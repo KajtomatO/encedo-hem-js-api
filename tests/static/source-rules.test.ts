@@ -51,3 +51,19 @@ describe("static source rules", () => {
     expect(found).toEqual([]);
   });
 });
+
+describe("module-level state", () => {
+  // verifies: REQ-API-001
+  it("src/ declares no module-level let or var", () => {
+    const found = walk(srcRoot)
+      .filter((f) => f.endsWith(".ts"))
+      .flatMap((f) =>
+        readFileSync(f, "utf8")
+          .split("\n")
+          .map((line, i) => ({ line, i }))
+          .filter(({ line }) => /^(export\s+)?(let|var)\s/.test(line))
+          .map(({ i }) => `${relative(srcRoot, f)}:${i + 1}`),
+      );
+    expect(found).toEqual([]);
+  });
+});

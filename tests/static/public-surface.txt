@@ -1,0 +1,170 @@
+ApprovalCheck
+ApprovalCheck: export type ApprovalCheck = {
+ApprovalCheck: readonly authreply: string;
+ApprovalCheck: readonly state: "approved";
+ApprovalCheck: readonly state: "expired";
+ApprovalCheck: readonly state: "pending";
+ApprovalCheck: readonly state: "rejected";
+ApprovalCheck: } | {
+ApprovalCheck: };
+ApprovalRelay
+ApprovalRelay: authreq: string;
+ApprovalRelay: check(id: string, options?: CallOptions): Promise<ApprovalCheck>;
+ApprovalRelay: epk: string;
+ApprovalRelay: export interface ApprovalRelay {
+ApprovalRelay: obtainKey(options?: CallOptions): Promise<ApprovalRelayKey>;
+ApprovalRelay: submit(request: {
+ApprovalRelay: }
+ApprovalRelay: }, options?: CallOptions): Promise<string>;
+ApprovalRelayKey
+ApprovalRelayKey: epk: string;
+ApprovalRelayKey: exp?: number | undefined;
+ApprovalRelayKey: export interface ApprovalRelayKey {
+ApprovalRelayKey: }
+AuthApi
+AuthApi: export interface AuthApi {
+AuthApi: }
+CallOptions
+CallOptions: export interface CallOptions {
+CallOptions: signal?: AbortSignal | undefined;
+CallOptions: timeoutMs?: number | undefined;
+CallOptions: }
+CheckinRelay
+CheckinRelay: exchange(check: string, options?: CallOptions): Promise<string>;
+CheckinRelay: export interface CheckinRelay {
+CheckinRelay: }
+CryptoApi
+CryptoApi: export interface CryptoApi {
+CryptoApi: }
+FetchLike
+FetchLike: export type FetchLike = (input: string, init: RequestInit) => Promise<Response>;
+HEM_API_VERSION
+HEM_API_VERSION: export declare const HEM_API_VERSION = "1.2.2";
+HemAbortError
+HemAbortError: export declare class HemAbortError extends HemError {
+HemAbortError: readonly code = "ABORTED";
+HemAbortError: }
+HemApprovalRejectedError
+HemApprovalRejectedError: export declare class HemApprovalRejectedError extends HemError {
+HemApprovalRejectedError: readonly code = "APPROVAL_REJECTED";
+HemApprovalRejectedError: }
+HemApprovalTimeoutError
+HemApprovalTimeoutError: export declare class HemApprovalTimeoutError extends HemError {
+HemApprovalTimeoutError: readonly code = "APPROVAL_TIMEOUT";
+HemApprovalTimeoutError: }
+HemBadRequestError
+HemBadRequestError: export declare class HemBadRequestError extends HemError {
+HemBadRequestError: readonly code = "BAD_REQUEST";
+HemBadRequestError: }
+HemClient
+HemClient: constructor(options: HemClientOptions);
+HemClient: export declare class HemClient {
+HemClient: readonly auth: AuthApi;
+HemClient: readonly crypto: CryptoApi;
+HemClient: readonly keys: KeysApi;
+HemClient: readonly system: SystemApi;
+HemClient: }
+HemClientOptions
+HemClientOptions: approvalRelay?: ApprovalRelay | null | undefined;
+HemClientOptions: checkinRelay?: CheckinRelay | null | undefined;
+HemClientOptions: clockRecovery?: boolean | undefined;
+HemClientOptions: export interface HemClientOptions {
+HemClientOptions: fetch?: FetchLike | undefined;
+HemClientOptions: minRequestIntervalMs?: number | undefined;
+HemClientOptions: mobileApproval?: boolean | MobileApprovalOptions | undefined;
+HemClientOptions: passphrase?: string | undefined;
+HemClientOptions: timeoutMs?: number | undefined;
+HemClientOptions: tokenLifetimeSeconds?: number | undefined;
+HemClientOptions: url: string | URL;
+HemClientOptions: }
+HemDeviceError
+HemDeviceError: export declare class HemDeviceError extends HemError {
+HemDeviceError: readonly code = "DEVICE_ERROR";
+HemDeviceError: }
+HemDeviceStateError
+HemDeviceStateError: export declare class HemDeviceStateError extends HemError {
+HemDeviceStateError: readonly code = "DEVICE_STATE";
+HemDeviceStateError: }
+HemError
+HemError: constructor(message: string, options?: HemErrorOptions);
+HemError: export declare class HemError extends Error {
+HemError: operation: string | undefined;
+HemError: readonly body: string | undefined;
+HemError: readonly code: HemErrorCode;
+HemError: readonly json: unknown;
+HemError: readonly status: number | undefined;
+HemError: toJSON(): Record<string, unknown>;
+HemError: }
+HemErrorCode
+HemErrorCode: export type HemErrorCode = "HEM_ERROR" | "BAD_REQUEST" | "UNAUTHENTICATED" | "FORBIDDEN" | "OPERATION_FAILED" | "DEVICE_STATE" | "ORIGIN_REJECTED" | "PAYLOAD_TOO_LARGE" | "TLS_REQUIRED" | "DEVICE_ERROR" | "TIMEOUT" | "UNREACHABLE" | "ABORTED" | "VALIDATION" | "PROTOCOL" | "UNSUPPORTED" | "APPROVAL_REJECTED" | "APPROVAL_TIMEOUT" | "RELAY";
+HemErrorOptions
+HemErrorOptions: body?: string;
+HemErrorOptions: cause?: unknown;
+HemErrorOptions: export interface HemErrorOptions {
+HemErrorOptions: operation?: string;
+HemErrorOptions: status?: number;
+HemErrorOptions: }
+HemForbiddenError
+HemForbiddenError: export declare class HemForbiddenError extends HemError {
+HemForbiddenError: readonly code = "FORBIDDEN";
+HemForbiddenError: }
+HemOperationFailedError
+HemOperationFailedError: export declare class HemOperationFailedError extends HemError {
+HemOperationFailedError: readonly code = "OPERATION_FAILED";
+HemOperationFailedError: }
+HemOriginRejectedError
+HemOriginRejectedError: export declare class HemOriginRejectedError extends HemError {
+HemOriginRejectedError: readonly code = "ORIGIN_REJECTED";
+HemOriginRejectedError: }
+HemPayloadTooLargeError
+HemPayloadTooLargeError: export declare class HemPayloadTooLargeError extends HemError {
+HemPayloadTooLargeError: readonly code = "PAYLOAD_TOO_LARGE";
+HemPayloadTooLargeError: }
+HemProtocolError
+HemProtocolError: export declare class HemProtocolError extends HemError {
+HemProtocolError: readonly code = "PROTOCOL";
+HemProtocolError: }
+HemRelayError
+HemRelayError: export declare class HemRelayError extends HemError {
+HemRelayError: readonly code = "RELAY";
+HemRelayError: }
+HemTimeoutError
+HemTimeoutError: export declare class HemTimeoutError extends HemError {
+HemTimeoutError: readonly code = "TIMEOUT";
+HemTimeoutError: }
+HemTlsRequiredError
+HemTlsRequiredError: export declare class HemTlsRequiredError extends HemError {
+HemTlsRequiredError: readonly code = "TLS_REQUIRED";
+HemTlsRequiredError: }
+HemUnauthenticatedError
+HemUnauthenticatedError: export declare class HemUnauthenticatedError extends HemError {
+HemUnauthenticatedError: readonly code = "UNAUTHENTICATED";
+HemUnauthenticatedError: }
+HemUnreachableError
+HemUnreachableError: export declare class HemUnreachableError extends HemError {
+HemUnreachableError: readonly code = "UNREACHABLE";
+HemUnreachableError: }
+HemUnsupportedError
+HemUnsupportedError: export declare class HemUnsupportedError extends HemError {
+HemUnsupportedError: readonly code = "UNSUPPORTED";
+HemUnsupportedError: }
+HemValidationError
+HemValidationError: constructor(parameter: string, message: string, options?: HemErrorOptions);
+HemValidationError: export declare class HemValidationError extends HemError {
+HemValidationError: readonly code = "VALIDATION";
+HemValidationError: readonly parameter: string;
+HemValidationError: toJSON(): Record<string, unknown>;
+HemValidationError: }
+KeysApi
+KeysApi: export interface KeysApi {
+KeysApi: }
+MobileApprovalOptions
+MobileApprovalOptions: ctx?: string | undefined;
+MobileApprovalOptions: export interface MobileApprovalOptions {
+MobileApprovalOptions: note?: string | undefined;
+MobileApprovalOptions: pollIntervalMs?: number | undefined;
+MobileApprovalOptions: waitTimeoutMs?: number | undefined;
+MobileApprovalOptions: }
+SystemApi
+SystemApi: export interface SystemApi {
+SystemApi: }

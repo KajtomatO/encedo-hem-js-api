@@ -1,6 +1,16 @@
 // Public entry point of encedo-hem-js-api.
 // implements: REQ-BUILD-002 — the package declares no dependencies; src/ imports only its own modules
 
+export { HemClient } from "./client.js";
+export type { HemClientOptions, MobileApprovalOptions } from "./client.js";
+export { HEM_API_VERSION } from "./version.js";
+export type { AuthApi } from "./api/auth.js";
+export type { SystemApi } from "./api/system.js";
+export type { KeysApi } from "./api/keymgmt.js";
+export type { CryptoApi } from "./api/crypto.js";
+export type { CheckinRelay } from "./relay/checkin.js";
+export type { ApprovalRelay, ApprovalRelayKey, ApprovalCheck } from "./relay/approval.js";
+export type { CallOptions, FetchLike } from "./transport/transport.js";
 export {
   HemError,
   HemBadRequestError,
