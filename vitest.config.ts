@@ -1,6 +1,7 @@
 import { defineConfig } from "vitest/config";
 import { playwright } from "@vitest/browser-playwright";
 
+// implements: REQ-TEST-001, REQ-TEST-002
 // Unit tests (tests/unit) run twice: in Node and in headless Chromium.
 // Static and packaging checks (tests/static) read files and run in Node only.
 // CHROMIUM_PATH points Playwright at a preinstalled Chromium when set.

@@ -1,3 +1,4 @@
+// implements: REQ-BUILD-004 — ES2023 target for Node.js >= 24 (package.json "engines") and current browsers
 {
   "compilerOptions": {
     "target": "ES2023",

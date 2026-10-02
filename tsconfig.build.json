@@ -1,3 +1,4 @@
+// implements: REQ-BUILD-001 — ESM output with declarations; package.json carries "type": "module" and the exports map
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
