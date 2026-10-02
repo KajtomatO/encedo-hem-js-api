@@ -7,9 +7,9 @@ traces:
   architecture: ["ARCHITECTURE.md#4-public-api--conventions", "ARCHITECTURE.md#6-protocol-bindings", "ARCHITECTURE.md#2-context--constraints"]
 depends_on: ["STEP-M1A-030"]
 evidence:
-  commits: []
-  tests: []
-  notes: null
+  commits: ["710a102"]
+  tests: ["verifies: REQ-API-004", "verifies: REQ-API-005"]
+  notes: "npm run check: 92 tests passed in Node 24 and Chromium; the codec tests pass in the browser run. base64 is hand-written (no atob/btoa, no Buffer). The body-size check is applied by the transport in STEP-M1A-050; parameter checks by the bindings in STEP-M1A-140 and STEP-M1A-150."
 reopened: []
 cancelled: null
 ---
@@ -29,9 +29,9 @@ the bindings (STEP-M1A-140, STEP-M1A-150). `TextEncoder`, `TextDecoder`,
 acceptable where it is simpler to make byte-exact.
 
 **Definition of done**
-- [ ] Round-trip tests cover standard base64 with padding, base64url without padding and lowercase hex, including the empty input and all 256 byte values
-- [ ] Decoding accepts the standard and the URL-safe alphabet, with and without padding
-- [ ] No `Buffer` or other Node-only API is used; the codec tests pass in the browser run
-- [ ] Each limit violation raises `HemValidationError` naming the parameter
-- [ ] Boundary values are accepted: a 32-character label, a 64-byte description, a 2048-byte message, a 7300-byte body
-- [ ] An upper-case hex key id is accepted and normalised to lower case; an empty message is rejected where the reference requires one
+- [x] Round-trip tests cover standard base64 with padding, base64url without padding and lowercase hex, including the empty input and all 256 byte values
+- [x] Decoding accepts the standard and the URL-safe alphabet, with and without padding
+- [x] No `Buffer` or other Node-only API is used; the codec tests pass in the browser run
+- [x] Each limit violation raises `HemValidationError` naming the parameter
+- [x] Boundary values are accepted: a 32-character label, a 64-byte description, a 2048-byte message, a 7300-byte body
+- [x] An upper-case hex key id is accepted and normalised to lower case; an empty message is rejected where the reference requires one

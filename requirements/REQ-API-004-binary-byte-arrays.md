@@ -1,7 +1,7 @@
 ---
 id: REQ-API-004
 title: Binary values exchanged as byte arrays
-status: approved
+status: verified
 priority: must
 revision: 1
 source: start_point G18; ref/api/hem-api-1.2.2.yaml
