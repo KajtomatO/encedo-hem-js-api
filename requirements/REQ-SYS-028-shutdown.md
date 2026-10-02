@@ -1,7 +1,7 @@
 ---
 id: REQ-SYS-028
 title: Device shutdown
-status: draft
+status: approved
 priority: must
 revision: 1
 source: start_point §5; start_point M3.2; start_point M3.3; ref/api/hem-api-1.2.2.yaml

@@ -1,7 +1,7 @@
 ---
 id: REQ-NET-008
 title: Optional minimum interval between requests
-status: draft
+status: approved
 priority: should
 revision: 1
 source: ARCHITECTURE.md §7; https://github.com/KajtomatO/encedo-hem-c-api

@@ -1,7 +1,7 @@
 ---
 id: REQ-API-011
 title: Clear error for operations the hardware does not provide
-status: draft
+status: approved
 priority: must
 revision: 1
 source: start_point G20; ref/api/hem-api-1.2.2.yaml; https://github.com/KajtomatO/encedo-hem-c-api

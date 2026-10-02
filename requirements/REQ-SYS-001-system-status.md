@@ -1,7 +1,7 @@
 ---
 id: REQ-SYS-001
 title: Device status
-status: draft
+status: approved
 priority: must
 revision: 1
 source: start_point §3; ref/api/hem-api-1.2.2.yaml

@@ -1,7 +1,7 @@
 ---
 id: REQ-TEST-001
 title: Unit tests run without a device
-status: draft
+status: approved
 priority: must
 revision: 1
 source: start_point G21

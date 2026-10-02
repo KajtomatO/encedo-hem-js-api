@@ -1,7 +1,7 @@
 ---
 id: REQ-AUTH-008
 title: Re-authentication after a 401
-status: draft
+status: approved
 priority: must
 revision: 1
 source: start_point G11; ref/api/hem-api-1.2.2.yaml

@@ -1,7 +1,7 @@
 ---
 id: REQ-AUTH-020
 title: Recovery when the broker rejects a request for clock drift
-status: draft
+status: approved
 priority: should
 revision: 1
 source: https://github.com/KajtomatO/encedo-hem-c-api

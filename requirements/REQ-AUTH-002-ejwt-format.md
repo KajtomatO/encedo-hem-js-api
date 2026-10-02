@@ -1,7 +1,7 @@
 ---
 id: REQ-AUTH-002
 title: Login proof encoding (eJWT)
-status: draft
+status: approved
 priority: must
 revision: 1
 source: start_point §6 Q1; https://github.com/KajtomatO/encedo-hem-c-api

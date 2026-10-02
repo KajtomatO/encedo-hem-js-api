@@ -1,7 +1,7 @@
 ---
 id: REQ-AUTH-026
 title: Pairing through a replaceable relay
-status: draft
+status: approved
 priority: must
 revision: 1
 source: start_point §5; https://github.com/KajtomatO/encedo-hem-c-api

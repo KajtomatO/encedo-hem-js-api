@@ -1,7 +1,7 @@
 ---
 id: REQ-TEST-002
 title: Unit tests pass in Node.js and in a browser
-status: draft
+status: approved
 priority: must
 revision: 1
 source: start_point G3; ARCHITECTURE.md §1

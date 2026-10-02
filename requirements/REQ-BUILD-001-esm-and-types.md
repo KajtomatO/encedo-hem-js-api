@@ -1,7 +1,7 @@
 ---
 id: REQ-BUILD-001
 title: TypeScript source published as ESM with type declarations
-status: draft
+status: approved
 priority: must
 revision: 1
 source: start_point G1

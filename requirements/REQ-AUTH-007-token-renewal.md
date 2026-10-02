@@ -1,7 +1,7 @@
 ---
 id: REQ-AUTH-007
 title: Renewal before expiry
-status: draft
+status: approved
 priority: must
 revision: 1
 source: start_point G11; ARCHITECTURE.md §5; https://github.com/KajtomatO/encedo-hem-c-api

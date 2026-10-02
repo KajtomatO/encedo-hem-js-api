@@ -1,7 +1,7 @@
 ---
 id: REQ-API-005
 title: Inputs validated against the documented hard limits before sending
-status: draft
+status: approved
 priority: must
 revision: 1
 source: start_point G17; ref/api/hem-api-1.2.2.yaml; https://github.com/KajtomatO/encedo-hem-c-api

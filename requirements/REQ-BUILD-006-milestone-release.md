@@ -1,7 +1,7 @@
 ---
 id: REQ-BUILD-006
 title: A versioned release at the end of each milestone
-status: draft
+status: approved
 priority: must
 revision: 1
 source: start_point G4; ARCHITECTURE.md §4

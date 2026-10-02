@@ -1,7 +1,7 @@
 ---
 id: REQ-API-010
 title: Targeted API version exported
-status: draft
+status: approved
 priority: must
 revision: 1
 source: start_point G19

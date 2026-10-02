@@ -1,7 +1,7 @@
 ---
 id: REQ-KEY-009
 title: Derive a key by ECDH and HKDF
-status: draft
+status: approved
 priority: must
 revision: 1
 source: start_point §4; start_point G16; ref/api/hem-api-1.2.2.yaml; https://github.com/KajtomatO/encedo-hem-c-api

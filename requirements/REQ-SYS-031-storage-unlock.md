@@ -1,7 +1,7 @@
 ---
 id: REQ-SYS-031
 title: Expose a storage slot
-status: draft
+status: approved
 priority: must
 revision: 1
 source: start_point §5; start_point M3.6; ref/api/hem-api-1.2.2.yaml; https://github.com/KajtomatO/encedo-hem-api-doc; https://github.com/KajtomatO/encedo-hem-c-api

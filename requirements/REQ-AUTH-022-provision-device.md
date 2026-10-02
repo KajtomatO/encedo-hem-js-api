@@ -1,7 +1,7 @@
 ---
 id: REQ-AUTH-022
 title: Device provisioning
-status: draft
+status: approved
 priority: must
 revision: 1
 source: start_point §5; start_point M3.2; ref/api/hem-api-1.2.2.yaml; https://github.com/KajtomatO/encedo-hem-api-doc

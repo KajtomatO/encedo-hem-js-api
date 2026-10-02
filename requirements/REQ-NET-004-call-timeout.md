@@ -1,7 +1,7 @@
 ---
 id: REQ-NET-004
 title: Time limit on every call
-status: draft
+status: approved
 priority: must
 revision: 1
 source: start_point G7; https://github.com/KajtomatO/encedo-hem-c-api; ref/api/hem-api-1.2.2.yaml

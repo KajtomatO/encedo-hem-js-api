@@ -1,7 +1,7 @@
 ---
 id: REQ-SYS-017
 title: Operations that work with and without a token
-status: draft
+status: approved
 priority: must
 revision: 1
 source: start_point M3.1; ref/api/hem-api-1.2.2.yaml

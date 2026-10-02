@@ -1,7 +1,7 @@
 ---
 id: REQ-OPS-004
 title: Verify operations return valid or invalid
-status: draft
+status: approved
 priority: must
 revision: 1
 source: start_point M2.2; https://github.com/KajtomatO/encedo-hem-c-api

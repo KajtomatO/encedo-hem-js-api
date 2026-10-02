@@ -1,7 +1,7 @@
 ---
 id: REQ-NET-001
 title: Caller-supplied fetch implementation
-status: draft
+status: approved
 priority: must
 revision: 1
 source: start_point G6

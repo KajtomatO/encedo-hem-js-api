@@ -1,7 +1,7 @@
 ---
 id: REQ-API-002
 title: Typed errors that identify the cause of a failure
-status: draft
+status: approved
 priority: must
 revision: 1
 source: start_point G14; ARCHITECTURE.md §4; ref/api/hem-api-1.2.2.yaml

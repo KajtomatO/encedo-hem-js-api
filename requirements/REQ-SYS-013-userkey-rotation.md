@@ -1,7 +1,7 @@
 ---
 id: REQ-SYS-013
 title: User passphrase change
-status: draft
+status: approved
 priority: must
 revision: 1
 source: start_point §5; ref/api/hem-api-1.2.2.yaml

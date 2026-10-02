@@ -1,7 +1,7 @@
 ---
 id: REQ-SYS-009
 title: Audit-log verification key
-status: draft
+status: approved
 priority: must
 revision: 1
 source: start_point §4; start_point M2.3; ref/api/hem-api-1.2.2.yaml

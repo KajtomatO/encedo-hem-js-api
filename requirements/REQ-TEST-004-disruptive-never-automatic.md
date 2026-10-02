@@ -1,7 +1,7 @@
 ---
 id: REQ-TEST-004
 title: Disruptive tests never run automatically
-status: draft
+status: approved
 priority: must
 revision: 1
 source: CLAUDE.md; ARCHITECTURE.md §8; ARCHITECTURE.md §1

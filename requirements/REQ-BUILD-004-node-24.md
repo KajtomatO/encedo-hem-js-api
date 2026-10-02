@@ -1,7 +1,7 @@
 ---
 id: REQ-BUILD-004
 title: Node.js 24 as the minimum version
-status: draft
+status: approved
 priority: must
 revision: 1
 source: user decision 2026-10-02; start_point G3

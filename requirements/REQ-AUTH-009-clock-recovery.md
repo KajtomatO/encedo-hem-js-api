@@ -1,7 +1,7 @@
 ---
 id: REQ-AUTH-009
 title: Login recovery when the device clock is wrong
-status: draft
+status: approved
 priority: must
 revision: 1
 source: ARCHITECTURE.md §5; ref/api/hem-api-1.2.2.yaml; https://github.com/KajtomatO/encedo-hem-c-api

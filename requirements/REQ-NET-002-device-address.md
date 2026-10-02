@@ -1,7 +1,7 @@
 ---
 id: REQ-NET-002
 title: Configurable device address
-status: draft
+status: approved
 priority: must
 revision: 1
 source: start_point G5; ref/api/hem-api-1.2.2.yaml

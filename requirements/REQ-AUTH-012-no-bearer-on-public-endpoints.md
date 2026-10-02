@@ -1,7 +1,7 @@
 ---
 id: REQ-AUTH-012
 title: No token on operations that need none
-status: draft
+status: approved
 priority: must
 revision: 1
 source: ref/api/hem-api-1.2.2.yaml; ARCHITECTURE.md §5

@@ -1,7 +1,7 @@
 ---
 id: REQ-AUTH-025
 title: Proof that the device holds its identity key
-status: draft
+status: approved
 priority: must
 revision: 1
 source: start_point §5; ref/api/hem-api-1.2.2.yaml

@@ -1,7 +1,7 @@
 ---
 id: REQ-API-013
 title: Dropped connection after a restart request is not an error
-status: draft
+status: approved
 priority: must
 revision: 1
 source: start_point M3.3; ref/api/hem-api-1.2.2.yaml

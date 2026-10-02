@@ -1,7 +1,7 @@
 ---
 id: REQ-AUTH-011
 title: Credentials held in memory and discarded on logout
-status: draft
+status: approved
 priority: must
 revision: 1
 source: start_point G13

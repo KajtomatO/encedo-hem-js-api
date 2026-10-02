@@ -1,7 +1,7 @@
 ---
 id: REQ-API-009
 title: Secrets never logged, stored or put into error messages
-status: draft
+status: approved
 priority: must
 revision: 1
 source: start_point G13; ARCHITECTURE.md §1

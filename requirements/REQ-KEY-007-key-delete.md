@@ -1,7 +1,7 @@
 ---
 id: REQ-KEY-007
 title: Delete a key
-status: draft
+status: approved
 priority: must
 revision: 1
 source: start_point §4; ref/api/hem-api-1.2.2.yaml

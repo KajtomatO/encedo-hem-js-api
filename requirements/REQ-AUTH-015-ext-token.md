@@ -1,7 +1,7 @@
 ---
 id: REQ-AUTH-015
 title: Mobile approval step 2 — redeem the reply
-status: draft
+status: approved
 priority: must
 revision: 1
 source: start_point M1.2; ref/api/hem-api-1.2.2.yaml; https://github.com/KajtomatO/encedo-hem-c-api

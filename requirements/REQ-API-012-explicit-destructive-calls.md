@@ -1,7 +1,7 @@
 ---
 id: REQ-API-012
 title: Destructive actions reachable only through dedicated calls
-status: draft
+status: approved
 priority: must
 revision: 1
 source: start_point M3.2; ref/api/hem-api-1.2.2.yaml

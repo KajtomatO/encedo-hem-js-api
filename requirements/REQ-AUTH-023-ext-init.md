@@ -1,7 +1,7 @@
 ---
 id: REQ-AUTH-023
 title: Mobile-app pairing step 1
-status: draft
+status: approved
 priority: must
 revision: 1
 source: start_point §5; ref/api/hem-api-1.2.2.yaml; https://github.com/KajtomatO/encedo-hem-c-api

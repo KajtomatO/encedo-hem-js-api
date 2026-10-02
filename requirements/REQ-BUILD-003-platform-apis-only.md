@@ -1,7 +1,7 @@
 ---
 id: REQ-BUILD-003
 title: Only APIs present in both Node.js and browsers
-status: draft
+status: approved
 priority: must
 revision: 1
 source: start_point G3; ARCHITECTURE.md §1

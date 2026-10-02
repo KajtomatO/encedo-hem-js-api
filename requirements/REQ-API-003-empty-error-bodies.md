@@ -1,7 +1,7 @@
 ---
 id: REQ-API-003
 title: Error mapping independent of the response body
-status: draft
+status: approved
 priority: must
 revision: 1
 source: start_point G15; ref/api/hem-api-1.2.2.yaml

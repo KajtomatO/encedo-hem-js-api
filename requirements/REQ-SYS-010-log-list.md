@@ -1,7 +1,7 @@
 ---
 id: REQ-SYS-010
 title: Paged audit-log listing
-status: draft
+status: approved
 priority: must
 revision: 1
 source: start_point §4; start_point M2.4; ref/api/hem-api-1.2.2.yaml
