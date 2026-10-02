@@ -2,15 +2,15 @@
 
 # Traceability matrix
 
-Generated: 2026-10-02 (after STEP-M1A-020)
+Generated: 2026-10-02 (after STEP-M1A-030)
 
-Scan inputs: 117 REQ files (`requirements/`), 23 step files (`workplan/{todo,doing,done}/`: 21 todo, 0 doing, 2 done). Code tags (`implements: REQ-`) scanned across `src/` and the build and CI locations (`package.json`, `tsconfig*.json`, `vitest.config.ts`, `.github/workflows/`); test tags (`verifies:`/`supports: REQ-`) scanned across `tests/`. Unit suite passed in Node 24 and headless Chromium for this run.
+Scan inputs: 117 REQ files (`requirements/`), 23 step files (`workplan/{todo,doing,done}/`: 20 todo, 0 doing, 3 done). Code tags (`implements: REQ-`) scanned across `src/` and the build and CI locations (`package.json`, `tsconfig*.json`, `vitest.config.ts`, `.github/workflows/`); test tags (`verifies:`/`supports: REQ-`) scanned across `tests/`. Unit suite passed in Node 24 and headless Chromium for this run.
 
 | REQ | Title | Status | Priority | Architecture | Steps | Code | Tests |
 |---|---|---|---|---|---|---|---|
 | REQ-API-001 | Client object created from options, with no global state | approved | must | §4, §3 | STEP-M1A-070 (todo) | — | — |
-| REQ-API-002 | Typed errors that identify the cause of a failure | approved | must | §4 | STEP-M1A-030 (todo) | — | — |
-| REQ-API-003 | Error mapping independent of the response body | approved | must | §4, §2 | STEP-M1A-030 (todo) | — | — |
+| REQ-API-002 | Typed errors that identify the cause of a failure | verified | must | §4 | STEP-M1A-030 (done) | src/errors.ts:2 | tests/unit/errors.test.ts:39, tests/unit/errors.test.ts:51, tests/unit/errors.test.ts:57, tests/unit/errors.test.ts:98, tests/unit/errors.test.ts:118 |
+| REQ-API-003 | Error mapping independent of the response body | verified | must | §4, §2 | STEP-M1A-030 (done) | src/errors.ts:2 | tests/unit/errors.test.ts:64, tests/unit/errors.test.ts:73, tests/unit/errors.test.ts:81 |
 | REQ-API-004 | Binary values exchanged as byte arrays | approved | must | §4 | STEP-M1A-040 (todo) | — | — |
 | REQ-API-005 | Inputs validated against the documented hard limits before sending | approved | must | §6, §2 | STEP-M1A-040 (todo), STEP-M1A-140 (todo), STEP-M1A-150 (todo), STEP-M1A-180 (todo) | — | — |
 | REQ-API-006 | Tolerant parsing of success responses | approved | must | §6 | STEP-M1A-110 (todo) | — | — |
@@ -128,13 +128,13 @@ Scan inputs: 117 REQ files (`requirements/`), 23 step files (`workplan/{todo,doi
 
 ## Coverage report
 
-- Totals: 117 REQs (113 approved, 3 verified, 1 implemented), 23 steps (21 in `todo/`, 0 in `doing/`, 2 in `done/`; cancelled: none).
-- M1A REQs (64) lacking an `implements:` or a `verifies:` tag: REQ-API-001, REQ-API-002, REQ-API-003, REQ-API-004, REQ-API-005, REQ-API-006, REQ-API-007, REQ-API-008, REQ-API-009, REQ-API-010, REQ-AUTH-001, REQ-AUTH-002, REQ-AUTH-003, REQ-AUTH-004, REQ-AUTH-005, REQ-AUTH-006, REQ-AUTH-007, REQ-AUTH-008, REQ-AUTH-009, REQ-AUTH-010, REQ-AUTH-011, REQ-AUTH-012, REQ-AUTH-013, REQ-AUTH-014, REQ-AUTH-015, REQ-AUTH-016, REQ-AUTH-017, REQ-AUTH-018, REQ-AUTH-019, REQ-AUTH-020, REQ-BUILD-003, REQ-BUILD-005, REQ-KEY-001, REQ-KEY-002, REQ-KEY-003, REQ-KEY-004, REQ-KEY-005, REQ-NET-001, REQ-NET-002, REQ-NET-003, REQ-NET-004, REQ-NET-005, REQ-NET-006, REQ-NET-007, REQ-NET-008, REQ-NET-009, REQ-NET-010, REQ-NET-011, REQ-NET-012, REQ-OPS-001, REQ-OPS-002, REQ-OPS-003, REQ-SYS-001, REQ-SYS-002, REQ-SYS-003, REQ-SYS-004, REQ-SYS-005, REQ-SYS-006, REQ-SYS-007.
-- Approved REQs with no code tag (unimplemented): 111; of these in M1A: REQ-API-001, REQ-API-002, REQ-API-003, REQ-API-004, REQ-API-005, REQ-API-006, REQ-API-007, REQ-API-008, REQ-API-009, REQ-API-010, REQ-AUTH-001, REQ-AUTH-002, REQ-AUTH-003, REQ-AUTH-004, REQ-AUTH-005, REQ-AUTH-006, REQ-AUTH-007, REQ-AUTH-008, REQ-AUTH-009, REQ-AUTH-010, REQ-AUTH-011, REQ-AUTH-012, REQ-AUTH-013, REQ-AUTH-014, REQ-AUTH-015, REQ-AUTH-016, REQ-AUTH-017, REQ-AUTH-018, REQ-AUTH-019, REQ-AUTH-020, REQ-BUILD-003, REQ-KEY-001, REQ-KEY-002, REQ-KEY-003, REQ-KEY-004, REQ-KEY-005, REQ-NET-001, REQ-NET-002, REQ-NET-003, REQ-NET-004, REQ-NET-005, REQ-NET-006, REQ-NET-007, REQ-NET-008, REQ-NET-009, REQ-NET-010, REQ-NET-011, REQ-NET-012, REQ-OPS-001, REQ-OPS-002, REQ-OPS-003, REQ-SYS-001, REQ-SYS-002, REQ-SYS-003, REQ-SYS-004, REQ-SYS-005, REQ-SYS-006, REQ-SYS-007; the rest belong to later milestones.
+- Totals: 117 REQs (111 approved, 5 verified, 1 implemented), 23 steps (20 in `todo/`, 0 in `doing/`, 3 in `done/`; cancelled: none).
+- M1A REQs (64) lacking an `implements:` or a `verifies:` tag: REQ-API-001, REQ-API-004, REQ-API-005, REQ-API-006, REQ-API-007, REQ-API-008, REQ-API-009, REQ-API-010, REQ-AUTH-001, REQ-AUTH-002, REQ-AUTH-003, REQ-AUTH-004, REQ-AUTH-005, REQ-AUTH-006, REQ-AUTH-007, REQ-AUTH-008, REQ-AUTH-009, REQ-AUTH-010, REQ-AUTH-011, REQ-AUTH-012, REQ-AUTH-013, REQ-AUTH-014, REQ-AUTH-015, REQ-AUTH-016, REQ-AUTH-017, REQ-AUTH-018, REQ-AUTH-019, REQ-AUTH-020, REQ-BUILD-003, REQ-BUILD-005, REQ-KEY-001, REQ-KEY-002, REQ-KEY-003, REQ-KEY-004, REQ-KEY-005, REQ-NET-001, REQ-NET-002, REQ-NET-003, REQ-NET-004, REQ-NET-005, REQ-NET-006, REQ-NET-007, REQ-NET-008, REQ-NET-009, REQ-NET-010, REQ-NET-011, REQ-NET-012, REQ-OPS-001, REQ-OPS-002, REQ-OPS-003, REQ-SYS-001, REQ-SYS-002, REQ-SYS-003, REQ-SYS-004, REQ-SYS-005, REQ-SYS-006, REQ-SYS-007.
+- Approved REQs with no code tag (unimplemented): 109; of these in M1A: REQ-API-001, REQ-API-004, REQ-API-005, REQ-API-006, REQ-API-007, REQ-API-008, REQ-API-009, REQ-API-010, REQ-AUTH-001, REQ-AUTH-002, REQ-AUTH-003, REQ-AUTH-004, REQ-AUTH-005, REQ-AUTH-006, REQ-AUTH-007, REQ-AUTH-008, REQ-AUTH-009, REQ-AUTH-010, REQ-AUTH-011, REQ-AUTH-012, REQ-AUTH-013, REQ-AUTH-014, REQ-AUTH-015, REQ-AUTH-016, REQ-AUTH-017, REQ-AUTH-018, REQ-AUTH-019, REQ-AUTH-020, REQ-BUILD-003, REQ-KEY-001, REQ-KEY-002, REQ-KEY-003, REQ-KEY-004, REQ-KEY-005, REQ-NET-001, REQ-NET-002, REQ-NET-003, REQ-NET-004, REQ-NET-005, REQ-NET-006, REQ-NET-007, REQ-NET-008, REQ-NET-009, REQ-NET-010, REQ-NET-011, REQ-NET-012, REQ-OPS-001, REQ-OPS-002, REQ-OPS-003, REQ-SYS-001, REQ-SYS-002, REQ-SYS-003, REQ-SYS-004, REQ-SYS-005, REQ-SYS-006, REQ-SYS-007; the rest belong to later milestones.
 - Approved REQs with code tags whose steps are not all in `done/`: REQ-BUILD-004, REQ-TEST-001.
 - Implemented REQs with no passing tagged test (unverified): REQ-BUILD-005.
 - Orphan tags (naming a nonexistent REQ): none.
 - Steps in `done/` with empty evidence: none.
 - Broken architecture anchors: none.
 - REQs in `needs-reverify`: none.
-- Status transitions applied in this run: REQ-BUILD-005: approved → implemented.
+- Status transitions applied in this run: REQ-API-002: approved → implemented, REQ-API-002: implemented → verified, REQ-API-003: approved → implemented, REQ-API-003: implemented → verified.
