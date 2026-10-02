@@ -1,0 +1,25 @@
+# implements: REQ-BUILD-005, REQ-BUILD-004
+# Build, type-check and unit tests (Node 24 and headless Chromium) on every
+# push and pull request. Runs `npm run check`, the same script used locally
+# for the A gate. No integration or attended tests, no device credentials.
+name: ci
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run check
