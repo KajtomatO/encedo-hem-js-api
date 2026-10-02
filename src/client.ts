@@ -5,6 +5,8 @@ import { AuthApiImpl, type AuthApi } from "./api/auth.js";
 import { CryptoApiImpl, type CryptoApi } from "./api/crypto.js";
 import { KeysApiImpl, type KeysApi } from "./api/keymgmt.js";
 import { SystemApiImpl, type SystemApi } from "./api/system.js";
+import { DEFAULT_TOKEN_LIFETIME_SECONDS, Session } from "./auth/session.js";
+import { validateInteger } from "./codec/validate.js";
 import { HemValidationError } from "./errors.js";
 import type { ClientContext } from "./internal/context.js";
 import type { ApprovalRelay } from "./relay/approval.js";
@@ -84,7 +86,15 @@ export class HemClient {
       timeoutMs: options.timeoutMs,
       minIntervalMs: options.minRequestIntervalMs,
     });
-    const ctx: ClientContext = { transport };
+    const lifetimeSeconds =
+      options.tokenLifetimeSeconds === undefined
+        ? DEFAULT_TOKEN_LIFETIME_SECONDS
+        : validateInteger(options.tokenLifetimeSeconds, "tokenLifetimeSeconds", 1);
+    if (options.passphrase !== undefined && typeof options.passphrase !== "string") {
+      throw new HemValidationError("passphrase", "must be a string");
+    }
+    const ctx = { transport } as ClientContext;
+    ctx.session = new Session(ctx, { passphrase: options.passphrase, lifetimeSeconds });
     this.auth = new AuthApiImpl(ctx);
     this.system = new SystemApiImpl(ctx);
     this.keys = new KeysApiImpl(ctx);

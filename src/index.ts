@@ -4,7 +4,9 @@
 export { HemClient } from "./client.js";
 export type { HemClientOptions, MobileApprovalOptions } from "./client.js";
 export { HEM_API_VERSION } from "./version.js";
-export type { AuthApi } from "./api/auth.js";
+export type { AuthApi, SessionInfo } from "./api/auth.js";
+export type { LoginChallenge } from "./api/auth-calls.js";
+export type { HemRole } from "./auth/token.js";
 export type { SystemApi } from "./api/system.js";
 export type { KeysApi } from "./api/keymgmt.js";
 export type { CryptoApi } from "./api/crypto.js";

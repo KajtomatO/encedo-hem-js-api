@@ -23,6 +23,9 @@ ApprovalRelayKey: export interface ApprovalRelayKey {
 ApprovalRelayKey: }
 AuthApi
 AuthApi: export interface AuthApi {
+AuthApi: getChallenge(options?: CallOptions): Promise<LoginChallenge>;
+AuthApi: login(scope: string, options?: CallOptions): Promise<SessionInfo>;
+AuthApi: logout(): void;
 AuthApi: }
 CallOptions
 CallOptions: export interface CallOptions {
@@ -128,6 +131,14 @@ HemRelayError
 HemRelayError: export declare class HemRelayError extends HemError {
 HemRelayError: readonly code = "RELAY";
 HemRelayError: }
+HemRole
+HemRole: export type HemRole = {
+HemRole: readonly id: string;
+HemRole: readonly kind: "app";
+HemRole: readonly kind: "master";
+HemRole: readonly kind: "user";
+HemRole: } | {
+HemRole: };
 HemTimeoutError
 HemTimeoutError: export declare class HemTimeoutError extends HemError {
 HemTimeoutError: readonly code = "TIMEOUT";
@@ -158,6 +169,14 @@ HemValidationError: }
 KeysApi
 KeysApi: export interface KeysApi {
 KeysApi: }
+LoginChallenge
+LoginChallenge: export interface LoginChallenge {
+LoginChallenge: readonly eid: string;
+LoginChallenge: readonly exp: number | undefined;
+LoginChallenge: readonly jti: string;
+LoginChallenge: readonly lbl: string | undefined;
+LoginChallenge: readonly spk: string;
+LoginChallenge: }
 MobileApprovalOptions
 MobileApprovalOptions: ctx?: string | undefined;
 MobileApprovalOptions: export interface MobileApprovalOptions {
@@ -165,6 +184,12 @@ MobileApprovalOptions: note?: string | undefined;
 MobileApprovalOptions: pollIntervalMs?: number | undefined;
 MobileApprovalOptions: waitTimeoutMs?: number | undefined;
 MobileApprovalOptions: }
+SessionInfo
+SessionInfo: export interface SessionInfo {
+SessionInfo: readonly expiresAt: number;
+SessionInfo: readonly role: HemRole | undefined;
+SessionInfo: readonly scope: string;
+SessionInfo: }
 SystemApi
 SystemApi: export interface SystemApi {
 SystemApi: }

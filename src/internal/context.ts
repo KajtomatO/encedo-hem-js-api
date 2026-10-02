@@ -1,10 +1,18 @@
 // State shared by the namespaces of one client. Every client owns its own.
 
 import { errorFromStatus } from "../errors.js";
-import type { DeviceRequest, DeviceResponse, Transport } from "../transport/transport.js";
+import type { Session } from "../auth/session.js";
+import type { CallOptions, DeviceRequest, DeviceResponse, Transport } from "../transport/transport.js";
 
 export interface ClientContext {
   readonly transport: Transport;
+  /** Set right after construction of the context. */
+  session: Session;
+}
+
+/** Copies only the call options a caller may set. */
+export function callOptions(options: CallOptions | undefined): CallOptions {
+  return { signal: options?.signal, timeoutMs: options?.timeoutMs };
 }
 
 /** Sends a request that needs no token and maps an error status to its error class. */
