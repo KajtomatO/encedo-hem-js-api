@@ -1,7 +1,7 @@
 ---
 id: REQ-NET-012
 title: Custom TLS trust through the caller's fetch documented
-status: approved
+status: verified
 priority: must
 revision: 1
 source: start_point §6 Q4; start_point G6; https://github.com/KajtomatO/encedo-hem-c-api

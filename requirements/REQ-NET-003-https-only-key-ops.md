@@ -1,7 +1,7 @@
 ---
 id: REQ-NET-003
 title: Key-management and crypto calls refused over plain HTTP
-status: approved
+status: verified
 priority: must
 revision: 1
 source: start_point G8; start_point G16; ref/api/hem-api-1.2.2.yaml
