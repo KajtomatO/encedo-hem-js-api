@@ -1,0 +1,39 @@
+{
+  "name": "encedo-hem-js-api",
+  "version": "0.0.0",
+  "private": true,
+  "description": "TypeScript client for the Encedo HEM REST API",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.d.ts"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:node": "vitest run --project node",
+    "test:browser": "vitest run --project browser",
+    "check": "npm run build && npm run typecheck && npm test"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.1",
+    "@vitest/browser-playwright": "5.0.3",
+    "playwright": "1.63.0",
+    "typescript": "5.9.3",
+    "vitest": "5.0.3"
+  }
+}
