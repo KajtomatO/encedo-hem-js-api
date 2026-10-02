@@ -9,7 +9,7 @@ import { DEFAULT_TOKEN_LIFETIME_SECONDS, Session } from "./auth/session.js";
 import { validateInteger } from "./codec/validate.js";
 import { HemValidationError } from "./errors.js";
 import type { ClientContext } from "./internal/context.js";
-import type { ApprovalRelay } from "./relay/approval.js";
+import { EncedoApprovalRelay, type ApprovalRelay } from "./relay/approval.js";
 import { EncedoCheckinRelay, type CheckinRelay } from "./relay/checkin.js";
 import { Transport, type FetchLike } from "./transport/transport.js";
 
@@ -95,7 +95,11 @@ export class HemClient {
     }
     const checkinRelay =
       options.checkinRelay === undefined ? new EncedoCheckinRelay() : checkRelay(options.checkinRelay, "checkinRelay", ["exchange"]);
-    const ctx = { transport, checkinRelay } as ClientContext;
+    const approvalRelay =
+      options.approvalRelay === undefined
+        ? new EncedoApprovalRelay()
+        : checkRelay(options.approvalRelay, "approvalRelay", ["obtainKey", "submit", "check"]);
+    const ctx = { transport, checkinRelay, approvalRelay } as ClientContext;
     ctx.session = new Session(ctx, {
       passphrase: options.passphrase,
       lifetimeSeconds,

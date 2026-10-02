@@ -5,6 +5,7 @@ import { callOptions, type ClientContext } from "../internal/context.js";
 import { validateScope } from "../internal/scope.js";
 import type { CallOptions } from "../transport/transport.js";
 import { getChallenge, type LoginChallenge } from "./auth-calls.js";
+import { extRequest, extToken, type ExtRequestParams, type ExtRequestResult } from "./ext-calls.js";
 
 /** What a login produced, without the token itself. */
 export interface SessionInfo {
@@ -36,6 +37,30 @@ export interface AuthApi {
    * @milestone M1
    */
   login(scope: string, options?: CallOptions): Promise<SessionInfo>;
+
+  /**
+   * Mobile approval step 1 (`POST /api/auth/ext/request`): asks the device
+   * for an authorization request for `scope`, encrypted for the paired apps
+   * and bound to the relay key `epk`. The result is opaque and is meant to be
+   * handed to the approval relay. A 403 (device clock not set) runs one
+   * recovery check-in and repeats the request.
+   *
+   * @scope none
+   * @milestone M1
+   */
+  extRequest(params: ExtRequestParams, options?: CallOptions): Promise<ExtRequestResult>;
+
+  /**
+   * Mobile approval step 2 (`POST /api/auth/ext/token`): redeems a paired
+   * app's reply for a bearer token, which is cached under `scope` (the scope
+   * originally requested) and also returned. A 401 (reply invalid, expired or
+   * used) raises `HemUnauthenticatedError`; a 406 (unknown pairing,
+   * undecryptable scope) raises `HemOperationFailedError`.
+   *
+   * @scope none
+   * @milestone M1
+   */
+  extToken(params: { authreply: string; scope: string }, options?: CallOptions): Promise<string>;
 
   /**
    * The role the device granted in the most recently obtained token: user
@@ -71,6 +96,14 @@ export class AuthApiImpl implements AuthApi {
     const s = validateScope(scope);
     const entry = await this.#ctx.session.token(s, callOptions(options));
     return { scope: entry.scope, role: entry.role, expiresAt: entry.exp };
+  }
+
+  extRequest(params: ExtRequestParams, options?: CallOptions): Promise<ExtRequestResult> {
+    return extRequest(this.#ctx, params, options);
+  }
+
+  async extToken(params: { authreply: string; scope: string }, options?: CallOptions): Promise<string> {
+    return (await extToken(this.#ctx, params, options)).token;
   }
 
   getRole(): HemRole | undefined {

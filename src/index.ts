@@ -28,7 +28,9 @@ export { EncedoCheckinRelay, ENCEDO_CHECKIN_URL } from "./relay/checkin.js";
 export type { CheckinRelay, EncedoCheckinRelayOptions } from "./relay/checkin.js";
 export type { RelayHttpOptions } from "./relay/http.js";
 export type { CheckinResult } from "./api/checkin.js";
-export type { ApprovalRelay, ApprovalRelayKey, ApprovalCheck } from "./relay/approval.js";
+export { EncedoApprovalRelay, ENCEDO_NOTIFY_URL } from "./relay/approval.js";
+export type { ApprovalRelay, ApprovalRelayKey, ApprovalCheck, EncedoApprovalRelayOptions } from "./relay/approval.js";
+export type { ExtRequestParams, ExtRequestResult } from "./api/ext-calls.js";
 export type { CallOptions, FetchLike } from "./transport/transport.js";
 export {
   HemError,

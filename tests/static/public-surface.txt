@@ -22,12 +22,17 @@ ApprovalRelayKey: exp?: number | undefined;
 ApprovalRelayKey: export interface ApprovalRelayKey {
 ApprovalRelayKey: }
 AuthApi
+AuthApi: authreply: string;
 AuthApi: export interface AuthApi {
+AuthApi: extRequest(params: ExtRequestParams, options?: CallOptions): Promise<ExtRequestResult>;
+AuthApi: extToken(params: {
 AuthApi: getChallenge(options?: CallOptions): Promise<LoginChallenge>;
 AuthApi: getRole(): HemRole | undefined;
 AuthApi: login(scope: string, options?: CallOptions): Promise<SessionInfo>;
 AuthApi: logout(): void;
+AuthApi: scope: string;
 AuthApi: }
+AuthApi: }, options?: CallOptions): Promise<string>;
 CREATABLE_KEY_TYPES
 CREATABLE_KEY_TYPES: export declare const CREATABLE_KEY_TYPES: readonly ["SECP256R1", "SECP384R1", "SECP521R1", "SECP256K1", "CURVE25519", "CURVE448", "ED25519", "ED448", "SHA2-256", "SHA2-384", "SHA2-512", "SHA3-256", "SHA3-384", "SHA3-512", "AES128", "AES192", "AES256", "MLKEM512", "MLKEM768", "MLKEM1024", "MLDSA44", "MLDSA65", "MLDSA87"];
 CallOptions
@@ -63,6 +68,24 @@ CryptoApi: wrap(params: WrapParams, options?: CallOptions): Promise<Uint8Array>;
 CryptoApi: }
 ENCEDO_CHECKIN_URL
 ENCEDO_CHECKIN_URL: export declare const ENCEDO_CHECKIN_URL = "https://api.encedo.com/checkin";
+ENCEDO_NOTIFY_URL
+ENCEDO_NOTIFY_URL: export declare const ENCEDO_NOTIFY_URL = "https://api.encedo.com/notify";
+EncedoApprovalRelay
+EncedoApprovalRelay: #private;
+EncedoApprovalRelay: authreq: string;
+EncedoApprovalRelay: check(id: string, options?: CallOptions): Promise<ApprovalCheck>;
+EncedoApprovalRelay: constructor(options?: EncedoApprovalRelayOptions);
+EncedoApprovalRelay: epk: string;
+EncedoApprovalRelay: export declare class EncedoApprovalRelay implements ApprovalRelay {
+EncedoApprovalRelay: obtainKey(options?: CallOptions): Promise<ApprovalRelayKey>;
+EncedoApprovalRelay: readonly url: string;
+EncedoApprovalRelay: submit(request: {
+EncedoApprovalRelay: }
+EncedoApprovalRelay: }, options?: CallOptions): Promise<string>;
+EncedoApprovalRelayOptions
+EncedoApprovalRelayOptions: export interface EncedoApprovalRelayOptions extends RelayHttpOptions {
+EncedoApprovalRelayOptions: url?: string | undefined;
+EncedoApprovalRelayOptions: }
 EncedoCheckinRelay
 EncedoCheckinRelay: #private;
 EncedoCheckinRelay: constructor(options?: EncedoCheckinRelayOptions);
@@ -74,6 +97,18 @@ EncedoCheckinRelayOptions
 EncedoCheckinRelayOptions: export interface EncedoCheckinRelayOptions extends RelayHttpOptions {
 EncedoCheckinRelayOptions: url?: string | undefined;
 EncedoCheckinRelayOptions: }
+ExtRequestParams
+ExtRequestParams: ctx?: string | undefined;
+ExtRequestParams: epk: string;
+ExtRequestParams: export interface ExtRequestParams {
+ExtRequestParams: note?: string | undefined;
+ExtRequestParams: scope: string;
+ExtRequestParams: }
+ExtRequestResult
+ExtRequestResult: export interface ExtRequestResult {
+ExtRequestResult: readonly authreq: string;
+ExtRequestResult: readonly epk: string;
+ExtRequestResult: }
 FetchLike
 FetchLike: export type FetchLike = (input: string, init: RequestInit) => Promise<Response>;
 HEM_API_VERSION
