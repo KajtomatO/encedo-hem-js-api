@@ -9,6 +9,10 @@ AI-assisted requirements and workplan process.
   (what is being built, milestones).
 - Claude produces, humans decide: never approve, reject or supersede a REQ;
   propose milestone decompositions and impact analyses, then **stop** for approval.
+- Milestones are split (REQUIREMENTS-MANAGEMENT.md §5.5): `MnA` = implementation
+  + unit tests, no device; `MnB` = verification on hardware with the user.
+  Strict order M1A → M1B → M2A → …; before any B step, say what it does to the
+  device and **stop** until the user says go.
 - Steps move only by `git mv` between `workplan/todo|doing|done`; WIP limit 2;
   every commit subject during a step starts with `[STEP-<ID>]`.
 - Git: **never push**. Commit only while implementing milestone steps or when the

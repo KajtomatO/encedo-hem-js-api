@@ -104,6 +104,9 @@ flags the item loudly in the coverage report.
 - **Cited**: `source` names where the requirement came from — a user decision
   with date, an `ARCHITECTURE.md` section, or an external source per §8.
 - **Non-duplicative**: a REQ never restates another; use `depends_on`.
+- **Device criteria**: an acceptance criterion that can only be settled on
+  hardware starts with the B part that settles it, e.g. `- [ ] (M1B) …`
+  (§5.5). It stays unchecked through the A part.
 - **Edits**: any edit bumps `revision`; git history is the changelog. An edit
   that changes the *meaning* of an approved REQ resets `status` to `draft`
   (human must re-approve) and triggers the §6.2 procedure first. Typo and
@@ -173,8 +176,9 @@ written, no status changes.
 ### 5.1 Step files
 
 `STEP-<Mx>-<NNN>-<slug>.md` — one file per step, living in exactly one of
-`todo/`, `doing/`, `done/`. `Mx` is a milestone from the **Milestones**
-section of `ARCHITECTURE.md`. `NNN` is numbered in gaps of ten (010, 020, …)
+`todo/`, `doing/`, `done/`. `Mx` is a milestone part from the **Milestones**
+section of `ARCHITECTURE.md` — `M1A`, `M1B`, `M2A`, … (§5.5), e.g.
+`STEP-M1A-010-package-skeleton.md`. `NNN` is numbered in gaps of ten (010, 020, …)
 so insertions fit; IDs are never reused; the *filename* never changes — only
 its folder does.
 
@@ -240,6 +244,32 @@ time.
 7. `git mv` to `done/`; commit `[STEP-<ID>] done`.
 8. Regenerate the trace matrix (§4.3) and report.
 
+### 5.5 Milestone parts A and B
+
+Every milestone is split in two (user decision 2026-10-02):
+
+- **A — implementation and unit tests.** No device, no network. Claude can
+  carry an A part from decomposition to gate without the user present.
+- **B — tests and verification on hardware, with user interaction.**
+  Integration runs against a real device, attended checks (phone approval,
+  power cycle), and anything disruptive.
+
+Rules:
+
+- **Strict order:** M1A → M1B → M2A → M2B → M3A → M3B. A part is decomposed
+  (§5.3) only after the previous part's gate has passed.
+- **B steps need the user.** Before starting a B step Claude states what the
+  step will do to the device and what the user has to do, then **stops**
+  until the user says to go. Disruptive actions are never run automatically,
+  inside a B part or anywhere else.
+- **Device criteria** (`(MnB)` prefix, §3.3) are checked only at their B
+  part, with the finding written next to the box. One that cannot be settled
+  is carried forward only by an explicit human decision, recorded in the REQ.
+- **REQ status** still follows §3.2. A REQ can become `verified` in an A
+  part on unit-test evidence while its `(MnB)` criteria are still open; the
+  B gate is what closes them.
+- **Releases** are cut only after a B gate.
+
 ## 6. Change management & impact analysis
 
 ### 6.1 What counts as a change
@@ -300,7 +330,7 @@ Claude SHOULD propose capturing it as a REQ on the spot.
   | https://github.com/KajtomatO/encedo-hem-c-api | device-verified C client for the same API: auth flow and KDF facts, recorded firmware quirks, endpoint coverage dispositions |
   | `ref/api/hem-api-1.2.2.yaml` | HEM REST API (fw 1.2.2): endpoints, request/response payloads, scopes, error codes |
   | https://github.com/KajtomatO/encedo-hem-api-doc | HEM REST API prose documentation, incl. its record of known doc/implementation divergences |
-  | `requirements/start_point/` (`goal.txt`, `high-level-requirements.md`) | the user's brief: scope, milestones, consumer needs |
+  | `requirements/start_point/` (`high-level-requirements.md`) | the user's brief: scope, milestones, consumer needs |
 
   Precedence when sources conflict: device > encedo-hem-c-api > OpenAPI
   yaml > API doc repo; conflicts are recorded in the affected REQ, not
