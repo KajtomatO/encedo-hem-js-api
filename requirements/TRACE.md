@@ -2,9 +2,9 @@
 
 # Traceability matrix
 
-Generated: 2026-10-02 (after STEP-M1A-120)
+Generated: 2026-10-02 (after STEP-M1A-130)
 
-Scan inputs: 117 REQ files (`requirements/`), 23 step files (`workplan/{todo,doing,done}/`: 11 todo, 0 doing, 12 done). Code tags (`implements: REQ-`) scanned across `src/` and the build and CI locations (`package.json`, `tsconfig*.json`, `vitest.config.ts`, `.github/workflows/`); test tags (`verifies:`/`supports: REQ-`) scanned across `tests/`. Unit suite passed in Node 24 and headless Chromium for this run.
+Scan inputs: 117 REQ files (`requirements/`), 23 step files (`workplan/{todo,doing,done}/`: 10 todo, 0 doing, 13 done). Code tags (`implements: REQ-`) scanned across `src/` and the build and CI locations (`package.json`, `tsconfig*.json`, `vitest.config.ts`, `.github/workflows/`); test tags (`verifies:`/`supports: REQ-`) scanned across `tests/`. Unit suite passed in Node 24 and headless Chromium for this run.
 
 | REQ | Title | Status | Priority | Architecture | Steps | Code | Tests |
 |---|---|---|---|---|---|---|---|
@@ -30,7 +30,7 @@ Scan inputs: 117 REQ files (`requirements/`), 23 step files (`workplan/{todo,doi
 | REQ-AUTH-006 | Requested token lifetime | verified | must | §5.2, §11 | STEP-M1A-090 (done) | src/auth/session.ts:2 | tests/unit/auth/login.test.ts:83, tests/unit/auth/login.test.ts:90, tests/unit/auth/login.test.ts:97 |
 | REQ-AUTH-007 | Renewal before expiry | verified | must | §5.2 | STEP-M1A-100 (done) | src/auth/session.ts:3 | tests/unit/auth/session.test.ts:82, tests/unit/auth/session.test.ts:100 |
 | REQ-AUTH-008 | Re-authentication after a 401 | verified | must | §5.2 | STEP-M1A-100 (done) | src/auth/session.ts:3 | tests/unit/auth/session.test.ts:113, tests/unit/auth/session.test.ts:125, tests/unit/auth/session.test.ts:133 |
-| REQ-AUTH-009 | Login recovery when the device clock is wrong | approved | must | §5.2, §11 | STEP-M1A-130 (todo) | — | — |
+| REQ-AUTH-009 | Login recovery when the device clock is wrong | verified | must | §5.2, §11 | STEP-M1A-130 (done) | src/auth/session.ts:3 | tests/unit/auth/clock-recovery.test.ts:38, tests/unit/auth/clock-recovery.test.ts:54, tests/unit/auth/clock-recovery.test.ts:72, tests/unit/auth/clock-recovery.test.ts:81, tests/unit/auth/clock-recovery.test.ts:94, tests/unit/auth/clock-recovery.test.ts:105 |
 | REQ-AUTH-010 | User and master roles | verified | must | §5.2, §11 | STEP-M1A-100 (done) | src/auth/token.ts:2 | tests/unit/auth/session.test.ts:201, tests/unit/auth/session.test.ts:215 |
 | REQ-AUTH-011 | Credentials held in memory and discarded on logout | verified | must | §5.2 | STEP-M1A-090 (done) | src/auth/session.ts:2 | tests/unit/auth/ejwt.test.ts:32, tests/unit/auth/login.test.ts:104, tests/unit/auth/login.test.ts:115, tests/unit/auth/login.test.ts:128, tests/unit/auth/session.test.ts:239 |
 | REQ-AUTH-012 | No token on operations that need none | approved | must | §5.2, §2 | STEP-M1A-180 (todo), STEP-M1A-100 (done) | src/api/auth-calls.ts:2, src/auth/session.ts:3 | tests/unit/auth/session.test.ts:190 |
@@ -128,13 +128,13 @@ Scan inputs: 117 REQ files (`requirements/`), 23 step files (`workplan/{todo,doi
 
 ## Coverage report
 
-- Totals: 117 REQs (34 verified, 82 approved, 1 implemented), 23 steps (11 in `todo/`, 0 in `doing/`, 12 in `done/`; cancelled: none).
-- M1A REQs (64) lacking an `implements:` or a `verifies:` tag: REQ-API-007, REQ-API-008, REQ-AUTH-009, REQ-AUTH-014, REQ-AUTH-015, REQ-AUTH-016, REQ-AUTH-017, REQ-AUTH-018, REQ-AUTH-019, REQ-AUTH-020, REQ-BUILD-005, REQ-KEY-001, REQ-KEY-002, REQ-KEY-003, REQ-KEY-004, REQ-KEY-005, REQ-NET-011, REQ-NET-012, REQ-OPS-001, REQ-OPS-002, REQ-OPS-003.
-- Approved REQs with no code tag (unimplemented): 73; of these in M1A: REQ-API-007, REQ-API-008, REQ-AUTH-009, REQ-AUTH-014, REQ-AUTH-015, REQ-AUTH-016, REQ-AUTH-017, REQ-AUTH-018, REQ-AUTH-019, REQ-AUTH-020, REQ-KEY-001, REQ-KEY-002, REQ-KEY-003, REQ-KEY-004, REQ-KEY-005, REQ-NET-011, REQ-NET-012, REQ-OPS-001, REQ-OPS-002, REQ-OPS-003; the rest belong to later milestones.
+- Totals: 117 REQs (35 verified, 81 approved, 1 implemented), 23 steps (10 in `todo/`, 0 in `doing/`, 13 in `done/`; cancelled: none).
+- M1A REQs (64) lacking an `implements:` or a `verifies:` tag: REQ-API-007, REQ-API-008, REQ-AUTH-014, REQ-AUTH-015, REQ-AUTH-016, REQ-AUTH-017, REQ-AUTH-018, REQ-AUTH-019, REQ-AUTH-020, REQ-BUILD-005, REQ-KEY-001, REQ-KEY-002, REQ-KEY-003, REQ-KEY-004, REQ-KEY-005, REQ-NET-011, REQ-NET-012, REQ-OPS-001, REQ-OPS-002, REQ-OPS-003.
+- Approved REQs with no code tag (unimplemented): 72; of these in M1A: REQ-API-007, REQ-API-008, REQ-AUTH-014, REQ-AUTH-015, REQ-AUTH-016, REQ-AUTH-017, REQ-AUTH-018, REQ-AUTH-019, REQ-AUTH-020, REQ-KEY-001, REQ-KEY-002, REQ-KEY-003, REQ-KEY-004, REQ-KEY-005, REQ-NET-011, REQ-NET-012, REQ-OPS-001, REQ-OPS-002, REQ-OPS-003; the rest belong to later milestones.
 - Approved REQs with code tags whose steps are not all in `done/`: REQ-API-005, REQ-API-009, REQ-API-010, REQ-AUTH-005, REQ-AUTH-012, REQ-BUILD-004, REQ-NET-003, REQ-NET-009, REQ-TEST-001.
 - Implemented REQs with no passing tagged test (unverified): REQ-BUILD-005.
 - Orphan tags (naming a nonexistent REQ): none.
 - Steps in `done/` with empty evidence: none.
 - Broken architecture anchors: none.
 - REQs in `needs-reverify`: none.
-- Status transitions applied in this run: REQ-SYS-004: approved → implemented, REQ-SYS-004: implemented → verified, REQ-SYS-005: approved → implemented, REQ-SYS-005: implemented → verified, REQ-SYS-006: approved → implemented, REQ-SYS-006: implemented → verified, REQ-SYS-007: approved → implemented, REQ-SYS-007: implemented → verified.
+- Status transitions applied in this run: REQ-AUTH-009: approved → implemented, REQ-AUTH-009: implemented → verified.
