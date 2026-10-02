@@ -118,7 +118,7 @@ describe("credential lifecycle", () => {
     const c = client(d);
     await c.auth.login("keymgmt:list");
     d.challenge = { ...d.challenge, eid: "ffffffffffffffffffffffffffffffff" };
-    const err = await c.auth.login("keymgmt:list").catch((e: unknown) => e);
+    const err = await c.auth.login("keymgmt:search").catch((e: unknown) => e);
     expect(err).toBeInstanceOf(HemUnauthenticatedError);
     expect((err as Error).message).toMatch(/identity changed/);
     // no proof was sent for the changed identity
