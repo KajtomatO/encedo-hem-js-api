@@ -1,7 +1,7 @@
 ---
 id: REQ-NET-010
 title: Redirects not followed
-status: approved
+status: verified
 priority: should
 revision: 1
 source: ARCHITECTURE.md §7

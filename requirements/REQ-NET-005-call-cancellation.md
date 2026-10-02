@@ -1,7 +1,7 @@
 ---
 id: REQ-NET-005
 title: Cancellation of every call
-status: approved
+status: verified
 priority: must
 revision: 1
 source: start_point G7

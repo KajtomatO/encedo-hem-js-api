@@ -1,7 +1,7 @@
 ---
 id: REQ-NET-006
 title: Transport failures classified
-status: approved
+status: verified
 priority: must
 revision: 1
 source: start_point G14
