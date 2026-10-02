@@ -1,5 +1,6 @@
 // Transport: one device request in, one response out, through the caller's fetch.
 // implements: REQ-NET-001, REQ-NET-004, REQ-NET-005, REQ-NET-006, REQ-NET-009, REQ-NET-010, REQ-BUILD-003
+// implements: REQ-NET-003, REQ-NET-007, REQ-NET-008
 
 import { validateBodySize, validateInteger } from "../codec/validate.js";
 import {
@@ -7,6 +8,7 @@ import {
   HemDeviceError,
   type HemError,
   HemTimeoutError,
+  HemTlsRequiredError,
   HemUnreachableError,
   HemUnsupportedError,
 } from "../errors.js";
@@ -25,6 +27,8 @@ export interface TransportOptions {
   fetch?: FetchLike | undefined;
   /** Time limit per request, in milliseconds. */
   timeoutMs?: number | undefined;
+  /** Minimum interval between the starts of consecutive requests, in milliseconds (default 0). */
+  minIntervalMs?: number | undefined;
 }
 
 /** Options every public call accepts. */
@@ -46,6 +50,8 @@ export interface DeviceRequest extends CallOptions {
   body?: unknown;
   /** Bearer token; only for operations that need one. */
   token?: string | undefined;
+  /** Key-management and crypto operations: refused unless the device URL is `https:`. */
+  requiresTls?: boolean | undefined;
 }
 
 /** A complete response: status, headers and the body read as text. */
@@ -59,7 +65,11 @@ export class Transport {
   readonly baseUrl: string;
   readonly secure: boolean;
   readonly timeoutMs: number;
+  readonly minIntervalMs: number;
   readonly #fetch: FetchLike | undefined;
+  readonly #queue: Job[] = [];
+  #busy = false;
+  #lastStart = Number.NEGATIVE_INFINITY;
 
   constructor(options: TransportOptions) {
     const { base, secure } = parseDeviceUrl(options.url);
@@ -70,16 +80,60 @@ export class Transport {
     if (options.fetch !== undefined && typeof options.fetch !== "function") {
       throw new HemUnsupportedError("options.fetch must be a function");
     }
+    this.minIntervalMs =
+      options.minIntervalMs === undefined ? 0 : validateInteger(options.minIntervalMs, "minIntervalMs", 0);
     this.#fetch = options.fetch;
     if (this.#fetch === undefined && typeof globalThis.fetch !== "function") {
       throw new HemUnsupportedError("no fetch implementation: pass options.fetch or run where fetch is global");
     }
   }
 
-  /** Sends one request and returns the complete response, whatever its status. */
+  /**
+   * Sends one request and returns the complete response, whatever its status.
+   * Requests of one transport are sent one at a time, in call order.
+   */
   async send(req: DeviceRequest): Promise<DeviceResponse> {
+    if (req.requiresTls && !this.secure) {
+      throw new HemTlsRequiredError(`${req.operation}: refused over plain HTTP; the device URL must use https:`, {
+        operation: req.operation,
+      });
+    }
     const prepared = this.prepare(req);
-    return this.execute(req, prepared);
+    const { signal } = req;
+    if (signal?.aborted) throw abortError(req.operation, signal);
+    return new Promise<DeviceResponse>((resolve, reject) => {
+      const job: Job = { req, prepared, resolve, reject, onQueuedAbort: () => {} };
+      job.onQueuedAbort = () => {
+        const i = this.#queue.indexOf(job);
+        if (i >= 0) {
+          this.#queue.splice(i, 1);
+          reject(abortError(req.operation, signal));
+        }
+      };
+      signal?.addEventListener("abort", job.onQueuedAbort, { once: true });
+      this.#queue.push(job);
+      void this.#pump();
+    });
+  }
+
+  async #pump(): Promise<void> {
+    if (this.#busy) return;
+    this.#busy = true;
+    try {
+      for (let job = this.#queue.shift(); job !== undefined; job = this.#queue.shift()) {
+        job.req.signal?.removeEventListener("abort", job.onQueuedAbort);
+        const wait = this.#lastStart + this.minIntervalMs - Date.now();
+        if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+        this.#lastStart = Date.now();
+        try {
+          job.resolve(await this.execute(job.req, job.prepared));
+        } catch (e) {
+          job.reject(e);
+        }
+      }
+    } finally {
+      this.#busy = false;
+    }
   }
 
   /** Validates and serialises a request; throws before anything is sent. */
@@ -154,6 +208,14 @@ export class Transport {
       signal?.removeEventListener("abort", onAbort);
     }
   }
+}
+
+interface Job {
+  req: DeviceRequest;
+  prepared: { url: string; init: RequestInit; timeoutMs: number };
+  resolve: (res: DeviceResponse) => void;
+  reject: (err: unknown) => void;
+  onQueuedAbort: () => void;
 }
 
 function abortError(operation: string, signal: AbortSignal | undefined): HemAbortError {
