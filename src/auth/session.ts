@@ -1,9 +1,10 @@
 // Session engine: login with the passphrase and the credential lifecycle.
 // implements: REQ-AUTH-001, REQ-AUTH-006, REQ-AUTH-011, REQ-API-009
-// implements: REQ-AUTH-004, REQ-AUTH-005, REQ-AUTH-007, REQ-AUTH-008, REQ-AUTH-012, REQ-AUTH-013
+// implements: REQ-AUTH-004, REQ-AUTH-005, REQ-AUTH-007, REQ-AUTH-008, REQ-AUTH-012, REQ-AUTH-013, REQ-AUTH-009
 
 import { decodeBase64 } from "../codec/base64.js";
-import { HemAbortError, HemProtocolError, HemUnauthenticatedError, errorFromStatus } from "../errors.js";
+import { HemAbortError, HemError, HemForbiddenError, HemProtocolError, HemUnauthenticatedError, errorFromStatus } from "../errors.js";
+import { runCheckin } from "../api/checkin.js";
 import { x25519 } from "../crypto/shim.js";
 import { getChallenge, postProof, type LoginChallenge } from "../api/auth-calls.js";
 import type { ClientContext } from "../internal/context.js";
@@ -29,12 +30,26 @@ export interface TokenEntry {
 export interface SessionOptions {
   passphrase?: string | undefined;
   lifetimeSeconds: number;
+  /** Run one check-in and retry when a login fails because the device clock is wrong (default true). */
+  clockRecovery?: boolean | undefined;
+}
+
+/** Allowed difference between the device clock (from the challenge) and the local clock, in seconds [C-SDK]. */
+export const CLOCK_DRIFT_TOLERANCE_SECONDS = 60;
+/** The challenge `exp` is device time plus this many seconds [C-SDK]. */
+export const CHALLENGE_DEADLINE_SECONDS = 60;
+
+/** True when the challenge shows the device clock differs from the local clock by more than 60 s. */
+export function challengeShowsDrift(challengeExp: number | undefined, now = nowSeconds()): boolean {
+  if (challengeExp === undefined) return false;
+  return Math.abs(challengeExp - CHALLENGE_DEADLINE_SECONDS - now) > CLOCK_DRIFT_TOLERANCE_SECONDS;
 }
 
 export const nowSeconds = (): number => Math.floor(Date.now() / 1000);
 
 export class Session {
   readonly lifetimeSeconds: number;
+  readonly clockRecovery: boolean;
   readonly #ctx: ClientContext;
   #passphrase: string | undefined;
   #key: Promise<LoginKey> | undefined;
@@ -45,13 +60,54 @@ export class Session {
   readonly #inflight = new Map<string, Promise<TokenEntry>>();
   #role: HemRole | undefined;
   /** Obtains a fresh token for a scope; the passphrase login unless replaced (mobile mode). */
-  tokenSource: (scope: string, options: CallOptions) => Promise<TokenEntry> = async (scope, options) =>
-    (await this.passphraseLogin(scope, options)).entry;
+  tokenSource: (scope: string, options: CallOptions) => Promise<TokenEntry> = (scope, options) =>
+    this.loginWithClockRecovery(scope, options);
+
+  /**
+   * A passphrase login that, when it fails because the device clock is unset
+   * (403 on the challenge) or drifted (401 on the proof with drift evidence),
+   * runs one check-in and logs in once more with a fresh challenge.
+   */
+  async loginWithClockRecovery(scope: string, options: CallOptions = {}): Promise<TokenEntry> {
+    let recovered = false;
+    for (;;) {
+      const attempt: { challenge?: LoginChallenge } = {};
+      try {
+        return (await this.passphraseLogin(scope, options, attempt)).entry;
+      } catch (e) {
+        const clockError =
+          (e instanceof HemForbiddenError && e.operation === "auth.getChallenge") ||
+          (e instanceof HemUnauthenticatedError &&
+            e.status === 401 &&
+            e.operation === "auth.login" &&
+            challengeShowsDrift(attempt.challenge?.exp));
+        if (!clockError || recovered) throw e;
+        recovered = true;
+        await this.recoverClock(e as HemError, options);
+      }
+    }
+  }
+
+  /**
+   * Runs the one recovery check-in for a login-type failure. Throws
+   * `original` when recovery is off or there is no relay, or with the
+   * check-in failure attached as its cause when the check-in fails.
+   */
+  async recoverClock(original: HemError, options: CallOptions): Promise<void> {
+    if (!this.clockRecovery || !this.#ctx.checkinRelay) throw original;
+    try {
+      await runCheckin(this.#ctx, options);
+    } catch (checkinError) {
+      Object.defineProperty(original, "cause", { value: checkinError, writable: true, configurable: true, enumerable: false });
+      throw original;
+    }
+  }
 
   constructor(ctx: ClientContext, options: SessionOptions) {
     this.#ctx = ctx;
     this.#passphrase = options.passphrase;
     this.lifetimeSeconds = options.lifetimeSeconds;
+    this.clockRecovery = options.clockRecovery !== false;
   }
 
   get loggedOut(): boolean {
@@ -140,9 +196,14 @@ export class Session {
    * One passphrase login for `scope`: challenge, derive (first time only),
    * agree, prove, submit. Errors never carry the passphrase, proof or token.
    */
-  async passphraseLogin(scope: string, options: CallOptions = {}): Promise<{ entry: TokenEntry; challenge: LoginChallenge }> {
+  async passphraseLogin(
+    scope: string,
+    options: CallOptions = {},
+    attempt: { challenge?: LoginChallenge } = {},
+  ): Promise<{ entry: TokenEntry; challenge: LoginChallenge }> {
     this.#assertCredential();
     const challenge = await getChallenge(this.#ctx, options);
+    attempt.challenge = challenge;
     const key = await this.#loginKey(challenge.eid);
     let spk: Uint8Array;
     try {

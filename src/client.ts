@@ -96,7 +96,11 @@ export class HemClient {
     const checkinRelay =
       options.checkinRelay === undefined ? new EncedoCheckinRelay() : checkRelay(options.checkinRelay, "checkinRelay", ["exchange"]);
     const ctx = { transport, checkinRelay } as ClientContext;
-    ctx.session = new Session(ctx, { passphrase: options.passphrase, lifetimeSeconds });
+    ctx.session = new Session(ctx, {
+      passphrase: options.passphrase,
+      lifetimeSeconds,
+      clockRecovery: options.clockRecovery,
+    });
     this.auth = new AuthApiImpl(ctx);
     this.system = new SystemApiImpl(ctx);
     this.keys = new KeysApiImpl(ctx);
