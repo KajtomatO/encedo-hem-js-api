@@ -1,7 +1,7 @@
 ---
 id: REQ-KEY-005
 title: Key type presented as flags and algorithm
-status: approved
+status: verified
 priority: must
 revision: 1
 source: ref/api/hem-api-1.2.2.yaml; https://github.com/KajtomatO/encedo-hem-c-api

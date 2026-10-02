@@ -1,7 +1,7 @@
 ---
 id: REQ-KEY-004
 title: Paged key listing
-status: approved
+status: verified
 priority: must
 revision: 1
 source: start_point §3; start_point M1.4; ref/api/hem-api-1.2.2.yaml; https://github.com/KajtomatO/encedo-hem-c-api
