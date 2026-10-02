@@ -89,7 +89,7 @@ Decisions already made and not up for re-litigation. REQs cite these.
 | D3 | Only `fetch` and Web Crypto are used as platform APIs; `src/` imports nothing from `node:`. | [BRIEF] G3 |
 | D4 | Minimum Node.js version is 24. Browsers are supported wherever Web Crypto provides X25519. | user decision 2026-10-02 |
 | D5 | Toolchain: npm, `tsc` for the build, Vitest for unit tests (run in Node and in a headless browser). All of it is development-only. | user decision 2026-10-02 |
-| D6 | The login KDF is PBKDF2-HMAC-SHA256 only (600 000 iterations, 32-byte output, salt = the challenge `eid` as its raw string). Argon2 is not supported: the description of an Argon2 derivation attributed to Encedo Manager in [DOC] and in older [C-SDK] text is incorrect and is ignored. There is no KDF hook and no raw-secret credential. | user decision 2026-10-02; parameters from [C-SDK] |
+| D6 | The login KDF is PBKDF2-HMAC-SHA256 only (600 000 iterations, 32-byte output, salt = the challenge `eid` as its raw string). Argon2 is not supported: the description of an Argon2 derivation attributed to Encedo Manager in [DOC] and in older [C-SDK] text is incorrect and is ignored. There is no KDF hook and no raw-secret credential. This exclusion is re-reviewed before M1B starts (§11, risk 14). | user decision 2026-10-02; parameters from [C-SDK] |
 | D7 | Default relays for the Encedo cloud (check-in backend and mobile-approval broker at `api.encedo.com`) ship with the library behind small interfaces, so a caller can replace or disable them. | user decision 2026-10-02 |
 | D8 | Each milestone is split into an **A** part (implementation and unit tests, no device) and a **B** part (tests and verification on hardware, with user interaction). Order is strict: M1A → M1B → M2A → M2B → M3A → M3B. | user decision 2026-10-02 |
 | D9 | Requirements for all three milestones are drafted at bootstrap; each stays `draft` until a human approves it. | user decision 2026-10-02 |
@@ -546,8 +546,9 @@ strict sequence (D8). Scope comes from [BRIEF] §3–§5.
   REQ-SYS-001…007, REQ-KEY-001…005, REQ-OPS-001…003, REQ-TEST-001…002,
   REQ-BUILD-001…005.
   **Gate:** A gate (§8); the login vector reproduces byte for byte.
-- **M1B — MVP: hardware verification.** Starts with defining the device
-  and its test policy (D10) and drafting the requirement for it. Then the
+- **M1B — MVP: hardware verification.** Starts with two reviews: defining
+  the device and its test policy (D10) and drafting the requirement for it;
+  and re-reviewing the exclusion of Argon2 (D6; §11, risk 14). Then the
   integration harness and live runs of everything in [BRIEF] §3 "Complete
   when": unattended passphrase login; create a root key and find it by
   description; HMAC; wrap and unwrap; health; check-in. Attended: approve,
@@ -593,7 +594,7 @@ strict sequence (D8). Scope comes from [BRIEF] §3–§5.
 | Q3 | Check-in backend and its interface | RESOLVED (2026-10-02) | `https://api.encedo.com/checkin`; the device's reply is posted to it and its reply is posted back to the device (§6) [C-SDK]. Default relay ships (D7). |
 | Q4 | How the device's TLS certificate is trusted | RESOLVED for the dev device (2026-10-02) | Public-CA certificate for `my.ence.do` [C-SDK]; no TLS setting in the library; other cases through the caller's `fetch` (§7). |
 | Q5 | Throughput, concurrent connections, token limits | PARTIALLY RESOLVED (2026-10-02) | No limit is documented in any source. Known: TCP closed per response, stalls under sustained load, up to 8 paired apps [C-SDK]. Parallel requests are untested, so the client serialises (§7). Open for M1B. |
-| Q6 | Who is responsible for the CORS allow-list | PROPOSED (2026-10-02) | The caller configures the device; the library documents it and reports 412 distinctly (§7). Becomes fixed when REQ-NET-011 is approved. |
+| Q6 | Who is responsible for the CORS allow-list | RESOLVED (2026-10-02) | The caller configures the device; the library documents it and reports 412 distinctly (§7). Fixed by the approval of REQ-NET-011. |
 | Q7 | Which endpoints diagnostic firmware adds | RESOLVED (2026-10-02) | Everything under `/api/diag/`, present only on firmware whose version ends in `-DIAG`. [DOC] names seven endpoints; [C-SDK] counts nine. The exclusion is stated by path prefix, so the difference does not matter. |
 
 ### Risks
@@ -643,3 +644,11 @@ strict sequence (D8). Scope comes from [BRIEF] §3–§5.
     decision before the 0.1.0 release.
 13. **Node 24 is not installed on the development machine** (2026-10-02).
     M1A cannot build or test until it is.
+14. **The exclusion of Argon2 is to be re-reviewed.** D6 rests on the
+    user's statement of 2026-10-02 that Encedo Manager does not use Argon2,
+    while [DOC] and older [C-SDK] text describe such a derivation; the
+    sources still disagree. *Resolved by:* a review before M1B starts (user
+    request 2026-10-02): confirm how the M1B test device was initialised,
+    and whether any device this library has to support needs a derivation
+    other than PBKDF2. If one does, REQ-AUTH-003 changes through the §6.2
+    impact analysis.
