@@ -63,3 +63,21 @@ describe("operation documentation", () => {
     ]);
   });
 });
+
+describe("token handling in the public API", () => {
+  // verifies: REQ-AUTH-005
+  it("no namespace operation takes a token or a scope for an authenticated call", () => {
+    const { declarations } = readSurface(dist);
+    const offenders: string[] = [];
+    for (const [name, decl] of declarations) {
+      if (!/Api$/.test(name)) continue;
+      for (const line of decl.lines) if (/\btoken\??:|\bbearer/i.test(line)) offenders.push(`${name}: ${line}`);
+    }
+    // params types of key and crypto operations carry no token or scope either
+    for (const t of ["CreateKeyParams", "SearchKeysParams", "ListKeysParams", "HmacParams", "WrapParams", "UnwrapParams"]) {
+      for (const line of declarations.get(t)?.lines ?? []) if (/\b(token|scope)\??:/.test(line)) offenders.push(`${t}: ${line}`);
+    }
+    expect(offenders).toEqual([]);
+  });
+});
+

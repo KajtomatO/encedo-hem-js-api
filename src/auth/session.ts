@@ -8,7 +8,6 @@ import {
   HemError,
   HemForbiddenError,
   HemProtocolError,
-  HemTlsRequiredError,
   HemUnauthenticatedError,
   errorFromStatus,
 } from "../errors.js";
@@ -177,12 +176,8 @@ export class Session {
    * new one obtained and the request repeated once. Error statuses are mapped.
    */
   async authorized(req: DeviceRequest, scope: string): Promise<DeviceResponse> {
-    if (req.requiresTls && !this.#ctx.transport.secure) {
-      // refuse before logging in: nothing is sent at all
-      throw new HemTlsRequiredError(`${req.operation}: refused over plain HTTP; the device URL must use https:`, {
-        operation: req.operation,
-      });
-    }
+    // refuse before logging in, so that a refused request causes no traffic at all
+    this.#ctx.transport.preflight(req);
     for (let attempt = 0; ; attempt++) {
       const entry = await this.token(scope, req);
       const res = await this.#ctx.transport.send({ ...req, token: entry.token });

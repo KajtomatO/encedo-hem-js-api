@@ -1,5 +1,7 @@
 // Public entry point of encedo-hem-js-api.
 // implements: REQ-BUILD-002 — the package declares no dependencies; src/ imports only its own modules
+// implements: REQ-API-008 — this list is the public surface; it only grows (snapshot: tests/static/public-surface.txt)
+// implements: REQ-API-007 — every namespace operation carries @scope and @milestone in its TSDoc
 
 export { HemClient } from "./client.js";
 export type { HemClientOptions, MobileApprovalOptions } from "./client.js";

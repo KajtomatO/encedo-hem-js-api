@@ -93,12 +93,7 @@ export class Transport {
    * Requests of one transport are sent one at a time, in call order.
    */
   async send(req: DeviceRequest): Promise<DeviceResponse> {
-    if (req.requiresTls && !this.secure) {
-      throw new HemTlsRequiredError(`${req.operation}: refused over plain HTTP; the device URL must use https:`, {
-        operation: req.operation,
-      });
-    }
-    const prepared = this.prepare(req);
+    const prepared = this.preflight(req);
     const { signal } = req;
     if (signal?.aborted) throw abortError(req.operation, signal);
     return new Promise<DeviceResponse>((resolve, reject) => {
@@ -134,6 +129,20 @@ export class Transport {
     } finally {
       this.#busy = false;
     }
+  }
+
+  /**
+   * Every check made before a request may leave: the HTTPS guard, the time
+   * limit and the 7300-byte body limit. Callers that do work before sending
+   * (such as logging in) run it first, so a refused request causes no traffic.
+   */
+  preflight(req: DeviceRequest): { url: string; init: RequestInit; timeoutMs: number } {
+    if (req.requiresTls && !this.secure) {
+      throw new HemTlsRequiredError(`${req.operation}: refused over plain HTTP; the device URL must use https:`, {
+        operation: req.operation,
+      });
+    }
+    return this.prepare(req);
   }
 
   /** Validates and serialises a request; throws before anything is sent. */
