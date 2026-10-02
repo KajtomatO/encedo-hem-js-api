@@ -1,0 +1,18 @@
+Input references:
+(1) C:\repo\open-mercato\.ai\specs\analysis\ANALYSIS-2026-10-01-encedo-hem-hsm-integration.md
+(2) C:\repo\encedo-hem-js-api\ref\api\hem-api-1.2.2.yaml
+
+I want to create a JS library / plugin that can interract with Encedo HEM device using REST API.
+This library / plugin will later be used to develop an integration to open-mercato as investigated in (1).
+It should be only JS and not use PKCS#11.
+Use (2) as REST api reference.
+
+I want you to define a high level reqirements ONLY; especialy what REST api endopints have to be impplemented.
+This requirements should specify at least three milestones:
+- MVP: all endopints required for open-mercato impplemented
+- Full spec for daily usage + reading logs.
+- Full spec excluding diag endpoints [Diag endpoints exists only in diag version of firmware and may not be defined in (2)] 
+
+Notes: Do not reference (1) file in reqiremenmts - it is local only.
+Remember: I only need High Level reqirements, wirte them in reqirements.md file.
+Ask Questions.
