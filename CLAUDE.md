@@ -13,9 +13,13 @@ AI-assisted requirements and workplan process.
   every commit subject during a step starts with `[STEP-<ID>]`.
 - Tag code `// implements: REQ-…` and tests `// verifies: REQ-…`;
   `requirements/TRACE.md` is generated, never hand-edited.
-- Claims about device or API behavior cite a §8 source (device, encedo-hem-c-api,
-  `ref/api/hem-api-1.2.2.yaml`, encedo-hem-api-doc) — never memory. Unresolved
+- Claims about device or API behavior cite a §8 source (device,
+  https://github.com/KajtomatO/encedo-hem-c-api, `ref/api/hem-api-1.2.2.yaml`,
+  https://github.com/KajtomatO/encedo-hem-api-doc) — never memory. Unresolved
   questions stay as unchecked acceptance criteria.
+- Never reference files outside this repo — no local machine paths and no links
+  to individual files in other repos. Other repos may be cited only as a whole,
+  by their GitHub URL.
 - Never run disruptive tests (reboot, shutdown, wipe, firmware/UI upgrade,
   provisioning) automatically.
 - `requirements/start_point/` is input material, not requirements.

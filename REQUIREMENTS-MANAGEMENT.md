@@ -297,14 +297,19 @@ Claude SHOULD propose capturing it as a REQ on the spot.
   | Source | Authoritative for |
   |---|---|
   | the real HEM device (dev machine, later CI) | final arbiter for all device behavior; wins over every document |
-  | encedo-hem-c-api (sibling repo, `../encedo-hem-c-api`) | device-verified client reference: auth flow and KDF facts (its `REQ-AUTH-*`), firmware quirks (`KNOWN-ISSUES.md`), endpoint coverage dispositions (`docs/COVERAGE.md`) |
+  | https://github.com/KajtomatO/encedo-hem-c-api | device-verified C client for the same API: auth flow and KDF facts, recorded firmware quirks, endpoint coverage dispositions |
   | `ref/api/hem-api-1.2.2.yaml` | HEM REST API (fw 1.2.2): endpoints, request/response payloads, scopes, error codes |
-  | https://github.com/KajtomatO/encedo-hem-api-doc | HEM REST API prose documentation; its `DISCREPANCIES.md` records known doc/implementation divergences |
+  | https://github.com/KajtomatO/encedo-hem-api-doc | HEM REST API prose documentation, incl. its record of known doc/implementation divergences |
   | `requirements/start_point/` (`goal.txt`, `high-level-requirements.md`) | the user's brief: scope, milestones, consumer needs |
 
   Precedence when sources conflict: device > encedo-hem-c-api > OpenAPI
   yaml > API doc repo; conflicts are recorded in the affected REQ, not
   silently resolved. `start_point/` states intent, not device behavior.
+
+- **No references outside this repo.** Files in this repo never reference
+  local machine paths or individual files in other repositories. Other
+  repos are cited only as a whole, by their GitHub URL (as in the table
+  above); summarize what was found there instead of linking the file.
 
 - **No silent state changes.** Every status transition, folder move, or
   generated-file update appears in a commit and/or a chat report.

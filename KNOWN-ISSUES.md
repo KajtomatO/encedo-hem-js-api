@@ -1,10 +1,10 @@
 # Known issues
 
 Device, firmware and library defects found while building this library.
-Issues already recorded in the sibling C SDK
-(`../encedo-hem-c-api/KNOWN-ISSUES.md`, fw 1.2.2) are cited from there, not
-copied; add an entry here only when it affects this library differently or
-is newly found.
+Issues already recorded by the C SDK
+(https://github.com/KajtomatO/encedo-hem-c-api, fw 1.2.2) are cited from that
+repo, not copied; add an entry here only when it affects this library
+differently or is newly found.
 
 <!-- Entry format (newest OPEN entries first, RESOLVED at the bottom):
 
