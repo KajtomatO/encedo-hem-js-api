@@ -44,6 +44,16 @@ FetchLike
 FetchLike: export type FetchLike = (input: string, init: RequestInit) => Promise<Response>;
 HEM_API_VERSION
 HEM_API_VERSION: export declare const HEM_API_VERSION = "1.2.2";
+HealthReport
+HealthReport: export interface HealthReport {
+HealthReport: readonly clockSet: boolean;
+HealthReport: readonly error: HemError | undefined;
+HealthReport: readonly healthy: boolean;
+HealthReport: readonly initialised: boolean;
+HealthReport: readonly reachable: boolean;
+HealthReport: readonly selfTestOk: boolean;
+HealthReport: readonly status: SystemStatus | undefined;
+HealthReport: }
 HemAbortError
 HemAbortError: export declare class HemAbortError extends HemError {
 HemAbortError: readonly code = "ABORTED";
@@ -193,4 +203,37 @@ SessionInfo: readonly scope: string;
 SessionInfo: }
 SystemApi
 SystemApi: export interface SystemApi {
+SystemApi: health(options?: CallOptions): Promise<HealthReport>;
+SystemApi: status(options?: CallOptions): Promise<SystemStatus>;
+SystemApi: version(options?: CallOptions): Promise<SystemVersion>;
 SystemApi: }
+SystemStatus
+SystemStatus: export interface SystemStatus {
+SystemStatus: readonly clockSet: boolean;
+SystemStatus: readonly ctx: number;
+SystemStatus: readonly flsState: number;
+SystemStatus: readonly format: string | undefined;
+SystemStatus: readonly fwUpgrade: boolean;
+SystemStatus: readonly hostname: string | undefined;
+SystemStatus: readonly https: boolean | undefined;
+SystemStatus: readonly initialised: boolean;
+SystemStatus: readonly storage: readonly string[] | undefined;
+SystemStatus: readonly temp: number;
+SystemStatus: readonly time: number | undefined;
+SystemStatus: readonly trustedTime: boolean;
+SystemStatus: readonly ts: string | undefined;
+SystemStatus: readonly uptime: number;
+SystemStatus: }
+SystemVersion
+SystemVersion: export interface SystemVersion {
+SystemVersion: readonly blk: Uint8Array | undefined;
+SystemVersion: readonly bls: Uint8Array | undefined;
+SystemVersion: readonly blv: string | undefined;
+SystemVersion: readonly fwk: Uint8Array;
+SystemVersion: readonly fws: Uint8Array;
+SystemVersion: readonly fwv: string;
+SystemVersion: readonly hwv: string;
+SystemVersion: readonly sdCid: string | undefined;
+SystemVersion: readonly sdCsd: string | undefined;
+SystemVersion: readonly uis: Uint8Array | undefined;
+SystemVersion: }

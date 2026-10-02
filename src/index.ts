@@ -7,7 +7,7 @@ export { HEM_API_VERSION } from "./version.js";
 export type { AuthApi, SessionInfo } from "./api/auth.js";
 export type { LoginChallenge } from "./api/auth-calls.js";
 export type { HemRole } from "./auth/token.js";
-export type { SystemApi } from "./api/system.js";
+export type { SystemApi, SystemStatus, SystemVersion, HealthReport } from "./api/system.js";
 export type { KeysApi } from "./api/keymgmt.js";
 export type { CryptoApi } from "./api/crypto.js";
 export type { CheckinRelay } from "./relay/checkin.js";

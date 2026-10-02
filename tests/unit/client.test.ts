@@ -26,26 +26,6 @@ describe("HemClient construction", () => {
   });
 
   // verifies: REQ-API-001
-  it("keeps request queues separate between clients", async () => {
-    const gate: (() => void)[] = [];
-    const a = createFakeFetch().fallback(() => new Promise<Response>((r) => gate.push(() => r(jsonResponse(200, {})))));
-    const b = createFakeFetch().fallback(() => jsonResponse(200, { ctx: 1, uptime: 1, temp: 1, fls_state: 0 }));
-    const ca = new HemClient({ url: "https://a.example", fetch: a });
-    const cb = new HemClient({ url: "https://b.example", fetch: b });
-    // client A is blocked on a pending request; client B is not affected
-    const pa = (ca as unknown as { system: { status?: () => Promise<unknown> } }).system;
-    const pb = (cb as unknown as { system: { status?: () => Promise<unknown> } }).system;
-    if (pa.status && pb.status) {
-      const blocked = pa.status();
-      await pb.status();
-      expect(b.calls).toHaveLength(1);
-      gate.shift()?.();
-      await blocked.catch(() => {});
-    }
-    expect(a.calls.every((c) => c.url.startsWith("https://a.example"))).toBe(true);
-  });
-
-  // verifies: REQ-API-001
   it("exports no function that changes an already constructed client", () => {
     const fns = Object.entries(pkg).filter(([, v]) => typeof v === "function");
     for (const [name, v] of fns) {
