@@ -1,7 +1,7 @@
 ---
 id: REQ-API-006
 title: Tolerant parsing of success responses
-status: approved
+status: verified
 priority: must
 revision: 1
 source: ARCHITECTURE.md §6
