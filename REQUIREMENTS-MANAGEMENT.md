@@ -332,6 +332,10 @@ Claude SHOULD propose capturing it as a REQ on the spot.
   | https://github.com/KajtomatO/encedo-hem-api-doc | HEM REST API prose documentation, incl. its record of known doc/implementation divergences |
   | `requirements/start_point/` (`high-level-requirements.md`) | the user's brief: scope, milestones, consumer needs |
 
+  REQs and `ARCHITECTURE.md` abbreviate the middle three rows as **[C-SDK]**,
+  **[YAML]** and **[DOC]**, and the brief as **[BRIEF]** or `start_point`
+  followed by the item (`G6`, `M1.2`, `§6 Q4`).
+
   Precedence when sources conflict: device > encedo-hem-c-api > OpenAPI
   yaml > API doc repo; conflicts are recorded in the affected REQ, not
   silently resolved. `start_point/` states intent, not device behavior.
