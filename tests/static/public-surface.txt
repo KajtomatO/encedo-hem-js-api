@@ -57,6 +57,9 @@ CreateKeyParams: type: CreatableKeyType;
 CreateKeyParams: }
 CryptoApi
 CryptoApi: export interface CryptoApi {
+CryptoApi: hmac(params: HmacParams, options?: CallOptions): Promise<Uint8Array>;
+CryptoApi: unwrap(params: UnwrapParams, options?: CallOptions): Promise<Uint8Array>;
+CryptoApi: wrap(params: WrapParams, options?: CallOptions): Promise<Uint8Array>;
 CryptoApi: }
 ENCEDO_CHECKIN_URL
 ENCEDO_CHECKIN_URL: export declare const ENCEDO_CHECKIN_URL = "https://api.encedo.com/checkin";
@@ -208,6 +211,11 @@ HemValidationError: readonly code = "VALIDATION";
 HemValidationError: readonly parameter: string;
 HemValidationError: toJSON(): Record<string, unknown>;
 HemValidationError: }
+HmacParams
+HmacParams: export interface HmacParams {
+HmacParams: kid: string;
+HmacParams: message: Uint8Array;
+HmacParams: }
 KEY_ALGORITHMS
 KEY_ALGORITHMS: export declare const KEY_ALGORITHMS: readonly ["GENERIC_DER", "SECP256R1", "SECP384R1", "SECP521R1", "SECP256K1", "CURVE25519", "CURVE448", "ED25519", "ED448", "MLKEM512", "MLKEM768", "MLKEM1024", "MLDSA44", "MLDSA65", "MLDSA87", "SHA2-256", "SHA2-384", "SHA2-512", "SHA3-256", "SHA3-384", "SHA3-512", "AES128", "AES192", "AES256"];
 KEY_FLAGS
@@ -341,5 +349,23 @@ SystemVersion: readonly sdCid: string | undefined;
 SystemVersion: readonly sdCsd: string | undefined;
 SystemVersion: readonly uis: Uint8Array | undefined;
 SystemVersion: }
+UnwrapParams
+UnwrapParams: alg?: WrapAlgorithm | undefined;
+UnwrapParams: data: Uint8Array;
+UnwrapParams: export interface UnwrapParams {
+UnwrapParams: iv?: Uint8Array | undefined;
+UnwrapParams: kid: string;
+UnwrapParams: }
+WRAP_ALGORITHMS
+WRAP_ALGORITHMS: export declare const WRAP_ALGORITHMS: readonly ["AES128", "AES192", "AES256"];
+WrapAlgorithm
+WrapAlgorithm: export type WrapAlgorithm = (typeof WRAP_ALGORITHMS)[number];
+WrapParams
+WrapParams: alg?: WrapAlgorithm | undefined;
+WrapParams: data: Uint8Array;
+WrapParams: export interface WrapParams {
+WrapParams: iv?: Uint8Array | undefined;
+WrapParams: kid: string;
+WrapParams: }
 parseKeyType
 parseKeyType: export declare function parseKeyType(raw: string): KeyType;

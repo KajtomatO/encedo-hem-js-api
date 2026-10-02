@@ -22,7 +22,8 @@ export type {
 export { CREATABLE_KEY_TYPES, KEY_MODES } from "./api/keymgmt.js";
 export { parseKeyType, KEY_FLAGS, KEY_ALGORITHMS } from "./api/keytype.js";
 export type { KeyType, KeyFlag, KeyAlgorithm } from "./api/keytype.js";
-export type { CryptoApi } from "./api/crypto.js";
+export type { CryptoApi, HmacParams, WrapParams, UnwrapParams, WrapAlgorithm } from "./api/crypto.js";
+export { WRAP_ALGORITHMS } from "./api/crypto.js";
 export { EncedoCheckinRelay, ENCEDO_CHECKIN_URL } from "./relay/checkin.js";
 export type { CheckinRelay, EncedoCheckinRelayOptions } from "./relay/checkin.js";
 export type { RelayHttpOptions } from "./relay/http.js";
