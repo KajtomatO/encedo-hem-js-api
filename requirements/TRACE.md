@@ -2,138 +2,141 @@
 
 # Traceability matrix
 
-Generated: 2026-10-02 (requirements approved by the user on 2026-10-02 — no steps, no code yet.)
+Generated: 2026-10-02 (after the M1A decomposition — steps in `todo/`, no code yet.)
 
-Scan inputs: 117 REQ files (`requirements/`), 0 step files (`workplan/{todo,doing,done}/`). Code tags (`implements: REQ-`) scanned across `src/` (absent); test tags (`verifies:`/`supports: REQ-`) scanned across `tests/` (absent). Build and CI requirements are realised outside `src/` (`package.json`, `tsconfig.json`, `.github/workflows/`); those locations do not exist yet.
+Scan inputs: 117 REQ files (`requirements/`), 23 step files (`workplan/{todo,doing,done}/`: 23 todo, 0 doing, 0 done). Code tags (`implements: REQ-`) scanned across `src/` (absent); test tags (`verifies:`/`supports: REQ-`) scanned across `tests/` (absent). Build and CI requirements are realised outside `src/` (`package.json`, `tsconfig.json`, `vitest.config.ts`, `.github/workflows/`); those locations do not exist yet.
 
 | REQ | Title | Status | Priority | Architecture | Steps | Code | Tests |
 |---|---|---|---|---|---|---|---|
-| REQ-API-001 | Client object created from options, with no global state | approved | must | §4, §3 | — | — | — |
-| REQ-API-002 | Typed errors that identify the cause of a failure | approved | must | §4 | — | — | — |
-| REQ-API-003 | Error mapping independent of the response body | approved | must | §4, §2 | — | — | — |
-| REQ-API-004 | Binary values exchanged as byte arrays | approved | must | §4 | — | — | — |
-| REQ-API-005 | Inputs validated against the documented hard limits before sending | approved | must | §6, §2 | — | — | — |
-| REQ-API-006 | Tolerant parsing of success responses | approved | must | §6 | — | — | — |
-| REQ-API-007 | Every public operation documents its scope and milestone | approved | must | §4 | — | — | — |
-| REQ-API-008 | Public API only grows between releases | approved | must | §4, §1 | — | — | — |
-| REQ-API-009 | Secrets never logged, stored or put into error messages | approved | must | §1, §5.2 | — | — | — |
-| REQ-API-010 | Targeted API version exported | approved | must | §1, §4 | — | — | — |
-| REQ-API-011 | Clear error for operations the hardware does not provide | approved | must | §6, §2 | — | — | — |
-| REQ-API-012 | Destructive actions reachable only through dedicated calls | approved | must | §4 | — | — | — |
-| REQ-API-013 | Dropped connection after a restart request is not an error | approved | must | §6 | — | — | — |
-| REQ-API-014 | Coverage document for all 58 operations | approved | must | §6, §10 | — | — | — |
-| REQ-AUTH-001 | Unattended passphrase login | approved | must | §5.1 | — | — | — |
-| REQ-AUTH-002 | Login proof encoding (eJWT) | approved | must | §5.1 | — | — | — |
-| REQ-AUTH-003 | PBKDF2 as the only login key derivation | approved | must | §5.1, §1 | — | — | — |
-| REQ-AUTH-004 | One cached token per scope | approved | must | §5.2 | — | — | — |
-| REQ-AUTH-005 | Scope chosen and token attached by the library | approved | must | §5.2, §6 | — | — | — |
-| REQ-AUTH-006 | Requested token lifetime | approved | must | §5.2, §11 | — | — | — |
-| REQ-AUTH-007 | Renewal before expiry | approved | must | §5.2 | — | — | — |
-| REQ-AUTH-008 | Re-authentication after a 401 | approved | must | §5.2 | — | — | — |
-| REQ-AUTH-009 | Login recovery when the device clock is wrong | approved | must | §5.2, §11 | — | — | — |
-| REQ-AUTH-010 | User and master roles | approved | must | §5.2, §11 | — | — | — |
-| REQ-AUTH-011 | Credentials held in memory and discarded on logout | approved | must | §5.2 | — | — | — |
-| REQ-AUTH-012 | No token on operations that need none | approved | must | §5.2, §2 | — | — | — |
-| REQ-AUTH-013 | Concurrent calls share one login | approved | should | §5.2 | — | — | — |
-| REQ-AUTH-014 | Mobile approval step 1 — authorization request | approved | must | §5.3 | — | — | — |
-| REQ-AUTH-015 | Mobile approval step 2 — redeem the reply | approved | must | §5.3 | — | — | — |
-| REQ-AUTH-016 | Replaceable approval relay | approved | must | §5.3, §3 | — | — | — |
-| REQ-AUTH-017 | Default approval relay for the Encedo broker | approved | must | §5.3, §11 | — | — | — |
-| REQ-AUTH-018 | Approval attempts end as approved, rejected or timed out | approved | must | §5.3 | — | — | — |
-| REQ-AUTH-019 | Mobile approval as the client's login mode | approved | must | §5.3 | — | — | — |
-| REQ-AUTH-020 | Recovery when the broker rejects a request for clock drift | approved | should | §5.3 | — | — | — |
-| REQ-AUTH-021 | Provisioning challenge | approved | must | §6, §5 | — | — | — |
-| REQ-AUTH-022 | Device provisioning | approved | must | §6, §5, §11 | — | — | — |
-| REQ-AUTH-023 | Mobile-app pairing step 1 | approved | must | §5.3, §6 | — | — | — |
-| REQ-AUTH-024 | Mobile-app pairing step 2 | approved | must | §5.3, §6 | — | — | — |
-| REQ-AUTH-025 | Proof that the device holds its identity key | approved | must | §5.3, §6 | — | — | — |
-| REQ-AUTH-026 | Pairing through a replaceable relay | approved | must | §5.3, §6 | — | — | — |
-| REQ-BUILD-001 | TypeScript source published as ESM with type declarations | approved | must | §1, §9 | — | — | — |
-| REQ-BUILD-002 | No runtime dependencies | approved | must | §1 | — | — | — |
-| REQ-BUILD-003 | Only APIs present in both Node.js and browsers | approved | must | §1, §3 | — | — | — |
-| REQ-BUILD-004 | Node.js 24 as the minimum version | approved | must | §1 | — | — | — |
-| REQ-BUILD-005 | Continuous integration for build and unit tests | approved | must | §8, §9 | — | — | — |
-| REQ-BUILD-006 | A versioned release at the end of each milestone | approved | must | §4, §10 | — | — | — |
-| REQ-KEY-001 | Generate a key on the device | approved | must | §6 | — | — | — |
-| REQ-KEY-002 | Read one key | approved | must | §6 | — | — | — |
-| REQ-KEY-003 | Find keys by description | approved | must | §6, §11 | — | — | — |
-| REQ-KEY-004 | Paged key listing | approved | must | §6 | — | — | — |
-| REQ-KEY-005 | Key type presented as flags and algorithm | approved | must | §6 | — | — | — |
-| REQ-KEY-006 | Change a key's label or description | approved | must | §6 | — | — | — |
-| REQ-KEY-007 | Delete a key | approved | must | §6 | — | — | — |
-| REQ-KEY-008 | Import an external public key | approved | must | §6 | — | — | — |
-| REQ-KEY-009 | Derive a key by ECDH and HKDF | approved | must | §6 | — | — | — |
-| REQ-NET-001 | Caller-supplied fetch implementation | approved | must | §7 | — | — | — |
-| REQ-NET-002 | Configurable device address | approved | must | §7 | — | — | — |
-| REQ-NET-003 | Key-management and crypto calls refused over plain HTTP | approved | must | §7, §6 | — | — | — |
-| REQ-NET-004 | Time limit on every call | approved | must | §7 | — | — | — |
-| REQ-NET-005 | Cancellation of every call | approved | must | §7 | — | — | — |
-| REQ-NET-006 | Transport failures classified | approved | must | §7, §4 | — | — | — |
-| REQ-NET-007 | One device request at a time | approved | must | §7, §11 | — | — | — |
-| REQ-NET-008 | Optional minimum interval between requests | approved | should | §7 | — | — | — |
-| REQ-NET-009 | Only headers the device's CORS policy allows | approved | must | §7 | — | — | — |
-| REQ-NET-010 | Redirects not followed | approved | should | §7 | — | — | — |
-| REQ-NET-011 | Browser use and the device's origin allow-list documented | approved | must | §7, §11 | — | — | — |
-| REQ-NET-012 | Custom TLS trust through the caller's fetch documented | approved | must | §7, §11 | — | — | — |
-| REQ-OPS-001 | HMAC with a stored key | approved | must | §6 | — | — | — |
-| REQ-OPS-002 | AES key wrap | approved | must | §6 | — | — | — |
-| REQ-OPS-003 | AES key unwrap | approved | must | §6 | — | — | — |
-| REQ-OPS-004 | Verify operations return valid or invalid | approved | must | §4, §6 | — | — | — |
-| REQ-OPS-005 | Verify an HMAC | approved | must | §6 | — | — | — |
-| REQ-OPS-006 | ECDSA and EdDSA signature | approved | must | §6 | — | — | — |
-| REQ-OPS-007 | Verify an ECDSA or EdDSA signature | approved | must | §6 | — | — | — |
-| REQ-OPS-008 | AES encryption | approved | must | §6 | — | — | — |
-| REQ-OPS-009 | AES decryption | approved | must | §6 | — | — | — |
-| REQ-OPS-010 | ECDH shared secret | approved | must | §6 | — | — | — |
-| REQ-OPS-011 | ML-KEM encapsulation | approved | must | §6 | — | — | — |
-| REQ-OPS-012 | ML-KEM decapsulation | approved | must | §6 | — | — | — |
-| REQ-OPS-013 | ML-DSA signature | approved | must | §6 | — | — | — |
-| REQ-OPS-014 | Verify an ML-DSA signature | approved | must | §6, §11 | — | — | — |
-| REQ-OPS-015 | ECDH-agreed keys for HMAC, cipher and wrap | approved | must | §6 | — | — | — |
-| REQ-SYS-001 | Device status | approved | must | §6 | — | — | — |
-| REQ-SYS-002 | Hardware and firmware version | approved | must | §6 | — | — | — |
-| REQ-SYS-003 | Single health operation | approved | must | §6 | — | — | — |
-| REQ-SYS-004 | Check-in step 1 | approved | must | §6 | — | — | — |
-| REQ-SYS-005 | Check-in step 2 | approved | must | §6 | — | — | — |
-| REQ-SYS-006 | Check-in relay, replaceable, with a default for the Encedo backend | approved | must | §6, §3, §11 | — | — | — |
-| REQ-SYS-007 | One-call check-in | approved | must | §6 | — | — | — |
-| REQ-SYS-008 | Read device configuration | approved | must | §6 | — | — | — |
-| REQ-SYS-009 | Audit-log verification key | approved | must | §6 | — | — | — |
-| REQ-SYS-010 | Paged audit-log listing | approved | must | §6 | — | — | — |
-| REQ-SYS-011 | Audit-log download as raw content | approved | must | §6 | — | — | — |
-| REQ-SYS-012 | Change device configuration | approved | must | §6 | — | — | — |
-| REQ-SYS-013 | User passphrase change | approved | must | §6, §11 | — | — | — |
-| REQ-SYS-014 | TLS certificate and key import | approved | must | §6, §11 | — | — | — |
-| REQ-SYS-015 | Certificate signing request | approved | must | §6 | — | — | — |
-| REQ-SYS-016 | Device wipe | approved | must | §6 | — | — | — |
-| REQ-SYS-017 | Operations that work with and without a token | approved | must | §6 | — | — | — |
-| REQ-SYS-018 | Secure-element attestation material | approved | must | §6 | — | — | — |
-| REQ-SYS-019 | Write the attestation certificate | approved | must | §6 | — | — | — |
-| REQ-SYS-020 | Firmware image upload | approved | must | §6, §7 | — | — | — |
-| REQ-SYS-021 | Firmware verification as start-and-poll | approved | must | §6 | — | — | — |
-| REQ-SYS-022 | Firmware install | approved | must | §6 | — | — | — |
-| REQ-SYS-023 | Dashboard archive upload | approved | must | §6, §7 | — | — | — |
-| REQ-SYS-024 | Dashboard verification as start-and-poll | approved | must | §6 | — | — | — |
-| REQ-SYS-025 | Dashboard activation | approved | must | §6 | — | — | — |
-| REQ-SYS-026 | Reboot into USB mode | approved | must | §6 | — | — | — |
-| REQ-SYS-027 | Run the self-test suite | approved | must | §6 | — | — | — |
-| REQ-SYS-028 | Device shutdown | approved | must | §6 | — | — | — |
-| REQ-SYS-029 | Device reboot | approved | must | §6 | — | — | — |
-| REQ-SYS-030 | Hide a storage slot | approved | must | §6 | — | — | — |
-| REQ-SYS-031 | Expose a storage slot | approved | must | §6 | — | — | — |
-| REQ-TEST-001 | Unit tests run without a device | approved | must | §8, §9 | — | — | — |
-| REQ-TEST-002 | Unit tests pass in Node.js and in a browser | approved | must | §8 | — | — | — |
-| REQ-TEST-003 | Device tests run only when explicitly configured | approved | must | §8, §1 | — | — | — |
-| REQ-TEST-004 | Disruptive tests never run automatically | approved | must | §8, §1 | — | — | — |
+| REQ-API-001 | Client object created from options, with no global state | approved | must | §4, §3 | STEP-M1A-070 (todo) | — | — |
+| REQ-API-002 | Typed errors that identify the cause of a failure | approved | must | §4 | STEP-M1A-030 (todo) | — | — |
+| REQ-API-003 | Error mapping independent of the response body | approved | must | §4, §2 | STEP-M1A-030 (todo) | — | — |
+| REQ-API-004 | Binary values exchanged as byte arrays | approved | must | §4 | STEP-M1A-040 (todo) | — | — |
+| REQ-API-005 | Inputs validated against the documented hard limits before sending | approved | must | §6, §2 | STEP-M1A-040 (todo), STEP-M1A-140 (todo), STEP-M1A-150 (todo), STEP-M1A-180 (todo) | — | — |
+| REQ-API-006 | Tolerant parsing of success responses | approved | must | §6 | STEP-M1A-110 (todo) | — | — |
+| REQ-API-007 | Every public operation documents its scope and milestone | approved | must | §4 | STEP-M1A-070 (todo), STEP-M1A-180 (todo) | — | — |
+| REQ-API-008 | Public API only grows between releases | approved | must | §4, §1 | STEP-M1A-070 (todo) | — | — |
+| REQ-API-009 | Secrets never logged, stored or put into error messages | approved | must | §1, §5.2 | STEP-M1A-020 (todo), STEP-M1A-090 (todo), STEP-M1A-180 (todo) | — | — |
+| REQ-API-010 | Targeted API version exported | approved | must | §1, §4 | STEP-M1A-070 (todo), STEP-M1A-180 (todo) | — | — |
+| REQ-API-011 | Clear error for operations the hardware does not provide | approved | must | §6, §2 | STEP-M2A-000 (todo) | — | — |
+| REQ-API-012 | Destructive actions reachable only through dedicated calls | approved | must | §4 | STEP-M3A-000 (todo) | — | — |
+| REQ-API-013 | Dropped connection after a restart request is not an error | approved | must | §6 | STEP-M3A-000 (todo) | — | — |
+| REQ-API-014 | Coverage document for all 58 operations | approved | must | §6, §10 | STEP-M3A-000 (todo) | — | — |
+| REQ-AUTH-001 | Unattended passphrase login | approved | must | §5.1 | STEP-M1A-090 (todo) | — | — |
+| REQ-AUTH-002 | Login proof encoding (eJWT) | approved | must | §5.1 | STEP-M1A-080 (todo) | — | — |
+| REQ-AUTH-003 | PBKDF2 as the only login key derivation | approved | must | §5.1, §1 | STEP-M1A-080 (todo) | — | — |
+| REQ-AUTH-004 | One cached token per scope | approved | must | §5.2 | STEP-M1A-100 (todo) | — | — |
+| REQ-AUTH-005 | Scope chosen and token attached by the library | approved | must | §5.2, §6 | STEP-M1A-100 (todo), STEP-M1A-180 (todo) | — | — |
+| REQ-AUTH-006 | Requested token lifetime | approved | must | §5.2, §11 | STEP-M1A-090 (todo) | — | — |
+| REQ-AUTH-007 | Renewal before expiry | approved | must | §5.2 | STEP-M1A-100 (todo) | — | — |
+| REQ-AUTH-008 | Re-authentication after a 401 | approved | must | §5.2 | STEP-M1A-100 (todo) | — | — |
+| REQ-AUTH-009 | Login recovery when the device clock is wrong | approved | must | §5.2, §11 | STEP-M1A-130 (todo) | — | — |
+| REQ-AUTH-010 | User and master roles | approved | must | §5.2, §11 | STEP-M1A-100 (todo) | — | — |
+| REQ-AUTH-011 | Credentials held in memory and discarded on logout | approved | must | §5.2 | STEP-M1A-090 (todo) | — | — |
+| REQ-AUTH-012 | No token on operations that need none | approved | must | §5.2, §2 | STEP-M1A-100 (todo), STEP-M1A-180 (todo) | — | — |
+| REQ-AUTH-013 | Concurrent calls share one login | approved | should | §5.2 | STEP-M1A-100 (todo) | — | — |
+| REQ-AUTH-014 | Mobile approval step 1 — authorization request | approved | must | §5.3 | STEP-M1A-160 (todo) | — | — |
+| REQ-AUTH-015 | Mobile approval step 2 — redeem the reply | approved | must | §5.3 | STEP-M1A-160 (todo) | — | — |
+| REQ-AUTH-016 | Replaceable approval relay | approved | must | §5.3, §3 | STEP-M1A-160 (todo) | — | — |
+| REQ-AUTH-017 | Default approval relay for the Encedo broker | approved | must | §5.3, §11 | STEP-M1A-160 (todo) | — | — |
+| REQ-AUTH-018 | Approval attempts end as approved, rejected or timed out | approved | must | §5.3 | STEP-M1A-170 (todo) | — | — |
+| REQ-AUTH-019 | Mobile approval as the client's login mode | approved | must | §5.3 | STEP-M1A-170 (todo) | — | — |
+| REQ-AUTH-020 | Recovery when the broker rejects a request for clock drift | approved | should | §5.3 | STEP-M1A-170 (todo) | — | — |
+| REQ-AUTH-021 | Provisioning challenge | approved | must | §6, §5 | STEP-M3A-000 (todo) | — | — |
+| REQ-AUTH-022 | Device provisioning | approved | must | §6, §5, §11 | STEP-M3A-000 (todo) | — | — |
+| REQ-AUTH-023 | Mobile-app pairing step 1 | approved | must | §5.3, §6 | STEP-M3A-000 (todo) | — | — |
+| REQ-AUTH-024 | Mobile-app pairing step 2 | approved | must | §5.3, §6 | STEP-M3A-000 (todo) | — | — |
+| REQ-AUTH-025 | Proof that the device holds its identity key | approved | must | §5.3, §6 | STEP-M3A-000 (todo) | — | — |
+| REQ-AUTH-026 | Pairing through a replaceable relay | approved | must | §5.3, §6 | STEP-M3A-000 (todo) | — | — |
+| REQ-BUILD-001 | TypeScript source published as ESM with type declarations | approved | must | §1, §9 | STEP-M1A-010 (todo) | — | — |
+| REQ-BUILD-002 | No runtime dependencies | approved | must | §1 | STEP-M1A-010 (todo) | — | — |
+| REQ-BUILD-003 | Only APIs present in both Node.js and browsers | approved | must | §1, §3 | STEP-M1A-020 (todo) | — | — |
+| REQ-BUILD-004 | Node.js 24 as the minimum version | approved | must | §1 | STEP-M1A-010 (todo), STEP-M1A-180 (todo) | — | — |
+| REQ-BUILD-005 | Continuous integration for build and unit tests | approved | must | §8, §9 | STEP-M1A-020 (todo) | — | — |
+| REQ-BUILD-006 | A versioned release at the end of each milestone | approved | must | §4, §10 | STEP-M1B-000 (todo) | — | — |
+| REQ-KEY-001 | Generate a key on the device | approved | must | §6 | STEP-M1A-140 (todo) | — | — |
+| REQ-KEY-002 | Read one key | approved | must | §6 | STEP-M1A-140 (todo) | — | — |
+| REQ-KEY-003 | Find keys by description | approved | must | §6, §11 | STEP-M1A-140 (todo) | — | — |
+| REQ-KEY-004 | Paged key listing | approved | must | §6 | STEP-M1A-140 (todo) | — | — |
+| REQ-KEY-005 | Key type presented as flags and algorithm | approved | must | §6 | STEP-M1A-140 (todo) | — | — |
+| REQ-KEY-006 | Change a key's label or description | approved | must | §6 | STEP-M2A-000 (todo) | — | — |
+| REQ-KEY-007 | Delete a key | approved | must | §6 | STEP-M2A-000 (todo) | — | — |
+| REQ-KEY-008 | Import an external public key | approved | must | §6 | STEP-M2A-000 (todo) | — | — |
+| REQ-KEY-009 | Derive a key by ECDH and HKDF | approved | must | §6 | STEP-M2A-000 (todo) | — | — |
+| REQ-NET-001 | Caller-supplied fetch implementation | approved | must | §7 | STEP-M1A-050 (todo) | — | — |
+| REQ-NET-002 | Configurable device address | approved | must | §7 | STEP-M1A-050 (todo) | — | — |
+| REQ-NET-003 | Key-management and crypto calls refused over plain HTTP | approved | must | §7, §6 | STEP-M1A-060 (todo), STEP-M1A-180 (todo) | — | — |
+| REQ-NET-004 | Time limit on every call | approved | must | §7 | STEP-M1A-050 (todo) | — | — |
+| REQ-NET-005 | Cancellation of every call | approved | must | §7 | STEP-M1A-050 (todo) | — | — |
+| REQ-NET-006 | Transport failures classified | approved | must | §7, §4 | STEP-M1A-050 (todo) | — | — |
+| REQ-NET-007 | One device request at a time | approved | must | §7, §11 | STEP-M1A-060 (todo) | — | — |
+| REQ-NET-008 | Optional minimum interval between requests | approved | should | §7 | STEP-M1A-060 (todo) | — | — |
+| REQ-NET-009 | Only headers the device's CORS policy allows | approved | must | §7 | STEP-M1A-050 (todo), STEP-M1A-180 (todo) | — | — |
+| REQ-NET-010 | Redirects not followed | approved | should | §7 | STEP-M1A-050 (todo) | — | — |
+| REQ-NET-011 | Browser use and the device's origin allow-list documented | approved | must | §7, §11 | STEP-M1A-180 (todo) | — | — |
+| REQ-NET-012 | Custom TLS trust through the caller's fetch documented | approved | must | §7, §11 | STEP-M1A-180 (todo) | — | — |
+| REQ-OPS-001 | HMAC with a stored key | approved | must | §6 | STEP-M1A-150 (todo) | — | — |
+| REQ-OPS-002 | AES key wrap | approved | must | §6 | STEP-M1A-150 (todo) | — | — |
+| REQ-OPS-003 | AES key unwrap | approved | must | §6 | STEP-M1A-150 (todo) | — | — |
+| REQ-OPS-004 | Verify operations return valid or invalid | approved | must | §4, §6 | STEP-M2A-000 (todo) | — | — |
+| REQ-OPS-005 | Verify an HMAC | approved | must | §6 | STEP-M2A-000 (todo) | — | — |
+| REQ-OPS-006 | ECDSA and EdDSA signature | approved | must | §6 | STEP-M2A-000 (todo) | — | — |
+| REQ-OPS-007 | Verify an ECDSA or EdDSA signature | approved | must | §6 | STEP-M2A-000 (todo) | — | — |
+| REQ-OPS-008 | AES encryption | approved | must | §6 | STEP-M2A-000 (todo) | — | — |
+| REQ-OPS-009 | AES decryption | approved | must | §6 | STEP-M2A-000 (todo) | — | — |
+| REQ-OPS-010 | ECDH shared secret | approved | must | §6 | STEP-M2A-000 (todo) | — | — |
+| REQ-OPS-011 | ML-KEM encapsulation | approved | must | §6 | STEP-M2A-000 (todo) | — | — |
+| REQ-OPS-012 | ML-KEM decapsulation | approved | must | §6 | STEP-M2A-000 (todo) | — | — |
+| REQ-OPS-013 | ML-DSA signature | approved | must | §6 | STEP-M2A-000 (todo) | — | — |
+| REQ-OPS-014 | Verify an ML-DSA signature | approved | must | §6, §11 | STEP-M2A-000 (todo) | — | — |
+| REQ-OPS-015 | ECDH-agreed keys for HMAC, cipher and wrap | approved | must | §6 | STEP-M2A-000 (todo) | — | — |
+| REQ-SYS-001 | Device status | approved | must | §6 | STEP-M1A-110 (todo) | — | — |
+| REQ-SYS-002 | Hardware and firmware version | approved | must | §6 | STEP-M1A-110 (todo) | — | — |
+| REQ-SYS-003 | Single health operation | approved | must | §6 | STEP-M1A-110 (todo) | — | — |
+| REQ-SYS-004 | Check-in step 1 | approved | must | §6 | STEP-M1A-120 (todo) | — | — |
+| REQ-SYS-005 | Check-in step 2 | approved | must | §6 | STEP-M1A-120 (todo) | — | — |
+| REQ-SYS-006 | Check-in relay, replaceable, with a default for the Encedo backend | approved | must | §6, §3, §11 | STEP-M1A-120 (todo) | — | — |
+| REQ-SYS-007 | One-call check-in | approved | must | §6 | STEP-M1A-120 (todo) | — | — |
+| REQ-SYS-008 | Read device configuration | approved | must | §6 | STEP-M2A-000 (todo) | — | — |
+| REQ-SYS-009 | Audit-log verification key | approved | must | §6 | STEP-M2A-000 (todo) | — | — |
+| REQ-SYS-010 | Paged audit-log listing | approved | must | §6 | STEP-M2A-000 (todo) | — | — |
+| REQ-SYS-011 | Audit-log download as raw content | approved | must | §6 | STEP-M2A-000 (todo) | — | — |
+| REQ-SYS-012 | Change device configuration | approved | must | §6 | STEP-M3A-000 (todo) | — | — |
+| REQ-SYS-013 | User passphrase change | approved | must | §6, §11 | STEP-M3A-000 (todo) | — | — |
+| REQ-SYS-014 | TLS certificate and key import | approved | must | §6, §11 | STEP-M3A-000 (todo) | — | — |
+| REQ-SYS-015 | Certificate signing request | approved | must | §6 | STEP-M3A-000 (todo) | — | — |
+| REQ-SYS-016 | Device wipe | approved | must | §6 | STEP-M3A-000 (todo) | — | — |
+| REQ-SYS-017 | Operations that work with and without a token | approved | must | §6 | STEP-M3A-000 (todo) | — | — |
+| REQ-SYS-018 | Secure-element attestation material | approved | must | §6 | STEP-M3A-000 (todo) | — | — |
+| REQ-SYS-019 | Write the attestation certificate | approved | must | §6 | STEP-M3A-000 (todo) | — | — |
+| REQ-SYS-020 | Firmware image upload | approved | must | §6, §7 | STEP-M3A-000 (todo) | — | — |
+| REQ-SYS-021 | Firmware verification as start-and-poll | approved | must | §6 | STEP-M3A-000 (todo) | — | — |
+| REQ-SYS-022 | Firmware install | approved | must | §6 | STEP-M3A-000 (todo) | — | — |
+| REQ-SYS-023 | Dashboard archive upload | approved | must | §6, §7 | STEP-M3A-000 (todo) | — | — |
+| REQ-SYS-024 | Dashboard verification as start-and-poll | approved | must | §6 | STEP-M3A-000 (todo) | — | — |
+| REQ-SYS-025 | Dashboard activation | approved | must | §6 | STEP-M3A-000 (todo) | — | — |
+| REQ-SYS-026 | Reboot into USB mode | approved | must | §6 | STEP-M3A-000 (todo) | — | — |
+| REQ-SYS-027 | Run the self-test suite | approved | must | §6 | STEP-M3A-000 (todo) | — | — |
+| REQ-SYS-028 | Device shutdown | approved | must | §6 | STEP-M3A-000 (todo) | — | — |
+| REQ-SYS-029 | Device reboot | approved | must | §6 | STEP-M3A-000 (todo) | — | — |
+| REQ-SYS-030 | Hide a storage slot | approved | must | §6 | STEP-M3A-000 (todo) | — | — |
+| REQ-SYS-031 | Expose a storage slot | approved | must | §6 | STEP-M3A-000 (todo) | — | — |
+| REQ-TEST-001 | Unit tests run without a device | approved | must | §8, §9 | STEP-M1A-010 (todo), STEP-M1A-180 (todo) | — | — |
+| REQ-TEST-002 | Unit tests pass in Node.js and in a browser | approved | must | §8 | STEP-M1A-010 (todo) | — | — |
+| REQ-TEST-003 | Device tests run only when explicitly configured | approved | must | §8, §1 | STEP-M1B-000 (todo) | — | — |
+| REQ-TEST-004 | Disruptive tests never run automatically | approved | must | §8, §1 | STEP-M1B-000 (todo) | — | — |
 
 ## Coverage report
 
-- Totals: 117 REQs (117 approved), 0 steps.
+- Totals: 117 REQs (117 approved), 23 steps (23 in `todo/`, 0 in `doing/`, 0 in `done/`; cancelled: none).
 - By area: API 14, AUTH 26, BUILD 6, KEY 9, NET 12, OPS 15, SYS 31, TEST 4.
-- Approved REQs with no code tag: all 117 (no code exists yet; `src/` is absent).
-- Implemented REQs with no passing tagged test: none.
-- Orphan tags: none.
+- Steps by milestone: M1A 18, M1B 1, M2A 1, M2B 1, M3A 1, M3B 1.
+- M1A (ARCHITECTURE.md §10) assigns 64 REQs; REQs with no M1A step: none; REQs listed by M1A steps but not assigned to M1A: none.
+- Approved REQs with no code tag (unimplemented): all 117 (no code exists yet; `src/` is absent).
+- Implemented REQs with no passing tagged test (unverified): none.
+- Orphan tags (naming a nonexistent REQ): none.
+- Steps referencing a nonexistent REQ or step: none.
 - Steps in `done/` with empty evidence: none.
 - Broken architecture anchors: none.
 - REQs in `needs-reverify`: none.
-- Status transitions applied in this run: none by the scan. The 117 REQs moved `draft` → `approved` by user decision on 2026-10-02.
+- Status transitions applied in this run: none (no code or test tags exist, so no REQ meets the §3.2 preconditions).
