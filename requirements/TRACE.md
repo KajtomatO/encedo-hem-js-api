@@ -2,9 +2,9 @@
 
 # Traceability matrix
 
-Generated: 2026-10-02 (after STEP-M1A-050)
+Generated: 2026-10-02 (after STEP-M1A-060)
 
-Scan inputs: 117 REQ files (`requirements/`), 23 step files (`workplan/{todo,doing,done}/`: 18 todo, 0 doing, 5 done). Code tags (`implements: REQ-`) scanned across `src/` and the build and CI locations (`package.json`, `tsconfig*.json`, `vitest.config.ts`, `.github/workflows/`); test tags (`verifies:`/`supports: REQ-`) scanned across `tests/`. Unit suite passed in Node 24 and headless Chromium for this run.
+Scan inputs: 117 REQ files (`requirements/`), 23 step files (`workplan/{todo,doing,done}/`: 17 todo, 0 doing, 6 done). Code tags (`implements: REQ-`) scanned across `src/` and the build and CI locations (`package.json`, `tsconfig*.json`, `vitest.config.ts`, `.github/workflows/`); test tags (`verifies:`/`supports: REQ-`) scanned across `tests/`. Unit suite passed in Node 24 and headless Chromium for this run.
 
 | REQ | Title | Status | Priority | Architecture | Steps | Code | Tests |
 |---|---|---|---|---|---|---|---|
@@ -65,12 +65,12 @@ Scan inputs: 117 REQ files (`requirements/`), 23 step files (`workplan/{todo,doi
 | REQ-KEY-009 | Derive a key by ECDH and HKDF | approved | must | §6 | STEP-M2A-000 (todo) | — | — |
 | REQ-NET-001 | Caller-supplied fetch implementation | verified | must | §7 | STEP-M1A-050 (done) | src/transport/transport.ts:2 | tests/unit/transport/transport.test.ts:20, tests/unit/transport/transport.test.ts:31, tests/unit/transport/transport.test.ts:39, tests/unit/transport/transport.test.ts:47 |
 | REQ-NET-002 | Configurable device address | verified | must | §7 | STEP-M1A-050 (done) | src/transport/url.ts:2 | tests/unit/transport/transport.test.ts:55, tests/unit/transport/transport.test.ts:74 |
-| REQ-NET-003 | Key-management and crypto calls refused over plain HTTP | approved | must | §7, §6 | STEP-M1A-060 (todo), STEP-M1A-180 (todo) | — | — |
+| REQ-NET-003 | Key-management and crypto calls refused over plain HTTP | approved | must | §7, §6 | STEP-M1A-180 (todo), STEP-M1A-060 (done) | src/transport/transport.ts:3 | tests/unit/transport/queue.test.ts:125, tests/unit/transport/queue.test.ts:138 |
 | REQ-NET-004 | Time limit on every call | verified | must | §7 | STEP-M1A-050 (done) | src/transport/transport.ts:2 | tests/unit/transport/transport.test.ts:84, tests/unit/transport/transport.test.ts:99, tests/unit/transport/transport.test.ts:114 |
-| REQ-NET-005 | Cancellation of every call | verified | must | §7 | STEP-M1A-050 (done) | src/transport/transport.ts:2 | tests/unit/transport/transport.test.ts:127, tests/unit/transport/transport.test.ts:138 |
+| REQ-NET-005 | Cancellation of every call | verified | must | §7 | STEP-M1A-050 (done) | src/transport/transport.ts:2 | tests/unit/transport/queue.test.ts:75, tests/unit/transport/transport.test.ts:127, tests/unit/transport/transport.test.ts:138 |
 | REQ-NET-006 | Transport failures classified | verified | must | §7, §4 | STEP-M1A-050 (done) | src/transport/transport.ts:2 | tests/unit/transport/transport.test.ts:127, tests/unit/transport/transport.test.ts:149, tests/unit/transport/transport.test.ts:158 |
-| REQ-NET-007 | One device request at a time | approved | must | §7, §11 | STEP-M1A-060 (todo) | — | — |
-| REQ-NET-008 | Optional minimum interval between requests | approved | should | §7 | STEP-M1A-060 (todo) | — | — |
+| REQ-NET-007 | One device request at a time | verified | must | §7, §11 | STEP-M1A-060 (done) | src/transport/transport.ts:3 | tests/unit/transport/queue.test.ts:46, tests/unit/transport/queue.test.ts:66 |
+| REQ-NET-008 | Optional minimum interval between requests | verified | should | §7 | STEP-M1A-060 (done) | src/transport/transport.ts:3 | tests/unit/transport/queue.test.ts:96, tests/unit/transport/queue.test.ts:106 |
 | REQ-NET-009 | Only headers the device's CORS policy allows | approved | must | §7 | STEP-M1A-180 (todo), STEP-M1A-050 (done) | src/transport/transport.ts:2 | tests/unit/transport/transport.test.ts:180 |
 | REQ-NET-010 | Redirects not followed | verified | should | §7 | STEP-M1A-050 (done) | src/transport/transport.ts:2 | tests/unit/transport/transport.test.ts:193, tests/unit/transport/transport.test.ts:204 |
 | REQ-NET-011 | Browser use and the device's origin allow-list documented | approved | must | §7, §11 | STEP-M1A-180 (todo) | — | — |
@@ -121,20 +121,20 @@ Scan inputs: 117 REQ files (`requirements/`), 23 step files (`workplan/{todo,doi
 | REQ-SYS-029 | Device reboot | approved | must | §6 | STEP-M3A-000 (todo) | — | — |
 | REQ-SYS-030 | Hide a storage slot | approved | must | §6 | STEP-M3A-000 (todo) | — | — |
 | REQ-SYS-031 | Expose a storage slot | approved | must | §6 | STEP-M3A-000 (todo) | — | — |
-| REQ-TEST-001 | Unit tests run without a device | approved | must | §8, §9 | STEP-M1A-180 (todo), STEP-M1A-010 (done) | vitest.config.ts:4 | tests/unit/environment.test.ts:5, supports tests/support/fake-fetch.ts:1, supports tests/support/setup.ts:1 |
+| REQ-TEST-001 | Unit tests run without a device | approved | must | §8, §9 | STEP-M1A-180 (todo), STEP-M1A-010 (done) | vitest.config.ts:4 | tests/unit/environment.test.ts:5, supports tests/support/fake-fetch.ts:1, supports tests/support/setup.ts:1, supports tests/support/timers.ts:1 |
 | REQ-TEST-002 | Unit tests pass in Node.js and in a browser | verified | must | §8 | STEP-M1A-010 (done) | vitest.config.ts:4 | tests/unit/environment.test.ts:14 |
 | REQ-TEST-003 | Device tests run only when explicitly configured | approved | must | §8, §1 | STEP-M1B-000 (todo) | — | — |
 | REQ-TEST-004 | Disruptive tests never run automatically | approved | must | §8, §1 | STEP-M1B-000 (todo) | — | — |
 
 ## Coverage report
 
-- Totals: 117 REQs (103 approved, 13 verified, 1 implemented), 23 steps (18 in `todo/`, 0 in `doing/`, 5 in `done/`; cancelled: none).
-- M1A REQs (64) lacking an `implements:` or a `verifies:` tag: REQ-API-001, REQ-API-006, REQ-API-007, REQ-API-008, REQ-API-009, REQ-API-010, REQ-AUTH-001, REQ-AUTH-002, REQ-AUTH-003, REQ-AUTH-004, REQ-AUTH-005, REQ-AUTH-006, REQ-AUTH-007, REQ-AUTH-008, REQ-AUTH-009, REQ-AUTH-010, REQ-AUTH-011, REQ-AUTH-012, REQ-AUTH-013, REQ-AUTH-014, REQ-AUTH-015, REQ-AUTH-016, REQ-AUTH-017, REQ-AUTH-018, REQ-AUTH-019, REQ-AUTH-020, REQ-BUILD-005, REQ-KEY-001, REQ-KEY-002, REQ-KEY-003, REQ-KEY-004, REQ-KEY-005, REQ-NET-003, REQ-NET-007, REQ-NET-008, REQ-NET-011, REQ-NET-012, REQ-OPS-001, REQ-OPS-002, REQ-OPS-003, REQ-SYS-001, REQ-SYS-002, REQ-SYS-003, REQ-SYS-004, REQ-SYS-005, REQ-SYS-006, REQ-SYS-007.
-- Approved REQs with no code tag (unimplemented): 99; of these in M1A: REQ-API-001, REQ-API-006, REQ-API-007, REQ-API-008, REQ-API-009, REQ-API-010, REQ-AUTH-001, REQ-AUTH-002, REQ-AUTH-003, REQ-AUTH-004, REQ-AUTH-005, REQ-AUTH-006, REQ-AUTH-007, REQ-AUTH-008, REQ-AUTH-009, REQ-AUTH-010, REQ-AUTH-011, REQ-AUTH-012, REQ-AUTH-013, REQ-AUTH-014, REQ-AUTH-015, REQ-AUTH-016, REQ-AUTH-017, REQ-AUTH-018, REQ-AUTH-019, REQ-AUTH-020, REQ-KEY-001, REQ-KEY-002, REQ-KEY-003, REQ-KEY-004, REQ-KEY-005, REQ-NET-003, REQ-NET-007, REQ-NET-008, REQ-NET-011, REQ-NET-012, REQ-OPS-001, REQ-OPS-002, REQ-OPS-003, REQ-SYS-001, REQ-SYS-002, REQ-SYS-003, REQ-SYS-004, REQ-SYS-005, REQ-SYS-006, REQ-SYS-007; the rest belong to later milestones.
-- Approved REQs with code tags whose steps are not all in `done/`: REQ-API-005, REQ-BUILD-004, REQ-NET-009, REQ-TEST-001.
+- Totals: 117 REQs (101 approved, 15 verified, 1 implemented), 23 steps (17 in `todo/`, 0 in `doing/`, 6 in `done/`; cancelled: none).
+- M1A REQs (64) lacking an `implements:` or a `verifies:` tag: REQ-API-001, REQ-API-006, REQ-API-007, REQ-API-008, REQ-API-009, REQ-API-010, REQ-AUTH-001, REQ-AUTH-002, REQ-AUTH-003, REQ-AUTH-004, REQ-AUTH-005, REQ-AUTH-006, REQ-AUTH-007, REQ-AUTH-008, REQ-AUTH-009, REQ-AUTH-010, REQ-AUTH-011, REQ-AUTH-012, REQ-AUTH-013, REQ-AUTH-014, REQ-AUTH-015, REQ-AUTH-016, REQ-AUTH-017, REQ-AUTH-018, REQ-AUTH-019, REQ-AUTH-020, REQ-BUILD-005, REQ-KEY-001, REQ-KEY-002, REQ-KEY-003, REQ-KEY-004, REQ-KEY-005, REQ-NET-011, REQ-NET-012, REQ-OPS-001, REQ-OPS-002, REQ-OPS-003, REQ-SYS-001, REQ-SYS-002, REQ-SYS-003, REQ-SYS-004, REQ-SYS-005, REQ-SYS-006, REQ-SYS-007.
+- Approved REQs with no code tag (unimplemented): 96; of these in M1A: REQ-API-001, REQ-API-006, REQ-API-007, REQ-API-008, REQ-API-009, REQ-API-010, REQ-AUTH-001, REQ-AUTH-002, REQ-AUTH-003, REQ-AUTH-004, REQ-AUTH-005, REQ-AUTH-006, REQ-AUTH-007, REQ-AUTH-008, REQ-AUTH-009, REQ-AUTH-010, REQ-AUTH-011, REQ-AUTH-012, REQ-AUTH-013, REQ-AUTH-014, REQ-AUTH-015, REQ-AUTH-016, REQ-AUTH-017, REQ-AUTH-018, REQ-AUTH-019, REQ-AUTH-020, REQ-KEY-001, REQ-KEY-002, REQ-KEY-003, REQ-KEY-004, REQ-KEY-005, REQ-NET-011, REQ-NET-012, REQ-OPS-001, REQ-OPS-002, REQ-OPS-003, REQ-SYS-001, REQ-SYS-002, REQ-SYS-003, REQ-SYS-004, REQ-SYS-005, REQ-SYS-006, REQ-SYS-007; the rest belong to later milestones.
+- Approved REQs with code tags whose steps are not all in `done/`: REQ-API-005, REQ-BUILD-004, REQ-NET-003, REQ-NET-009, REQ-TEST-001.
 - Implemented REQs with no passing tagged test (unverified): REQ-BUILD-005.
 - Orphan tags (naming a nonexistent REQ): none.
 - Steps in `done/` with empty evidence: none.
 - Broken architecture anchors: none.
 - REQs in `needs-reverify`: none.
-- Status transitions applied in this run: REQ-BUILD-003: approved → implemented, REQ-BUILD-003: implemented → verified, REQ-NET-001: approved → implemented, REQ-NET-001: implemented → verified, REQ-NET-002: approved → implemented, REQ-NET-002: implemented → verified, REQ-NET-004: approved → implemented, REQ-NET-004: implemented → verified, REQ-NET-005: approved → implemented, REQ-NET-005: implemented → verified, REQ-NET-006: approved → implemented, REQ-NET-006: implemented → verified, REQ-NET-010: approved → implemented, REQ-NET-010: implemented → verified.
+- Status transitions applied in this run: REQ-NET-007: approved → implemented, REQ-NET-007: implemented → verified, REQ-NET-008: approved → implemented, REQ-NET-008: implemented → verified.
