@@ -1,7 +1,7 @@
 ---
 id: REQ-AUTH-004
 title: One cached token per scope
-status: approved
+status: verified
 priority: must
 revision: 1
 source: start_point G10; ARCHITECTURE.md §5; ref/api/hem-api-1.2.2.yaml

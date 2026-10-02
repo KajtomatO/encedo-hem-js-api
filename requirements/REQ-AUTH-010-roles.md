@@ -1,7 +1,7 @@
 ---
 id: REQ-AUTH-010
 title: User and master roles
-status: approved
+status: verified
 priority: must
 revision: 1
 source: start_point G12; ref/api/hem-api-1.2.2.yaml
