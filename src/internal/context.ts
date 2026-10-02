@@ -2,12 +2,15 @@
 
 import { errorFromStatus } from "../errors.js";
 import type { Session } from "../auth/session.js";
+import type { CheckinRelay } from "../relay/checkin.js";
 import type { CallOptions, DeviceRequest, DeviceResponse, Transport } from "../transport/transport.js";
 
 export interface ClientContext {
   readonly transport: Transport;
   /** Set right after construction of the context. */
   session: Session;
+  /** `null` when check-in through a relay is disabled. */
+  readonly checkinRelay: CheckinRelay | null;
 }
 
 /** Copies only the call options a caller may set. */

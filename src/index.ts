@@ -10,7 +10,10 @@ export type { HemRole } from "./auth/token.js";
 export type { SystemApi, SystemStatus, SystemVersion, HealthReport } from "./api/system.js";
 export type { KeysApi } from "./api/keymgmt.js";
 export type { CryptoApi } from "./api/crypto.js";
-export type { CheckinRelay } from "./relay/checkin.js";
+export { EncedoCheckinRelay, ENCEDO_CHECKIN_URL } from "./relay/checkin.js";
+export type { CheckinRelay, EncedoCheckinRelayOptions } from "./relay/checkin.js";
+export type { RelayHttpOptions } from "./relay/http.js";
+export type { CheckinResult } from "./api/checkin.js";
 export type { ApprovalRelay, ApprovalRelayKey, ApprovalCheck } from "./relay/approval.js";
 export type { CallOptions, FetchLike } from "./transport/transport.js";
 export {

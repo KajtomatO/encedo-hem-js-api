@@ -158,55 +158,73 @@ export class Transport {
     req: DeviceRequest,
     prepared: { url: string; init: RequestInit; timeoutMs: number },
   ): Promise<DeviceResponse> {
-    const { signal, operation } = req;
-    if (signal?.aborted) throw abortError(operation, signal);
-
-    const controller = new AbortController();
-    let failure: HemError | undefined;
-    let rejectRace: (e: HemError) => void = () => {};
-    const race = new Promise<never>((_, reject) => {
-      rejectRace = reject;
-    });
-    race.catch(() => {});
-    const fail = (err: HemError) => {
-      if (failure) return;
-      failure = err;
-      controller.abort(err);
-      rejectRace(err);
-    };
-    const onAbort = () => fail(abortError(operation, signal));
-    signal?.addEventListener("abort", onAbort, { once: true });
-    const timer = setTimeout(
-      () => fail(new HemTimeoutError(`${operation}: no complete response within ${prepared.timeoutMs} ms`, { operation })),
-      prepared.timeoutMs,
-    );
-
     const fetchImpl: FetchLike = this.#fetch ?? ((input, init) => globalThis.fetch(input, init));
-    const work = (async (): Promise<DeviceResponse> => {
-      let res: Response;
-      let text: string;
-      try {
-        res = await fetchImpl(prepared.url, { ...prepared.init, signal: controller.signal });
-        text = await res.text();
-      } catch (cause) {
-        throw failure ?? new HemUnreachableError(`${operation}: device unreachable`, { operation, cause });
-      }
-      if (res.type === "opaqueredirect" || (res.status >= 300 && res.status < 400)) {
-        throw new HemDeviceError(`${operation}: the device answered with a redirect, which is not followed`, {
-          operation,
-          status: res.status,
-        });
-      }
-      return { status: res.status, headers: res.headers, text };
-    })();
-    work.catch(() => {});
-
-    try {
-      return await Promise.race([work, race]);
-    } finally {
-      clearTimeout(timer);
-      signal?.removeEventListener("abort", onAbort);
+    const res = await fetchWithLimit(fetchImpl, prepared.url, prepared.init, {
+      operation: req.operation,
+      signal: req.signal,
+      timeoutMs: prepared.timeoutMs,
+      what: "device",
+    });
+    if (res.type === "opaqueredirect" || (res.status >= 300 && res.status < 400)) {
+      throw new HemDeviceError(`${req.operation}: the device answered with a redirect, which is not followed`, {
+        operation: req.operation,
+        status: res.status,
+      });
     }
+    return { status: res.status, headers: res.headers, text: res.text };
+  }
+}
+
+/**
+ * One fetch, body included, under a time limit and an optional caller signal.
+ * Fails with exactly one of HemTimeoutError, HemAbortError (whichever fires
+ * first) or HemUnreachableError (fetch or body read rejected).
+ */
+export async function fetchWithLimit(
+  fetchImpl: FetchLike,
+  url: string,
+  init: RequestInit,
+  opts: { operation: string; signal: AbortSignal | undefined; timeoutMs: number; what: string },
+): Promise<{ status: number; headers: Headers; text: string; type: ResponseType }> {
+  const { signal, operation } = opts;
+  if (signal?.aborted) throw abortError(operation, signal);
+
+  const controller = new AbortController();
+  let failure: HemError | undefined;
+  let rejectRace: (e: HemError) => void = () => {};
+  const race = new Promise<never>((_, reject) => {
+    rejectRace = reject;
+  });
+  race.catch(() => {});
+  const fail = (err: HemError) => {
+    if (failure) return;
+    failure = err;
+    controller.abort(err);
+    rejectRace(err);
+  };
+  const onAbort = () => fail(abortError(operation, signal));
+  signal?.addEventListener("abort", onAbort, { once: true });
+  const timer = setTimeout(
+    () => fail(new HemTimeoutError(`${operation}: no complete response within ${opts.timeoutMs} ms`, { operation })),
+    opts.timeoutMs,
+  );
+
+  const work = (async () => {
+    try {
+      const res = await fetchImpl(url, { ...init, signal: controller.signal });
+      const text = await res.text();
+      return { status: res.status, headers: res.headers, text, type: res.type };
+    } catch (cause) {
+      throw failure ?? new HemUnreachableError(`${operation}: ${opts.what} unreachable`, { operation, cause });
+    }
+  })();
+  work.catch(() => {});
+
+  try {
+    return await Promise.race([work, race]);
+  } finally {
+    clearTimeout(timer);
+    signal?.removeEventListener("abort", onAbort);
   }
 }
 

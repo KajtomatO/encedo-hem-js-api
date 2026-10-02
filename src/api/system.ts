@@ -1,7 +1,7 @@
 // Bindings of the system group.
-// implements: REQ-SYS-001, REQ-SYS-002, REQ-SYS-003
+// implements: REQ-SYS-001, REQ-SYS-002, REQ-SYS-003, REQ-SYS-004, REQ-SYS-005, REQ-SYS-007
 
-import { HemAbortError, HemError, HemTimeoutError, HemUnreachableError } from "../errors.js";
+import { HemAbortError, HemError, HemTimeoutError, HemUnreachableError, HemValidationError } from "../errors.js";
 import { callOptions, sendPublic, type ClientContext } from "../internal/context.js";
 import {
   optBoolean,
@@ -15,6 +15,7 @@ import {
   type JsonObject,
 } from "../internal/parse.js";
 import type { CallOptions } from "../transport/transport.js";
+import { getCheckin, postCheckin, runCheckin, type CheckinResult } from "./checkin.js";
 
 /**
  * Device status. The device omits fields instead of sending defaults; they
@@ -124,6 +125,41 @@ export interface SystemApi {
    * @milestone M1
    */
   health(options?: CallOptions): Promise<HealthReport>;
+
+  /**
+   * Check-in step 1 (`GET /api/system/checkin`): returns the device-signed
+   * `check` token, unmodified, for the check-in backend.
+   *
+   * @scope none
+   * @milestone M1
+   */
+  getCheckin(options?: CallOptions): Promise<string>;
+
+  /**
+   * Check-in step 2 (`POST /api/system/checkin`): hands the backend's
+   * `checked` reply to the device, unmodified. The device validates it and
+   * sets its clock from it. When the device's trusted-backend option is on,
+   * it also executes the management action the reply carries: `L` erases the
+   * user key, `W` wipes the device and reboots, `B` stops the web servers,
+   * `U` forces an upgrade, `R` reports; with the option off these actions are
+   * suppressed. A 401 (reply invalid, nonce unknown, issuer not trusted)
+   * raises `HemUnauthenticatedError`; no login is attempted.
+   *
+   * @scope none
+   * @milestone M1
+   */
+  postCheckin(checked: string, options?: CallOptions): Promise<CheckinResult>;
+
+  /**
+   * Runs a complete check-in: step 1, the check-in relay, step 2. Sets the
+   * device clock. A failure names the failing leg in `operation`; without a
+   * configured relay it raises `HemUnsupportedError`. See `postCheckin` for
+   * the management actions a backend reply can carry.
+   *
+   * @scope none
+   * @milestone M1
+   */
+  checkin(options?: CallOptions): Promise<CheckinResult>;
 }
 
 export function parseStatus(o: JsonObject, operation: string): SystemStatus {
@@ -176,6 +212,21 @@ export class SystemApiImpl implements SystemApi {
       sdCid: optString(o, "sd_cid", operation),
       uis: optBytes(o, "uis", operation),
     };
+  }
+
+  getCheckin(options?: CallOptions): Promise<string> {
+    return getCheckin(this.#ctx, options);
+  }
+
+  postCheckin(checked: string, options?: CallOptions): Promise<CheckinResult> {
+    if (typeof checked !== "string" || checked === "") {
+      return Promise.reject(new HemValidationError("checked", "must be a non-empty string"));
+    }
+    return postCheckin(this.#ctx, checked, options);
+  }
+
+  checkin(options?: CallOptions): Promise<CheckinResult> {
+    return runCheckin(this.#ctx, options);
   }
 
   async health(options?: CallOptions): Promise<HealthReport> {

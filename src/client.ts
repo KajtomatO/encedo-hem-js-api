@@ -10,7 +10,7 @@ import { validateInteger } from "./codec/validate.js";
 import { HemValidationError } from "./errors.js";
 import type { ClientContext } from "./internal/context.js";
 import type { ApprovalRelay } from "./relay/approval.js";
-import type { CheckinRelay } from "./relay/checkin.js";
+import { EncedoCheckinRelay, type CheckinRelay } from "./relay/checkin.js";
 import { Transport, type FetchLike } from "./transport/transport.js";
 
 /** Settings of mobile-approval login mode. */
@@ -93,11 +93,23 @@ export class HemClient {
     if (options.passphrase !== undefined && typeof options.passphrase !== "string") {
       throw new HemValidationError("passphrase", "must be a string");
     }
-    const ctx = { transport } as ClientContext;
+    const checkinRelay =
+      options.checkinRelay === undefined ? new EncedoCheckinRelay() : checkRelay(options.checkinRelay, "checkinRelay", ["exchange"]);
+    const ctx = { transport, checkinRelay } as ClientContext;
     ctx.session = new Session(ctx, { passphrase: options.passphrase, lifetimeSeconds });
     this.auth = new AuthApiImpl(ctx);
     this.system = new SystemApiImpl(ctx);
     this.keys = new KeysApiImpl(ctx);
     this.crypto = new CryptoApiImpl(ctx);
   }
+}
+
+function checkRelay<T>(relay: T | null, parameter: string, methods: string[]): T | null {
+  if (relay === null) return null;
+  for (const m of methods) {
+    if (typeof (relay as Record<string, unknown> | undefined)?.[m] !== "function") {
+      throw new HemValidationError(parameter, `must implement ${methods.join(", ")} or be null`);
+    }
+  }
+  return relay;
 }
