@@ -2,9 +2,9 @@
 
 # Traceability matrix
 
-Generated: 2026-10-02 (after STEP-M1A-150)
+Generated: 2026-10-02 (after STEP-M1A-160)
 
-Scan inputs: 117 REQ files (`requirements/`), 23 step files (`workplan/{todo,doing,done}/`: 8 todo, 0 doing, 15 done). Code tags (`implements: REQ-`) scanned across `src/` and the build and CI locations (`package.json`, `tsconfig*.json`, `vitest.config.ts`, `.github/workflows/`); test tags (`verifies:`/`supports: REQ-`) scanned across `tests/`. Unit suite passed in Node 24 and headless Chromium for this run.
+Scan inputs: 117 REQ files (`requirements/`), 23 step files (`workplan/{todo,doing,done}/`: 7 todo, 0 doing, 16 done). Code tags (`implements: REQ-`) scanned across `src/` and the build and CI locations (`package.json`, `tsconfig*.json`, `vitest.config.ts`, `.github/workflows/`); test tags (`verifies:`/`supports: REQ-`) scanned across `tests/`. Unit suite passed in Node 24 and headless Chromium for this run.
 
 | REQ | Title | Status | Priority | Architecture | Steps | Code | Tests |
 |---|---|---|---|---|---|---|---|
@@ -33,13 +33,13 @@ Scan inputs: 117 REQ files (`requirements/`), 23 step files (`workplan/{todo,doi
 | REQ-AUTH-009 | Login recovery when the device clock is wrong | verified | must | §5.2, §11 | STEP-M1A-130 (done) | src/auth/session.ts:3 | tests/unit/auth/clock-recovery.test.ts:38, tests/unit/auth/clock-recovery.test.ts:54, tests/unit/auth/clock-recovery.test.ts:72, tests/unit/auth/clock-recovery.test.ts:81, tests/unit/auth/clock-recovery.test.ts:94, tests/unit/auth/clock-recovery.test.ts:105 |
 | REQ-AUTH-010 | User and master roles | verified | must | §5.2, §11 | STEP-M1A-100 (done) | src/auth/token.ts:2 | tests/unit/auth/session.test.ts:201, tests/unit/auth/session.test.ts:215 |
 | REQ-AUTH-011 | Credentials held in memory and discarded on logout | verified | must | §5.2 | STEP-M1A-090 (done) | src/auth/session.ts:2 | tests/unit/auth/ejwt.test.ts:32, tests/unit/auth/login.test.ts:104, tests/unit/auth/login.test.ts:115, tests/unit/auth/login.test.ts:128, tests/unit/auth/session.test.ts:239 |
-| REQ-AUTH-012 | No token on operations that need none | approved | must | §5.2, §2 | STEP-M1A-180 (todo), STEP-M1A-100 (done) | src/api/auth-calls.ts:2, src/auth/session.ts:3 | tests/unit/auth/session.test.ts:190 |
+| REQ-AUTH-012 | No token on operations that need none | approved | must | §5.2, §2 | STEP-M1A-180 (todo), STEP-M1A-100 (done) | src/api/auth-calls.ts:2, src/api/ext-calls.ts:3, src/auth/session.ts:3 | tests/unit/auth/session.test.ts:190 |
 | REQ-AUTH-013 | Concurrent calls share one login | verified | should | §5.2 | STEP-M1A-100 (done) | src/auth/session.ts:3 | tests/unit/auth/session.test.ts:147, tests/unit/auth/session.test.ts:156 |
-| REQ-AUTH-014 | Mobile approval step 1 — authorization request | approved | must | §5.3 | STEP-M1A-160 (todo) | — | — |
-| REQ-AUTH-015 | Mobile approval step 2 — redeem the reply | approved | must | §5.3 | STEP-M1A-160 (todo) | — | — |
-| REQ-AUTH-016 | Replaceable approval relay | approved | must | §5.3, §3 | STEP-M1A-160 (todo) | — | — |
-| REQ-AUTH-017 | Default approval relay for the Encedo broker | approved | must | §5.3, §11 | STEP-M1A-160 (todo) | — | — |
-| REQ-AUTH-018 | Approval attempts end as approved, rejected or timed out | approved | must | §5.3 | STEP-M1A-170 (todo) | — | — |
+| REQ-AUTH-014 | Mobile approval step 1 — authorization request | verified | must | §5.3 | STEP-M1A-160 (done) | src/api/ext-calls.ts:3 | tests/unit/auth/ext.test.ts:34, tests/unit/auth/ext.test.ts:49, tests/unit/auth/ext.test.ts:69 |
+| REQ-AUTH-015 | Mobile approval step 2 — redeem the reply | verified | must | §5.3 | STEP-M1A-160 (done) | src/api/ext-calls.ts:3 | tests/unit/auth/ext.test.ts:81, tests/unit/auth/ext.test.ts:99 |
+| REQ-AUTH-016 | Replaceable approval relay | verified | must | §5.3, §3 | STEP-M1A-160 (done) | src/relay/approval.ts:3 | tests/unit/auth/ext.test.ts:109, tests/unit/auth/ext.test.ts:124, supports tests/support/approval.ts:1 |
+| REQ-AUTH-017 | Default approval relay for the Encedo broker | verified | must | §5.3, §11 | STEP-M1A-160 (done) | src/relay/approval.ts:3 | tests/unit/auth/ext.test.ts:135, tests/unit/auth/ext.test.ts:163, tests/unit/auth/ext.test.ts:174 |
+| REQ-AUTH-018 | Approval attempts end as approved, rejected or timed out | approved | must | §5.3 | STEP-M1A-170 (todo) | — | supports tests/support/approval.ts:1 |
 | REQ-AUTH-019 | Mobile approval as the client's login mode | approved | must | §5.3 | STEP-M1A-170 (todo) | — | — |
 | REQ-AUTH-020 | Recovery when the broker rejects a request for clock drift | approved | should | §5.3 | STEP-M1A-170 (todo) | — | — |
 | REQ-AUTH-021 | Provisioning challenge | approved | must | §6, §5 | STEP-M3A-000 (todo) | — | — |
@@ -128,13 +128,13 @@ Scan inputs: 117 REQ files (`requirements/`), 23 step files (`workplan/{todo,doi
 
 ## Coverage report
 
-- Totals: 117 REQs (43 verified, 73 approved, 1 implemented), 23 steps (8 in `todo/`, 0 in `doing/`, 15 in `done/`; cancelled: none).
-- M1A REQs (64) lacking an `implements:` or a `verifies:` tag: REQ-API-007, REQ-API-008, REQ-AUTH-014, REQ-AUTH-015, REQ-AUTH-016, REQ-AUTH-017, REQ-AUTH-018, REQ-AUTH-019, REQ-AUTH-020, REQ-BUILD-005, REQ-NET-011, REQ-NET-012.
-- Approved REQs with no code tag (unimplemented): 64; of these in M1A: REQ-API-007, REQ-API-008, REQ-AUTH-014, REQ-AUTH-015, REQ-AUTH-016, REQ-AUTH-017, REQ-AUTH-018, REQ-AUTH-019, REQ-AUTH-020, REQ-NET-011, REQ-NET-012; the rest belong to later milestones.
+- Totals: 117 REQs (47 verified, 69 approved, 1 implemented), 23 steps (7 in `todo/`, 0 in `doing/`, 16 in `done/`; cancelled: none).
+- M1A REQs (64) lacking an `implements:` or a `verifies:` tag: REQ-API-007, REQ-API-008, REQ-AUTH-018, REQ-AUTH-019, REQ-AUTH-020, REQ-BUILD-005, REQ-NET-011, REQ-NET-012.
+- Approved REQs with no code tag (unimplemented): 60; of these in M1A: REQ-API-007, REQ-API-008, REQ-AUTH-018, REQ-AUTH-019, REQ-AUTH-020, REQ-NET-011, REQ-NET-012; the rest belong to later milestones.
 - Approved REQs with code tags whose steps are not all in `done/`: REQ-API-005, REQ-API-009, REQ-API-010, REQ-AUTH-005, REQ-AUTH-012, REQ-BUILD-004, REQ-NET-003, REQ-NET-009, REQ-TEST-001.
 - Implemented REQs with no passing tagged test (unverified): REQ-BUILD-005.
 - Orphan tags (naming a nonexistent REQ): none.
 - Steps in `done/` with empty evidence: none.
 - Broken architecture anchors: none.
 - REQs in `needs-reverify`: none.
-- Status transitions applied in this run: REQ-OPS-001: approved → implemented, REQ-OPS-001: implemented → verified, REQ-OPS-002: approved → implemented, REQ-OPS-002: implemented → verified, REQ-OPS-003: approved → implemented, REQ-OPS-003: implemented → verified.
+- Status transitions applied in this run: REQ-AUTH-014: approved → implemented, REQ-AUTH-014: implemented → verified, REQ-AUTH-015: approved → implemented, REQ-AUTH-015: implemented → verified, REQ-AUTH-016: approved → implemented, REQ-AUTH-016: implemented → verified, REQ-AUTH-017: approved → implemented, REQ-AUTH-017: implemented → verified.

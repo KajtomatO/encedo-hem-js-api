@@ -1,7 +1,7 @@
 ---
 id: REQ-AUTH-014
 title: Mobile approval step 1 — authorization request
-status: approved
+status: verified
 priority: must
 revision: 1
 source: start_point M1.2; ref/api/hem-api-1.2.2.yaml; https://github.com/KajtomatO/encedo-hem-c-api
