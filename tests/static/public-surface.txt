@@ -24,6 +24,7 @@ ApprovalRelayKey: }
 AuthApi
 AuthApi: export interface AuthApi {
 AuthApi: getChallenge(options?: CallOptions): Promise<LoginChallenge>;
+AuthApi: getRole(): HemRole | undefined;
 AuthApi: login(scope: string, options?: CallOptions): Promise<SessionInfo>;
 AuthApi: logout(): void;
 AuthApi: }

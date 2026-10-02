@@ -38,6 +38,16 @@ export interface AuthApi {
   login(scope: string, options?: CallOptions): Promise<SessionInfo>;
 
   /**
+   * The role the device granted in the most recently obtained token: user
+   * (`sub` `U`), master (`M`) or a paired app (its key id). `undefined`
+   * before the first login.
+   *
+   * @scope none
+   * @milestone M1
+   */
+  getRole(): HemRole | undefined;
+
+  /**
    * Discards the credential and every cached token. Afterwards every
    * authenticated call fails with `HemUnauthenticatedError` without a request.
    *
@@ -59,8 +69,12 @@ export class AuthApiImpl implements AuthApi {
 
   async login(scope: string, options?: CallOptions): Promise<SessionInfo> {
     const s = validateScope(scope);
-    const { entry } = await this.#ctx.session.passphraseLogin(s, callOptions(options));
+    const entry = await this.#ctx.session.token(s, callOptions(options));
     return { scope: entry.scope, role: entry.role, expiresAt: entry.exp };
+  }
+
+  getRole(): HemRole | undefined {
+    return this.#ctx.session.role;
   }
 
   logout(): void {
