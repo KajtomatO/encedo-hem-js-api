@@ -28,6 +28,8 @@ AuthApi: getRole(): HemRole | undefined;
 AuthApi: login(scope: string, options?: CallOptions): Promise<SessionInfo>;
 AuthApi: logout(): void;
 AuthApi: }
+CREATABLE_KEY_TYPES
+CREATABLE_KEY_TYPES: export declare const CREATABLE_KEY_TYPES: readonly ["SECP256R1", "SECP384R1", "SECP521R1", "SECP256K1", "CURVE25519", "CURVE448", "ED25519", "ED448", "SHA2-256", "SHA2-384", "SHA2-512", "SHA3-256", "SHA3-384", "SHA3-512", "AES128", "AES192", "AES256", "MLKEM512", "MLKEM768", "MLKEM1024", "MLDSA44", "MLDSA65", "MLDSA87"];
 CallOptions
 CallOptions: export interface CallOptions {
 CallOptions: signal?: AbortSignal | undefined;
@@ -44,6 +46,15 @@ CheckinResult: readonly newfws: string | undefined;
 CheckinResult: readonly newuis: string | undefined;
 CheckinResult: readonly status: string;
 CheckinResult: }
+CreatableKeyType
+CreatableKeyType: export type CreatableKeyType = (typeof CREATABLE_KEY_TYPES)[number];
+CreateKeyParams
+CreateKeyParams: description?: Uint8Array | undefined;
+CreateKeyParams: export interface CreateKeyParams {
+CreateKeyParams: label: string;
+CreateKeyParams: mode?: KeyMode | undefined;
+CreateKeyParams: type: CreatableKeyType;
+CreateKeyParams: }
 CryptoApi
 CryptoApi: export interface CryptoApi {
 CryptoApi: }
@@ -197,9 +208,67 @@ HemValidationError: readonly code = "VALIDATION";
 HemValidationError: readonly parameter: string;
 HemValidationError: toJSON(): Record<string, unknown>;
 HemValidationError: }
+KEY_ALGORITHMS
+KEY_ALGORITHMS: export declare const KEY_ALGORITHMS: readonly ["GENERIC_DER", "SECP256R1", "SECP384R1", "SECP521R1", "SECP256K1", "CURVE25519", "CURVE448", "ED25519", "ED448", "MLKEM512", "MLKEM768", "MLKEM1024", "MLDSA44", "MLDSA65", "MLDSA87", "SHA2-256", "SHA2-384", "SHA2-512", "SHA3-256", "SHA3-384", "SHA3-512", "AES128", "AES192", "AES256"];
+KEY_FLAGS
+KEY_FLAGS: export declare const KEY_FLAGS: readonly ["ATT", "PKEY", "ECDH", "ExDSA", "CERT", "PQC"];
+KEY_MODES
+KEY_MODES: export declare const KEY_MODES: readonly ["ECDH", "ExDSA", "ECDH,ExDSA"];
+KeyAlgorithm
+KeyAlgorithm: export type KeyAlgorithm = (typeof KEY_ALGORITHMS)[number];
+KeyDetails
+KeyDetails: export interface KeyDetails {
+KeyDetails: readonly der: Uint8Array | undefined;
+KeyDetails: readonly description: Uint8Array | undefined;
+KeyDetails: readonly kid: string;
+KeyDetails: readonly pubkey: Uint8Array | undefined;
+KeyDetails: readonly type: KeyType | undefined;
+KeyDetails: readonly updated: number;
+KeyDetails: }
+KeyFlag
+KeyFlag: export type KeyFlag = (typeof KEY_FLAGS)[number];
+KeyInfo
+KeyInfo: export interface KeyInfo {
+KeyInfo: readonly created: number;
+KeyInfo: readonly description: Uint8Array | undefined;
+KeyInfo: readonly kid: string;
+KeyInfo: readonly label: string;
+KeyInfo: readonly type: KeyType;
+KeyInfo: readonly updated: number;
+KeyInfo: }
+KeyMode
+KeyMode: export type KeyMode = (typeof KEY_MODES)[number];
+KeyPage
+KeyPage: export interface KeyPage {
+KeyPage: readonly deleted: number | undefined;
+KeyPage: readonly keys: readonly KeyInfo[];
+KeyPage: readonly listed: number;
+KeyPage: readonly offset: number;
+KeyPage: readonly total: number;
+KeyPage: }
+KeyType
+KeyType: export interface KeyType {
+KeyType: readonly algorithm: KeyAlgorithm | undefined;
+KeyType: readonly flags: readonly KeyFlag[];
+KeyType: readonly raw: string;
+KeyType: readonly unknown: readonly string[];
+KeyType: }
 KeysApi
+KeysApi: create(params: CreateKeyParams, options?: CallOptions): Promise<string>;
 KeysApi: export interface KeysApi {
+KeysApi: findByDescription(description: Uint8Array, options?: CallOptions): Promise<KeyInfo[]>;
+KeysApi: get(kid: string, options?: CallOptions): Promise<KeyDetails>;
+KeysApi: iterate(params?: {
+KeysApi: list(params?: ListKeysParams, options?: CallOptions): Promise<KeyPage>;
+KeysApi: pageSize?: number | undefined;
+KeysApi: search(params: SearchKeysParams, options?: CallOptions): Promise<KeyPage>;
 KeysApi: }
+KeysApi: }, options?: CallOptions): AsyncIterable<KeyInfo>;
+ListKeysParams
+ListKeysParams: count?: number | undefined;
+ListKeysParams: export interface ListKeysParams {
+ListKeysParams: offset?: number | undefined;
+ListKeysParams: }
 LoginChallenge
 LoginChallenge: export interface LoginChallenge {
 LoginChallenge: readonly eid: string;
@@ -220,6 +289,13 @@ RelayHttpOptions: export interface RelayHttpOptions {
 RelayHttpOptions: fetch?: FetchLike | undefined;
 RelayHttpOptions: timeoutMs?: number | undefined;
 RelayHttpOptions: }
+SearchKeysParams
+SearchKeysParams: description: Uint8Array;
+SearchKeysParams: export interface SearchKeysParams {
+SearchKeysParams: limit?: number | undefined;
+SearchKeysParams: match?: "prefix" | "suffix" | "contains" | undefined;
+SearchKeysParams: offset?: number | undefined;
+SearchKeysParams: }
 SessionInfo
 SessionInfo: export interface SessionInfo {
 SessionInfo: readonly expiresAt: number;
@@ -265,3 +341,5 @@ SystemVersion: readonly sdCid: string | undefined;
 SystemVersion: readonly sdCsd: string | undefined;
 SystemVersion: readonly uis: Uint8Array | undefined;
 SystemVersion: }
+parseKeyType
+parseKeyType: export declare function parseKeyType(raw: string): KeyType;

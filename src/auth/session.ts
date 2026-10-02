@@ -3,7 +3,15 @@
 // implements: REQ-AUTH-004, REQ-AUTH-005, REQ-AUTH-007, REQ-AUTH-008, REQ-AUTH-012, REQ-AUTH-013, REQ-AUTH-009
 
 import { decodeBase64 } from "../codec/base64.js";
-import { HemAbortError, HemError, HemForbiddenError, HemProtocolError, HemUnauthenticatedError, errorFromStatus } from "../errors.js";
+import {
+  HemAbortError,
+  HemError,
+  HemForbiddenError,
+  HemProtocolError,
+  HemTlsRequiredError,
+  HemUnauthenticatedError,
+  errorFromStatus,
+} from "../errors.js";
 import { runCheckin } from "../api/checkin.js";
 import { x25519 } from "../crypto/shim.js";
 import { getChallenge, postProof, type LoginChallenge } from "../api/auth-calls.js";
@@ -169,6 +177,12 @@ export class Session {
    * new one obtained and the request repeated once. Error statuses are mapped.
    */
   async authorized(req: DeviceRequest, scope: string): Promise<DeviceResponse> {
+    if (req.requiresTls && !this.#ctx.transport.secure) {
+      // refuse before logging in: nothing is sent at all
+      throw new HemTlsRequiredError(`${req.operation}: refused over plain HTTP; the device URL must use https:`, {
+        operation: req.operation,
+      });
+    }
     for (let attempt = 0; ; attempt++) {
       const entry = await this.token(scope, req);
       const res = await this.#ctx.transport.send({ ...req, token: entry.token });

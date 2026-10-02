@@ -8,7 +8,20 @@ export type { AuthApi, SessionInfo } from "./api/auth.js";
 export type { LoginChallenge } from "./api/auth-calls.js";
 export type { HemRole } from "./auth/token.js";
 export type { SystemApi, SystemStatus, SystemVersion, HealthReport } from "./api/system.js";
-export type { KeysApi } from "./api/keymgmt.js";
+export type {
+  KeysApi,
+  CreateKeyParams,
+  CreatableKeyType,
+  KeyMode,
+  KeyDetails,
+  KeyInfo,
+  KeyPage,
+  ListKeysParams,
+  SearchKeysParams,
+} from "./api/keymgmt.js";
+export { CREATABLE_KEY_TYPES, KEY_MODES } from "./api/keymgmt.js";
+export { parseKeyType, KEY_FLAGS, KEY_ALGORITHMS } from "./api/keytype.js";
+export type { KeyType, KeyFlag, KeyAlgorithm } from "./api/keytype.js";
 export type { CryptoApi } from "./api/crypto.js";
 export { EncedoCheckinRelay, ENCEDO_CHECKIN_URL } from "./relay/checkin.js";
 export type { CheckinRelay, EncedoCheckinRelayOptions } from "./relay/checkin.js";
