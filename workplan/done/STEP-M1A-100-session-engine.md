@@ -7,9 +7,9 @@ traces:
   architecture: ["ARCHITECTURE.md#52-session-behaviour", "ARCHITECTURE.md#6-protocol-bindings", "ARCHITECTURE.md#2-context--constraints"]
 depends_on: ["STEP-M1A-090"]
 evidence:
-  commits: ["fa4c9fb"]
+  commits: ["fa4c9fb", "1b5eb90"]
   tests: ["verifies: REQ-AUTH-004", "verifies: REQ-AUTH-005", "verifies: REQ-AUTH-007", "verifies: REQ-AUTH-008", "verifies: REQ-AUTH-010", "verifies: REQ-AUTH-012", "verifies: REQ-AUTH-013", "verifies: REQ-NET-004", "verifies: REQ-NET-005"]
-  notes: "npm run check passed in Node 24 and Chromium. Session.authorized(request, scope) is the single entry point for authenticated bindings; Session.token(scope) serves the cache (renew when exp - now <= 60 s) and shares one in-flight login per scope; a waiter's abort ends only its own wait. client.auth.getRole() exposes the latest role. The per-operation scope table (kid in lower case for keymgmt:use) and the no-token-parameter check over the whole surface are asserted per binding in STEP-M1A-140/150 and completed in STEP-M1A-180."
+  notes: "npm run check passed (291 tests after the follow-up test fix; the done commit was first made with two failing runs of the eid-change test, corrected by the last listed commit) in Node 24 and Chromium. Session.authorized(request, scope) is the single entry point for authenticated bindings; Session.token(scope) serves the cache (renew when exp - now <= 60 s) and shares one in-flight login per scope; a waiter's abort ends only its own wait. client.auth.getRole() exposes the latest role. The per-operation scope table (kid in lower case for keymgmt:use) and the no-token-parameter check over the whole surface are asserted per binding in STEP-M1A-140/150 and completed in STEP-M1A-180."
 reopened: []
 cancelled: null
 ---
