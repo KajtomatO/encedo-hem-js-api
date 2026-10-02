@@ -1,0 +1,2348 @@
+openapi: 3.0.3
+
+# Encedo nGINE REST API — OpenAPI 3.0.3 description for firmware release 1.2.2.
+#
+# This file is the single source of truth for the API reference published at
+# https://encedo.github.io/hem-api-docs/: the hand-written reference pages are kept in
+# sync with it (see AGENTS.md) and the interactive API tester renders it directly.
+# One file per API version: api/hem-api-<version>.yaml.
+#
+# Derived from the firmware source (Firmware/src/api.h, api.c, api_auth.c, api_system.c,
+# api_keymgmt.c, api_crypto.c, api_storage.c, api_logger.c) and hand-maintained
+# alongside api.h — update both together.
+
+info:
+  title: Encedo nGINE REST API
+  version: "1.2.2"
+  description: |
+    REST API served directly by the Encedo hardware security module (nGINE firmware,
+    SAM E70/V71, FreeRTOS). The device enumerates over USB as a CDC-ECM network
+    adapter and serves this API on that virtual link (HTTP :80, HTTPS :443 with
+    TLS 1.3 via wolfSSL). It also runs a DHCP server (pool 192.168.7.10-12) and an
+    optional DNS server answering `my.ence.do` / `my.encedo` with the device address.
+
+    ### Global conventions
+    - **Every response — including all errors — is sent with `Content-Type: application/json`.**
+      Error responses have an empty body (`Content-Length: 0`) unless documented otherwise.
+    - **Authentication** is a bearer JWT (HS256, signed with a per-boot session key —
+      all tokens become invalid when the device reboots). A *missing* `Authorization`
+      header passes the dispatcher and each endpoint decides whether to reject (401);
+      a *present but invalid* token is always rejected with 401 before routing.
+      Scope checks compare the token's `scope` claim as a **prefix** (the crypto
+      endpoints require an exact match `keymgmt:use:<kid>`). The `sub` claim carries
+      the role: `U` (user), `M` (master, denied on key-management/crypto operations),
+      or a base64 key id for externally paired clients.
+    - **418** means "TLS required" — the endpoint refuses plain HTTP. (The status
+      line carries an empty reason phrase; 418 is absent from the firmware's
+      status-text table.)
+    - **412** means the CORS `Origin` header did not match the configured allow-list
+      (`MainCfg.Option_CORSOrigin`; supports `*`, exact origins, and `*.domain.tld`).
+      Any endpoint can return it when an `Origin` header is present. Preflight
+      `OPTIONS` on any path returns `204` with
+      `Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS`,
+      `Access-Control-Allow-Headers: Content-Type, Cache-Control, Pragma, Expires,
+      Authorization, Content-Disposition`, `Access-Control-Max-Age: 86400`,
+      `Access-Control-Allow-Credentials: true`.
+    - **409** generally means the device is busy or in the wrong state: self-test
+      failure latched (`fls_state != 0`), device not yet initialised, software
+      install in progress, or disk format running.
+    - JSON request bodies are limited to **7300 bytes** (413, connection closed).
+      Raw uploads are limited to **16 MiB**. `Expect: 100-continue` is honoured.
+      POST without `Content-Length` returns **411**.
+    - Base64 fields accept the standard and URL-safe alphabets with optional `=`
+      padding on input; the device always emits standard base64 without line breaks.
+    - Key ids (`kid`) are 16 bytes rendered as 32 hex characters.
+    - Paths marked **MSC build only** exist only on hardware with SD/USB mass storage (`USB_MSC_AVAILABLE`).
+    - Non-`/api/` GET paths serve the static web dashboard from the device
+      filesystem (`/webroot`, `/app`) — not modelled in this document.
+  contact:
+    name: Encedo Limited
+    url: https://encedo.com
+
+servers:
+  - url: https://my.ence.do
+    description: Default device hostname on the USB CDC-ECM link (on-device DNS)
+  - url: https://192.168.7.1
+    description: Factory-default device IP on the USB CDC-ECM network
+  - url: http://192.168.7.1
+    description: Plain HTTP — key-management and crypto operations refuse it with 418
+
+tags:
+  - name: system
+    x-displayName: System
+    description: Device status, configuration, attestation, remote check-in, firmware/UI upgrade, power control
+  - name: auth
+    x-displayName: Authorization
+    description: Local login, device provisioning, and external (mobile app) ECDH pairing
+  - name: keymgmt
+    x-displayName: Key management
+    description: Key repository — list, search, fetch, create, import, derive, update, delete
+  - name: crypto
+    x-displayName: Cryptography operations
+    description: Cryptographic operations with stored keys (HMAC, ECDSA/EdDSA, AES, key wrap, ECDH, ML-KEM, ML-DSA). All HTTPS-only, all require the exact scope `keymgmt:use:<kid>`.
+  - name: logger
+    x-displayName: Audit log
+    description: Tamper-evident audit log — HMAC-chained log files signed with the device Ed25519 identity key
+  - name: storage
+    x-displayName: Storage
+    description: SD-card slot exposure over USB mass storage. Disk index and write permission are carried in the JWT scope (`storage:disk<N>[:rw]`), not the URL. MSC build only.
+
+security: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        HS256 JWT issued by `POST /api/auth/token` (local) or `POST /api/auth/ext/token`
+        (paired external app), signed with the per-boot session key. Claims: `scope`
+        (space-less scope string, checked by prefix), `sub` (role `U`/`M` or base64
+        app key id), `iat`, `exp` (default lifetime 8 h), `jti`, optional `ctx`.
+
+  parameters:
+    Kid:
+      name: kid
+      in: path
+      required: true
+      description: Key identifier — 16 bytes as exactly 32 hex characters.
+      schema:
+        type: string
+        pattern: '^[0-9a-fA-F]{32}$'
+
+  responses:
+    BadRequest:
+      description: "Malformed request: unparseable JSON, missing/invalid required field, or malformed path argument. Empty body."
+    Unauthorized:
+      description: Missing bearer token on a protected endpoint, or a supplied token failed signature/expiry validation. Empty body.
+    Forbidden:
+      description: Token scope/role does not permit this operation (audit-logged), or the operation is not allowed in the current device state. Empty body.
+    Conflict:
+      description: "Device busy or wrong state: self-test fault latched, not initialised, software install or disk format in progress. Empty body."
+    CorsRejected:
+      description: 412 — the request `Origin` header did not match the configured CORS allow-list. Empty body.
+    LengthRequired:
+      description: POST without a positive `Content-Length`. Empty body.
+    PayloadTooLarge:
+      description: Body exceeds the limit (7300 bytes for JSON, 16 MiB for uploads). Connection is closed. Empty body.
+    TlsRequired:
+      description: 418 — endpoint requires TLS; request arrived over plain HTTP. Empty body.
+    ServerError:
+      description: Internal allocation or serialization failure. Empty body.
+
+  schemas:
+    KidResponse:
+      type: object
+      required: [ kid ]
+      properties:
+        kid:
+          type: string
+          pattern: '^[0-9a-f]{32}$'
+          description: Key identifier of the affected/created key (lowercase hex).
+
+    TokenResponse:
+      type: object
+      required: [ token ]
+      properties:
+        token:
+          type: string
+          description: Bearer access JWT (HS256, valid until device reboot or `exp`).
+
+    KeyObject:
+      type: object
+      description: One key-repository record, as returned by list and search.
+      required: [ kid, created, type, label, updated ]
+      properties:
+        kid:
+          type: string
+          pattern: '^[0-9a-f]{32}$'
+        created:
+          type: integer
+          description: Unix timestamp of key creation.
+        type:
+          type: string
+          description: |
+            Comma-joined attribute prefixes (`ATT`, `PKEY`, `ECDH`, `ExDSA`, `CERT`, `PQC`)
+            followed by the algorithm: `GENERIC_DER`, `SECP256R1`, `SECP384R1`, `SECP521R1`,
+            `SECP256K1`, `CURVE25519`, `CURVE448`, `ED25519`, `ED448`, `MLKEM512`, `MLKEM768`,
+            `MLKEM1024`, `MLDSA44`, `MLDSA65`, `MLDSA87`, `SHA2-256`, `SHA2-384`, `SHA2-512`,
+            `SHA3-256`, `SHA3-384`, `SHA3-512`, `AES128`, `AES192`, `AES256`.
+            Example: `PKEY,ECDH,ExDSA,SECP256R1`.
+        label:
+          type: string
+          maxLength: 32
+          description: Human-readable label (printable ASCII).
+        descr:
+          type: string
+          format: byte
+          description: Base64 of the binary description blob. Present only when non-empty.
+        updated:
+          type: integer
+          description: Unix timestamp of last attribute update.
+
+    KeyListEnvelope:
+      type: object
+      required: [ offset, deleted, total, listed, list ]
+      properties:
+        offset:
+          type: integer
+          description: Echo of the requested offset.
+        deleted:
+          type: integer
+          description: Deleted/invalid records encountered during the scan.
+        total:
+          type: integer
+          description: Valid records in the repository.
+        listed:
+          type: integer
+          description: Number of elements in `list`.
+        list:
+          type: array
+          items:
+            $ref: '#/components/schemas/KeyObject'
+
+paths:
+
+  ############################################################################
+  # AUTH
+  ############################################################################
+
+  /api/auth/token:
+    get:
+      tags: [ auth ]
+      operationId: getAuthChallenge
+      summary: Get login challenge (nonce + session keys)
+      description: |
+        Unauthenticated challenge for local login. Returns a 60-second nonce (`jti`),
+        the per-boot session public id (`spk`), the device X25519 identity public key
+        (`eid`) and the configured user label. The client builds an HS256 JWT keyed
+        with the session key and POSTs it back to this path.
+      security: []
+      responses:
+        '200':
+          description: Challenge issued.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ exp, spk, jti, lbl, eid ]
+                properties:
+                  exp: { type: integer, description: "Challenge expiry (now + 60 s, unix time)." }
+                  spk: { type: string, format: byte, description: Base64 session public id. }
+                  jti: { type: string, format: byte, description: Base64 36-byte time-based nonce. }
+                  lbl: { type: string, description: Configured user identity label. }
+                  eid: { type: string, format: byte, description: Base64 X25519 device identity public key (32 bytes). }
+        '403': { description: Trusted-time option enabled but RTC not set. Empty body. }
+        '409': { description: Device not initialised. Empty body. }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+        '500': { $ref: '#/components/responses/ServerError' }
+    post:
+      tags: [ auth ]
+      operationId: postAuthToken
+      summary: Log in — exchange a proof JWT for a bearer token
+      description: |
+        Local token issuance. The `auth` field is a compact HS256 JWS signed with the
+        session key, carrying: `jti` (nonce from the GET challenge, single-use),
+        `iat`, `exp` (absolute epoch, becomes the issued token's expiry; defaults to
+        8 h when 0), `iss` (base64 of a 32-byte secret compared constant-time against
+        the configured UserKey → role `U`, or MasterKey → role `M`), optional
+        `scope` (≤127 chars, copied into the issued token) and `ctx` (<64 chars).
+        Responses are delayed to at least 500 ms (1500 ms after 3 consecutive
+        failures) as brute-force mitigation.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ auth ]
+              properties:
+                auth:
+                  type: string
+                  description: Compact HS256 JWS signed with the session key (see description).
+      responses:
+        '200':
+          description: Authenticated — bearer token issued.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TokenResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { description: "Bad signature, expired/replayed nonce, or unknown key. Empty body." }
+        '403': { description: Trusted-time option enabled but RTC not set. Empty body. }
+        '409': { description: Device not initialised. Empty body. }
+        '411': { $ref: '#/components/responses/LengthRequired' }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '500': { $ref: '#/components/responses/ServerError' }
+
+  /api/auth/init:
+    get:
+      tags: [ auth ]
+      operationId: getInitChallenge
+      summary: Get provisioning challenge (factory-fresh device only)
+      description: |
+        Same challenge material as `GET /api/auth/token` plus a hardware attestation
+        token (`genuine`), without the user label. Only available while the device is
+        uninitialised.
+      security: []
+      responses:
+        '200':
+          description: Challenge issued.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ exp, spk, jti, genuine, eid ]
+                properties:
+                  exp: { type: integer }
+                  spk: { type: string, format: byte }
+                  jti: { type: string, format: byte }
+                  genuine: { type: string, description: Hardware (ATECC608) attestation token. }
+                  eid: { type: string, format: byte }
+        '403': { description: RTC not set — initialisation requires valid time. Empty body. }
+        '406': { description: Device already initialised. Empty body. }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+        '500': { $ref: '#/components/responses/ServerError' }
+    post:
+      tags: [ auth ]
+      operationId: postAuthInit
+      summary: Provision the device (one-shot)
+      description: |
+        One-shot device provisioning. The `init` field is an HS256 JWS signed with
+        the session key carrying the single-use `jti` nonce and a `cfg` object claim
+        with the initial configuration. Required `cfg` fields: `user`, `masterkey`
+        (base64, 32 bytes), `userkey` (base64, 32 bytes), `hostname`, `origin`
+        (CORS allow-list), `trusted_ts` (bool), `trusted_backend` (bool),
+        `allow_keysearch` (bool), `email`; on MSC builds additionally `ip`
+        (CIDR, e.g. `192.168.7.1/24`), `storage_mode`, `storage_disk0size`, `dnsd`.
+        Optional: `ctx` (number), `gen_csr` (bool — generate a TLS key + CSR).
+        On success the config is written to flash and the key repository initialised.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ init ]
+              properties:
+                init:
+                  type: string
+                  description: Compact HS256 JWS with `jti` and `cfg` claims (see description).
+      responses:
+        '200':
+          description: Device provisioned.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ instanceid, token ]
+                properties:
+                  reboot_required:
+                    type: boolean
+                    description: Present (true) when network/storage settings require a reboot.
+                  instanceid:
+                    type: string
+                    description: HKDF-derived device instance UUID for remote management.
+                  token:
+                    type: string
+                    description: Bearer JWT scoped `system:config`, role U, 8-hour lifetime.
+                  csr:
+                    type: string
+                    description: PEM certificate signing request — only when `gen_csr` was true and generation succeeded.
+                  genuine:
+                    type: string
+                    description: Hardware attestation token (absent if CSR generation was requested but failed).
+        '400': { description: "Unparseable body, missing `init`/`cfg`, or incomplete required `cfg` fields. Empty body." }
+        '401': { description: JWT decode/validation failure or nonce replay. Empty body. }
+        '403': { description: RTC not set. Empty body. }
+        '406': { description: "Already initialised, or config flash write failed. Empty body." }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '411': { $ref: '#/components/responses/LengthRequired' }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '500': { $ref: '#/components/responses/ServerError' }
+
+  /api/auth/ext/init:
+    post:
+      tags: [ auth ]
+      operationId: postAuthExtInit
+      summary: 'External pairing step 1: create a pairing-request JWT'
+      description: |
+        Takes the external app's ephemeral X25519 public key and returns a
+        pairing-request JWT signed HS256 with the ECDH shared secret
+        (header `ecdh: x25519`, claims `jti`, `exp` = now + 24 h, `aud` = the
+        supplied key, `iss` = device identity key), plus the device identity key.
+        Requires role `U`.
+      security: [ { bearerAuth: [] } ]
+      x-required-scope: "auth:ext:pair OR system:config (prefix match)"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ epk ]
+              properties:
+                epk:
+                  type: string
+                  format: byte
+                  description: Base64 X25519 public key — must decode to exactly 32 bytes.
+      responses:
+        '200':
+          description: Pairing request created.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ request, eid ]
+                properties:
+                  request: { type: string, description: ECDH-bound pairing-request JWT (24 h validity). }
+                  eid: { type: string, format: byte, description: Base64 device X25519 identity public key. }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '411': { $ref: '#/components/responses/LengthRequired' }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '500': { $ref: '#/components/responses/ServerError' }
+
+  /api/auth/ext/validate:
+    post:
+      tags: [ auth ]
+      operationId: postAuthExtValidate
+      summary: 'External pairing step 2: validate the app reply and store its key'
+      description: |
+        Verifies the app's ECDH-signed reply JWT (claims `jti`, `iss` = app id,
+        `label`, `epk`), stores the app's X25519 public key in the repository under
+        descriptor `EXTAID<pid>`, and returns the stored key id plus a confirmation
+        code (HMAC-SHA256 of the reply keyed with the ECDH secret) to compare on the
+        app's display. Requires role `U`.
+      security: [ { bearerAuth: [] } ]
+      x-required-scope: "auth:ext:pair OR system:config (prefix match)"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ pid, reply ]
+              properties:
+                pid:
+                  type: string
+                  format: byte
+                  description: Base64 pairing id — appended to `EXTAID` to form the repository descriptor.
+                reply:
+                  type: string
+                  description: Compact JWS from the app, HMAC-signed with the device identity secret.
+      responses:
+        '200':
+          description: App key stored.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ kid, code ]
+                properties:
+                  kid: { type: string, pattern: '^[0-9a-f]{32}$' }
+                  code: { type: string, format: byte, description: Base64 32-byte pairing confirmation code. }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { description: "Missing/invalid bearer token, bad reply JWT, or nonce replay. Empty body." }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '406': { description: Key import failed (storage full or duplicate). Empty body. }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '411': { $ref: '#/components/responses/LengthRequired' }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '500': { $ref: '#/components/responses/ServerError' }
+
+  /api/auth/ext/mac:
+    post:
+      tags: [ auth ]
+      operationId: postAuthExtMac
+      summary: Proof-of-possession MAC helper
+      description: |
+        Given an ephemeral X25519 public key, returns a fresh nonce, the
+        HMAC-SHA256 of that nonce keyed with the ECDH shared secret, and the device
+        identity key — proving the device holds its identity private key.
+        Requires role `U`.
+      security: [ { bearerAuth: [] } ]
+      x-required-scope: "auth:ext:pair OR system:config (prefix match)"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ epk ]
+              properties:
+                epk:
+                  type: string
+                  format: byte
+                  description: Base64 X25519 public key — must decode to exactly 32 bytes.
+      responses:
+        '200':
+          description: MAC computed.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ nonce, mac, eid ]
+                properties:
+                  nonce: { type: string, format: byte, description: Base64 32-byte time-based nonce. }
+                  mac: { type: string, format: byte, description: "Base64 HMAC-SHA256(ECDH secret, nonce)." }
+                  eid: { type: string, format: byte }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '411': { $ref: '#/components/responses/LengthRequired' }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '500': { $ref: '#/components/responses/ServerError' }
+
+  /api/auth/ext/request:
+    post:
+      tags: [ auth ]
+      operationId: postAuthExtRequest
+      summary: Build an authorization request for paired external apps
+      description: |
+        Unauthenticated. Encrypts the requested scope separately for each paired
+        app (up to 8) under an ECDH+nonce-derived AES-128-CBC key and returns a
+        single ECDH-signed JWT (`authreq`) whose `scope` claim is a map of
+        per-app ciphertexts. Validity 60 min, or 15 min when the scope is a
+        narrowed `keymgmt:use:<kid>` request (the device appends key metadata as
+        `#<base64 {"t","l"}>` for the approving app to display).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ epk, scope ]
+              properties:
+                epk:
+                  type: string
+                  format: byte
+                  description: Base64 X25519 public key of the requesting client (32 bytes).
+                scope:
+                  type: string
+                  maxLength: 1023
+                  description: Requested scope string.
+                ctx:
+                  type: string
+                  maxLength: 64
+                  description: Optional context — copied into the request JWT.
+                note:
+                  type: string
+                  maxLength: 128
+                  description: Optional human-readable note — copied into the request JWT.
+      responses:
+        '200':
+          description: Authorization request created.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ authreq, epk ]
+                properties:
+                  authreq: { type: string, description: ECDH-bound authorization-request JWT. }
+                  epk: { type: string, format: byte, description: Echo of the client public key used. }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '403': { description: RTC not set. Empty body. }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '411': { $ref: '#/components/responses/LengthRequired' }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '500': { $ref: '#/components/responses/ServerError' }
+
+  /api/auth/ext/token:
+    post:
+      tags: [ auth ]
+      operationId: postAuthExtToken
+      summary: Redeem a paired app's approval for a bearer token
+      description: |
+        Unauthenticated. Verifies the paired app's signed approval JWT
+        (`authreply`: claims `jti`, `pid`, `iss`, encrypted `scope`, `exp`,
+        optional `ctx`) against the stored pairing key, decrypts and MAC-verifies
+        the approved scope, and issues a bearer token whose `sub` is the base64
+        key id of the approving app. Response timing is padded as brute-force
+        mitigation; failures are deliberately not audit-logged.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ authreply ]
+              properties:
+                authreply:
+                  type: string
+                  description: Compact JWS approval from the paired app.
+      responses:
+        '200':
+          description: Token issued.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TokenResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { description: Approval JWT invalid/expired or nonce replayed. Empty body. }
+        '403': { description: RTC not set. Empty body. }
+        '406': { description: "Unknown pairing, key mismatch, undecryptable scope, or unsupported scheme. Empty body." }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '411': { $ref: '#/components/responses/LengthRequired' }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '500': { $ref: '#/components/responses/ServerError' }
+
+  ############################################################################
+  # SYSTEM
+  ############################################################################
+
+  /api/system/status:
+    get:
+      tags: [ system ]
+      operationId: getSystemStatus
+      summary: Device status snapshot
+      description: Unauthenticated liveness/state snapshot. Several fields are conditional on device state and build.
+      security: []
+      responses:
+        '200':
+          description: Status.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ ctx, uptime, temp, fls_state ]
+                properties:
+                  inited: { type: boolean, description: Present (false) only when the device is NOT initialised. }
+                  https: { type: boolean, description: HTTPS server status — present only on plain-HTTP requests. }
+                  hostname: { type: string, description: Present only when the request Host header does not match the configured hostname. }
+                  tts: { type: boolean, description: Present (false) only when the trusted-time option is off. }
+                  ctx: { type: integer, description: Configured context number. }
+                  uptime: { type: integer, description: Seconds since boot. }
+                  ts: { type: string, description: RFC3339 UTC time — present only when the RTC is set. }
+                  time: { type: integer, description: Unix time — present only when the RTC is set. }
+                  storage:
+                    type: array
+                    items: { type: string }
+                    description: 'MSC build only: per-slot "<sectors>:rw|ro|-" strings.'
+                  format: { type: string, description: 'MSC build only: disk-format task progress ("status<N>" or "done").' }
+                  temp: { type: number, description: Device temperature. }
+                  fls_state: { type: integer, description: Latched self-test fault state (0 = healthy). }
+                  fw_upgrade: { type: boolean, description: Present (true) only right after a firmware upgrade completed. }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+        '500': { $ref: '#/components/responses/ServerError' }
+
+  /api/system/version:
+    get:
+      tags: [ system ]
+      operationId: getSystemVersion
+      summary: Hardware/firmware/bootloader identity
+      description: |
+        Unauthenticated. A valid bearer token (any scope) additionally unlocks the
+        SD-card CSD/CID registers on MSC builds.
+      security: []
+      responses:
+        '200':
+          description: Version info.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ hwv, fwv, fwk, fws ]
+                properties:
+                  hwv: { type: string, description: 'Hardware version, e.g. "PPA rev 2.2".' }
+                  fwv: { type: string, description: Firmware name from the signed image footer. }
+                  fwk: { type: string, format: byte, description: Base64 firmware public key. }
+                  fws: { type: string, format: byte, description: Base64 firmware signature. }
+                  blv: { type: string, description: Bootloader name (conditional). }
+                  blk: { type: string, format: byte, description: Base64 bootloader public key (conditional). }
+                  bls: { type: string, format: byte, description: Base64 bootloader signature (conditional). }
+                  sd_csd: { type: string, description: 'MSC build: hex SD CSD register — uninitialised device or valid token required.' }
+                  sd_cid: { type: string, description: 'MSC build: hex SD CID register — same condition.' }
+                  uis: { type: string, format: byte, description: 'MSC build: base64 dashboard version hash.' }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+        '500': { $ref: '#/components/responses/ServerError' }
+
+  /api/system/checkin:
+    get:
+      tags: [ system ]
+      operationId: getSystemCheckin
+      summary: 'Remote-management check-in step 1: get device-signed token'
+      description: |
+        Unauthenticated. Returns a JWS (`check`) describing this unit (nonce, session
+        id, device id, firmware/bootloader/UI signatures, TLS cert serial), HMAC-keyed
+        with an X25519 secret only the trusted backend can derive.
+      security: []
+      responses:
+        '200':
+          description: Check-in token.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ check ]
+                properties:
+                  check: { type: string, description: Compact JWS for the trusted backend. }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+        '500': { $ref: '#/components/responses/ServerError' }
+    post:
+      tags: [ system ]
+      operationId: postSystemCheckin
+      summary: 'Remote-management check-in step 2: apply backend reply'
+      description: |
+        Consumes the backend's signed JWT reply (`checked`): validates signature,
+        nonce and hard-coded trusted issuer, then executes the embedded management
+        action — `OK` (none), `L` (lock: erase user key), `W` (full wipe + reboot),
+        `R` (report), `B` (soft-brick: stop web servers), `U` (force upgrade) —
+        optionally installs a pushed TLS certificate (`newcrt`), and sets the RTC
+        from the token's `iat`. Actions are suppressed when the trusted-backend
+        option is off.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ checked ]
+              properties:
+                checked:
+                  type: string
+                  description: Compact JWS from the trusted backend.
+      responses:
+        '200':
+          description: Reply processed.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ status ]
+                properties:
+                  newcrt: { type: string, enum: [ OK, ERROR ], description: Result of TLS cert install — present only when a cert was pushed. }
+                  status: { type: string, description: 'Executed action: OK, L, W, R, B, U or "???".' }
+                  newfws: { type: string, description: "Newly available firmware signature (echoed, conditional)." }
+                  newuis: { type: string, description: 'MSC build: newly available UI signature (echoed, conditional).' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { description: "Reply JWT invalid, nonce unknown, or issuer not trusted. Empty body." }
+        '411': { $ref: '#/components/responses/LengthRequired' }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '500': { $ref: '#/components/responses/ServerError' }
+
+  /api/system/config:
+    get:
+      tags: [ system ]
+      operationId: getSystemConfig
+      summary: Read device configuration
+      description: |
+        Returns the full configuration, identity keys, and a fresh `nonce` + session
+        public key (`spk`) needed for the user-key-rotation handshake on POST.
+      security: [ { bearerAuth: [] } ]
+      x-required-scope: "system:config OR logger:get OR auth:ext:pair (prefix match)"
+      responses:
+        '200':
+          description: Configuration.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ iat, uts, devid, eid, eid_sign, user, email, hostname, dnsd, trusted_ts, trusted_backend, allow_keysearch, origin, ctx, ip, http_option_hsts, http_option_dosprot_mode, spk, nonce ]
+                properties:
+                  iat: { type: integer, description: Config creation timestamp. }
+                  uts: { type: integer, description: Config last-update timestamp. }
+                  devid: { type: string, description: Hex device serial (8 bytes). }
+                  instanceid: { type: string, description: Device instance UUID (conditional). }
+                  eid: { type: string, format: byte, description: Base64 X25519 identity public key. }
+                  eid_sign: { type: string, format: byte, description: Base64 Ed25519 signing public key. }
+                  user: { type: string }
+                  email: { type: string }
+                  hostname: { type: string }
+                  dnsd: { type: boolean }
+                  trusted_ts: { type: boolean }
+                  trusted_backend: { type: boolean }
+                  allow_keysearch: { type: boolean }
+                  origin: { type: string, description: CORS allow-list. }
+                  ctx: { type: integer }
+                  ip: { type: string, description: 'CIDR form, e.g. "192.168.7.1/24".' }
+                  http_option_hsts: { type: boolean }
+                  http_option_dosprot_mode: { type: integer, minimum: 0, maximum: 4 }
+                  genuine_id: { type: string, description: 'MSC build: secure-element serial (conditional).' }
+                  storage_mode: { type: integer, description: MSC build only. }
+                  storage_disk0size: { type: integer, description: 'MSC build: disk 0 size in sectors.' }
+                  storage_capacity: { type: integer, description: 'MSC build: total usable sectors.' }
+                  spk: { type: string, format: byte, description: Base64 session X25519 public key for user-key rotation. }
+                  nonce: { type: string, format: byte, description: Base64 nonce — echo as `userkey_nonce` on POST. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+        '500': { $ref: '#/components/responses/ServerError' }
+    post:
+      tags: [ system ]
+      operationId: postSystemConfig
+      summary: Update device configuration
+      description: |
+        Two modes. **Factory-fresh device** (unauthenticated): the body must contain
+        a `tls` object — the raw body is persisted as the initial TLS bundle and the
+        HTTPS server is started. **Initialised device** (bearer token, scope
+        `system:config`, role `U` or `M`): partial update of any supplied fields.
+        `wipeout: true` responds 200 (connection closed) then performs a full wipe
+        and reboot. User-key rotation requires the triple `userkey` (base64 X25519
+        public key), `userkey_hmac` (base64 HMAC proof) and `userkey_nonce` (nonce
+        from GET). The nested `tls` object accepts `emp` (base64 P-256 ephemeral
+        public key), `key` (encrypted private key, `"<b64 IV>.<b64 AES-256-CBC>"`,
+        exactly 113 chars) and `crt` (base64 DER certificate; also accepted alone).
+        `hostname`/`ip` are currently NOT settable post-init.
+      security: [ { bearerAuth: [] }, {} ]
+      x-required-scope: "system:config (prefix match; not required on a factory-fresh device)"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                wipeout: { type: boolean, description: Full factory wipe + reboot (role U/M). }
+                user: { type: string, maxLength: 32 }
+                email: { type: string }
+                origin: { type: string, description: CORS allow-list. }
+                trusted_ts: { type: boolean }
+                trusted_backend: { type: boolean }
+                allow_keysearch: { type: boolean }
+                userkey: { type: string, format: byte, description: Base64 new user X25519 public key (with `userkey_hmac` + `userkey_nonce`). }
+                userkey_hmac: { type: string, format: byte }
+                userkey_nonce: { type: string, format: byte }
+                ctx: { type: integer }
+                http_option_hsts: { type: boolean }
+                http_option_dosprot_mode: { type: integer, minimum: 0, maximum: 4 }
+                dnsd: { type: boolean, description: MSC build only. }
+                storage_mode: { type: integer, description: MSC build only. }
+                storage_disk0size: { type: integer, description: 'MSC build: sectors; change triggers a reformat.' }
+                tls:
+                  type: object
+                  description: TLS key/cert import (see endpoint description).
+                  properties:
+                    emp: { type: string, format: byte }
+                    key: { type: string }
+                    crt: { type: string, format: byte }
+                gen_csr: { type: boolean, description: Generate a CSR from the stored TLS key (ignored if TLS material was imported in the same call). }
+      responses:
+        '200':
+          description: |
+            Success. Fresh-device mode returns an empty body. Initialised mode returns
+            the update result (for `wipeout` the body is empty and the connection is
+            closed before the device wipes and reboots).
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ updated ]
+                properties:
+                  csr: { type: string, description: PEM CSR — only when `gen_csr` succeeded. }
+                  genuine: { type: string, description: Attestation token — only alongside `csr`. }
+                  updated: { type: boolean, description: Whether any persisted setting actually changed. }
+                  reboot_required: { type: boolean, description: Present (true) only when TLS material was imported. }
+        '400':
+          description: |
+            Unparseable JSON (fresh mode), or — initialised mode — at least one field
+            failed validation and nothing was changed (JSON body with the same shape
+            as the 200 response).
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '406': { description: '`tls` missing (fresh mode); wipeout refused; user-key rotation with wrong role; or flash write failed. Empty body.' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '411': { $ref: '#/components/responses/LengthRequired' }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '500': { $ref: '#/components/responses/ServerError' }
+
+  /api/system/config/attestation:
+    get:
+      tags: [ system ]
+      operationId: getConfigAttestation
+      summary: Secure-element attestation material (MSC build only)
+      description: |
+        Returns ATECC608 attestation material: on a fresh chip a CSR (`csr`) and the
+        attestation public key (`key`); once provisioned, the stored certificate
+        (`crt`). Always includes a signed `genuine` proof token. Unauthenticated on
+        a factory-fresh device; otherwise any valid bearer token (any scope).
+      security: [ { bearerAuth: [] }, {} ]
+      responses:
+        '200':
+          description: Attestation material.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ genuine ]
+                properties:
+                  csr: { type: string, description: PEM CSR (fresh secure element only). }
+                  key: { type: string, format: byte, description: Base64 DER attestation public key (fresh SE only). }
+                  crt: { type: string, format: byte, description: Base64 DER attestation certificate (provisioned SE). }
+                  genuine: { type: string, description: Timestamped attestation proof token. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+        '500':
+          description: |
+            Secure-element access failure. May carry a short non-JSON diagnostic body
+            (`atecc_1`..`atecc_4`) despite the application/json content type.
+
+  /api/system/config/provisioning:
+    post:
+      tags: [ system ]
+      operationId: postConfigProvisioning
+      summary: Write attestation certificate into the secure element (MSC build only)
+      description: |
+        One-shot factory provisioning: validates the `genuine` proof token issued by
+        the attestation endpoint and writes the signed certificate into the ATECC608.
+        Only works on an uninitialised device with no certificate already stored.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ genuine, crt ]
+              properties:
+                genuine: { type: string, description: Attestation proof token from GET /api/system/config/attestation. }
+                crt: { type: string, format: byte, description: Base64 DER certificate (must embed the SE slot-0 public key). }
+      responses:
+        '200': { description: Certificate written. Empty body. }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '403': { description: Device already initialised. Empty body. }
+        '406': { description: "Certificate already provisioned, public-key mismatch, or SE write failure. Empty body." }
+        '411': { $ref: '#/components/responses/LengthRequired' }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '500': { $ref: '#/components/responses/ServerError' }
+
+  /api/system/upgrade/check_fw:
+    get:
+      tags: [ system ]
+      operationId: upgradeCheckFw
+      summary: Verify the staged firmware image (MSC build only)
+      description: |
+        Starts (201) or polls (202) the asynchronous verification of the uploaded
+        firmware image; 200 = verified OK, 406 = verification failed, 404 = nothing
+        uploaded. Unauthenticated on a factory-fresh device.
+      security: [ { bearerAuth: [] }, {} ]
+      x-required-scope: "system:upgrade OR system:config (prefix match; not required on a fresh device)"
+      responses:
+        '200': { description: Image verified. Empty body. }
+        '201': { description: Verification task started. Empty body. }
+        '202': { description: Verification still running. Empty body. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { description: No firmware image staged. Empty body. }
+        '406': { description: Verification failed. Empty body. }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+
+  /api/system/upgrade/install_fw:
+    get:
+      tags: [ system ]
+      operationId: upgradeInstallFw
+      summary: Install the verified firmware and reboot (MSC build only)
+      description: |
+        Requires a previously verified image. Responds 200 with the connection
+        closed, then reboots into the bootloader to flash the image — no further
+        HTTP traffic follows.
+      security: [ { bearerAuth: [] }, {} ]
+      x-required-scope: "system:upgrade OR system:config (prefix match; not required on a fresh device)"
+      responses:
+        '200': { description: "Accepted — device reboots into the bootloader. Connection closed, empty body." }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '406': { description: No verified image staged. Empty body. }
+        '409': { description: Another install already in progress. Empty body. }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+
+  /api/system/upgrade/usbmode:
+    get:
+      tags: [ system ]
+      operationId: upgradeUsbMode
+      summary: Reboot into USB mass-storage mode
+      security: [ { bearerAuth: [] }, {} ]
+      x-required-scope: "system:upgrade OR system:config (prefix match; not required on a fresh device)"
+      responses:
+        '200': { description: "Accepted — device reboots into USB mode. Connection closed, empty body." }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '406': { description: Reboot branch not taken. Empty body. }
+        '409': { description: Install in progress. Empty body. }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+
+  /api/system/upgrade/check_ui:
+    get:
+      tags: [ system ]
+      operationId: upgradeCheckUi
+      summary: Verify and unpack the staged dashboard archive (MSC build only)
+      description: |
+        Starts (201) or polls (202) the async Ed25519 signature check + untar of the
+        uploaded `webroot.tar`; 200 = ready to install, 406 = failed.
+      security: [ { bearerAuth: [] }, {} ]
+      x-required-scope: "system:upgrade OR system:config (prefix match; not required on a fresh device)"
+      responses:
+        '200': { description: Archive verified and unpacked. Empty body. }
+        '201': { description: Check task started. Empty body. }
+        '202': { description: Check still running. Empty body. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '406': { description: Verification/unpack failed. Empty body. }
+        '409': { description: Unexpected task state. Empty body. }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+
+  /api/system/upgrade/install_ui:
+    get:
+      tags: [ system ]
+      operationId: upgradeInstallUi
+      summary: Activate the verified dashboard (MSC build only)
+      security: [ { bearerAuth: [] }, {} ]
+      x-required-scope: "system:upgrade OR system:config (prefix match; not required on a fresh device)"
+      responses:
+        '200': { description: New dashboard activated. Empty body. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '406': { description: No verified dashboard staged. Empty body. }
+        '409': { description: Install in progress. Empty body. }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+
+  /api/system/upgrade/upload_fw:
+    post:
+      tags: [ system ]
+      operationId: uploadFirmware
+      summary: Upload a firmware image (MSC build only)
+      description: |
+        Streams a raw firmware image (max 3 MiB) to device staging. Requires
+        `Content-Disposition: attachment; filename="firmware.bin"` (or `.hex` —
+        the filename must be `firmware.bin`/`firmware.hex` for the later check step
+        to find it). Not multipart — the body is the raw image. Unauthenticated on
+        a factory-fresh device. Note: two firmware error paths (oversize image,
+        wrong extension) close the connection without sending any HTTP response.
+      security: [ { bearerAuth: [] }, {} ]
+      x-required-scope: "system:upgrade (prefix match; not required on a fresh device)"
+      parameters:
+        - name: Content-Disposition
+          in: header
+          required: true
+          schema: { type: string }
+          example: 'attachment; filename="firmware.bin"'
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '200': { description: Image received and staged. Empty body. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '406': { description: Body stream ended early. Empty body. }
+        '411': { $ref: '#/components/responses/LengthRequired' }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+        '413': { description: Missing Content-Disposition filename or body over 16 MiB. Connection closed. }
+        '500': { $ref: '#/components/responses/ServerError' }
+
+  /api/system/upgrade/upload_ui:
+    post:
+      tags: [ system ]
+      operationId: uploadDashboard
+      summary: Upload the dashboard archive (MSC build only)
+      description: |
+        Streams the signed dashboard tar (must be named `webroot.tar` via
+        `Content-Disposition`) to device staging. Validation happens later in
+        `check_ui`. Unauthenticated on a factory-fresh device.
+      security: [ { bearerAuth: [] }, {} ]
+      x-required-scope: "system:upgrade (prefix match; not required on a fresh device)"
+      parameters:
+        - name: Content-Disposition
+          in: header
+          required: true
+          schema: { type: string }
+          example: 'attachment; filename="webroot.tar"'
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '200': { description: Archive received. Empty body. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '406': { description: Body stream ended early. Empty body. }
+        '411': { $ref: '#/components/responses/LengthRequired' }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+        '413': { description: Missing Content-Disposition filename or body over 16 MiB. Connection closed. }
+        '500': { $ref: '#/components/responses/ServerError' }
+
+  /api/system/selftest:
+    get:
+      tags: [ system ]
+      operationId: getSystemSelftest
+      summary: Run the full self-test suite
+      description: |
+        Synchronously re-runs all self-tests (not cheap — updates the latched fault
+        state) and returns results plus key-repository statistics. Unauthenticated
+        on a factory-fresh device; otherwise any valid bearer token (any scope).
+      security: [ { bearerAuth: [] }, {} ]
+      responses:
+        '200':
+          description: Self-test results.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ fls_state, selftest_ts, repo_stats ]
+                properties:
+                  last_selftest_ts: { type: integer }
+                  last_fls_state: { type: integer }
+                  last_entropytest_ts: { type: integer }
+                  last_kat_ts: { type: integer }
+                  kat_busy: { type: boolean, description: Present (true) only while a known-answer test is running. }
+                  fls_state: { type: integer, description: Result of this run (0 = all passed). }
+                  selftest_ts: { type: integer }
+                  repo_stats:
+                    type: object
+                    required: [ total, deleted, invalid, fragmented, freeslots ]
+                    properties:
+                      total: { type: integer }
+                      deleted: { type: integer }
+                      invalid: { type: integer }
+                      fragmented: { type: integer }
+                      freeslots: { type: integer }
+                  se_state: { type: integer, description: 'MSC build: secure-enclave status.' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+        '500': { $ref: '#/components/responses/ServerError' }
+
+  /api/system/shutdown:
+    get:
+      tags: [ system ]
+      operationId: getSystemShutdown
+      summary: Shut down the device
+      description: |
+        Stops the USB stack and the web server — the device stops responding until
+        physically power-cycled. Always requires a token (even on a fresh device).
+        Responds 200 with the connection closed, then shuts down.
+      security: [ { bearerAuth: [] } ]
+      x-required-scope: "system:config OR system:shutdown (prefix match)"
+      responses:
+        '200': { description: "Accepted — device shuts down. Connection closed, empty body." }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { description: Software install in progress. Empty body. }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+
+  /api/system/reboot:
+    get:
+      tags: [ system ]
+      operationId: getSystemReboot
+      summary: Reboot the device
+      description: |
+        Warm-restarts through the bootloader. Unauthenticated on a factory-fresh
+        device. Responds 200 with the connection closed, then reboots after ~2 s.
+      security: [ { bearerAuth: [] }, {} ]
+      x-required-scope: "system:config OR system:upgrade OR system:shutdown (prefix match; not required on a fresh device)"
+      responses:
+        '200': { description: "Accepted — device reboots. Connection closed, empty body." }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { description: Software install in progress. Empty body. }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+
+  ############################################################################
+  # KEY MANAGEMENT
+  ############################################################################
+
+  /api/keymgmt/list:
+    get:
+      tags: [ keymgmt ]
+      operationId: listKeys
+      summary: List keys (first page)
+      description: Returns the first page (up to 15 records) of the key repository. HTTPS only.
+      security: [ { bearerAuth: [] } ]
+      x-required-scope: "keymgmt:list (prefix match); role M denied"
+      responses:
+        '200':
+          description: Key page.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/KeyListEnvelope' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '406': { description: Repository not ready. Empty body. }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+        '418': { $ref: '#/components/responses/TlsRequired' }
+
+  /api/keymgmt/list/{offset}:
+    get:
+      tags: [ keymgmt ]
+      operationId: listKeysOffset
+      summary: List keys from an offset
+      description: As `/api/keymgmt/list`, starting after skipping `offset` valid records. Page size 15. HTTPS only.
+      security: [ { bearerAuth: [] } ]
+      x-required-scope: "keymgmt:list (prefix match); role M denied"
+      parameters:
+        - name: offset
+          in: path
+          required: true
+          schema: { type: integer, minimum: 0 }
+          description: Number of valid records to skip (decimal digits only).
+      responses:
+        '200':
+          description: Key page.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/KeyListEnvelope' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '406': { description: "Malformed offset, or repository not ready. Empty body." }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+        '418': { $ref: '#/components/responses/TlsRequired' }
+
+  /api/keymgmt/list/{offset}/{count}:
+    get:
+      tags: [ keymgmt ]
+      operationId: listKeysPage
+      summary: List keys (offset + count)
+      description: As `/api/keymgmt/list/{offset}` with an explicit page size. `count` is clamped to 15. HTTPS only.
+      security: [ { bearerAuth: [] } ]
+      x-required-scope: "keymgmt:list (prefix match); role M denied"
+      parameters:
+        - name: offset
+          in: path
+          required: true
+          schema: { type: integer, minimum: 0 }
+        - name: count
+          in: path
+          required: true
+          schema: { type: integer, minimum: 0, maximum: 15 }
+          description: Page size (values above 15 are clamped to 15).
+      responses:
+        '200':
+          description: Key page.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/KeyListEnvelope' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '406': { description: "Malformed offset/count, or repository not ready. Empty body." }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+        '418': { $ref: '#/components/responses/TlsRequired' }
+
+  /api/keymgmt/search:
+    post:
+      tags: [ keymgmt ]
+      operationId: searchKeys
+      summary: Search keys by binary description
+      description: |
+        Filters keys whose binary `descr` matches a base64-encoded needle:
+        `^<b64>` anchors at the start, `<b64>$` at the end, bare = substring.
+        The token/scope check is skipped for `^`-anchored needles of at least
+        6 decoded bytes when the "allow keysearch" device option is enabled
+        (anonymous prefix search for integrations). HTTPS only.
+      security: [ { bearerAuth: [] }, {} ]
+      x-required-scope: "keymgmt:search OR keymgmt:list OR auth:ext:pair (prefix match); role M denied; see anonymous exception"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ descr ]
+              properties:
+                offset: { type: integer, minimum: 0, default: 0, description: Applied after filtering. }
+                limit: { type: integer, minimum: 0, maximum: 15, default: 15, description: Clamped to 15. }
+                descr:
+                  type: string
+                  description: Base64 needle, optionally wrapped with `^` / `$` anchors. Decoded max 64 bytes.
+      responses:
+        '200':
+          description: Matching keys.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/KeyListEnvelope' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '406': { description: Needle longer than 64 decoded bytes. Empty body. }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '410': { description: Repository not ready. Empty body. }
+        '411': { $ref: '#/components/responses/LengthRequired' }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '418': { $ref: '#/components/responses/TlsRequired' }
+
+  /api/keymgmt/get/{kid}:
+    get:
+      tags: [ keymgmt ]
+      operationId: getKey
+      summary: Fetch a key's public material
+      description: |
+        Returns type, public key (compressed X9.63 for NIST curves; raw for
+        X25519/X448/Ed25519/Ed448/ML-KEM/ML-DSA) or DER blob, update timestamp and
+        description. Never returns private material. Also accessible with the
+        per-key scope `keymgmt:use:<kid>` (exact match) or `keymgmt:gen`. HTTPS only.
+      security: [ { bearerAuth: [] } ]
+      x-required-scope: "keymgmt:get (prefix) OR keymgmt:use:<kid> (exact) OR keymgmt:gen (prefix); role M denied"
+      parameters:
+        - $ref: '#/components/parameters/Kid'
+      responses:
+        '200':
+          description: Key material. `type`/`pubkey` may be absent if the export failed.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ updated ]
+                properties:
+                  type:
+                    type: string
+                    description: Key algorithm (`SECP256R1`, `CURVE25519`, `ED25519`, `MLKEM768`, `AES256`, `CERT`, `DER_PKEY`, ...).
+                  pubkey:
+                    type: string
+                    format: byte
+                    description: Base64 public key (asymmetric non-DER keys).
+                  der:
+                    type: string
+                    format: byte
+                    description: Base64 stored DER blob (generic-DER records only).
+                  updated: { type: integer }
+                  descr: { type: string, format: byte, description: Present only when non-empty. }
+        '400': { description: KID not exactly 32 hex chars. Empty body. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '406': { description: KID not found. Empty body. }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+        '418': { $ref: '#/components/responses/TlsRequired' }
+
+  /api/keymgmt/delete/{kid}:
+    delete:
+      tags: [ keymgmt ]
+      operationId: deleteKey
+      summary: Delete a key
+      description: |
+        Marks the record as deleted. HTTPS only — note the firmware reports a
+        plain-HTTP request on this endpoint as 409 (not 418).
+      security: [ { bearerAuth: [] } ]
+      x-required-scope: "keymgmt:del (prefix match); role M denied"
+      parameters:
+        - $ref: '#/components/parameters/Kid'
+      responses:
+        '200': { description: Key deleted. Empty body. }
+        '400': { description: KID not exactly 32 hex chars. Empty body. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '406': { description: Delete failed / KID not present. Empty body. }
+        '409': { description: Device busy/uninitialised — also returned for plain-HTTP requests. Empty body. }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+
+  /api/keymgmt/create:
+    post:
+      tags: [ keymgmt ]
+      operationId: createKey
+      summary: Generate a new key in the HSM
+      description: HTTPS only. Generates the key on-device and returns its id.
+      security: [ { bearerAuth: [] } ]
+      x-required-scope: "keymgmt:gen (prefix match); role M denied"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ label, type ]
+              properties:
+                label:
+                  type: string
+                  minLength: 1
+                  maxLength: 32
+                  description: Printable ASCII label.
+                type:
+                  type: string
+                  enum: [ SECP256R1, SECP384R1, SECP521R1, SECP256K1, CURVE25519, CURVE448, ED25519, ED448, SHA2-256, SHA2-384, SHA2-512, SHA3-256, SHA3-384, SHA3-512, AES128, AES192, AES256, MLKEM512, MLKEM768, MLKEM1024, MLDSA44, MLDSA65, MLDSA87 ]
+                mode:
+                  type: string
+                  enum: [ ECDH, 'ECDH,ExDSA', ExDSA ]
+                  description: Key-usage flags — honoured only for the SECP* types.
+                descr:
+                  type: string
+                  format: byte
+                  description: Base64 binary description (max 64 decoded bytes).
+      responses:
+        '200':
+          description: Key generated.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/KidResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '406': { description: Key generation failed. Empty body. }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '411': { $ref: '#/components/responses/LengthRequired' }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '418': { $ref: '#/components/responses/TlsRequired' }
+        '500': { $ref: '#/components/responses/ServerError' }
+
+  /api/keymgmt/update:
+    post:
+      tags: [ keymgmt ]
+      operationId: updateKey
+      summary: Update a key's label/description
+      description: HTTPS only. `label` is always required, even when only changing `descr`.
+      security: [ { bearerAuth: [] } ]
+      x-required-scope: "keymgmt:upd (prefix match); role M denied"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ kid, label ]
+              properties:
+                kid: { type: string, pattern: '^[0-9a-fA-F]{32}$' }
+                label: { type: string, minLength: 1, maxLength: 32 }
+                descr: { type: string, format: byte, description: "Base64, max 64 decoded bytes." }
+      responses:
+        '200': { description: Attributes updated. Empty body. }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '406': { description: Update failed (e.g. KID not found). Empty body. }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '411': { $ref: '#/components/responses/LengthRequired' }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '418': { $ref: '#/components/responses/TlsRequired' }
+
+  /api/keymgmt/import:
+    post:
+      tags: [ keymgmt ]
+      operationId: importKey
+      summary: Import an external public key
+      description: |
+        Stores an externally supplied **public** key (asymmetric types only; no
+        symmetric or DER import). The returned key id is deterministic —
+        SHA-1 of the raw public key truncated to 16 bytes — so re-importing the
+        same key is rejected as a duplicate (406). NIST-curve keys must be in
+        compressed X9.63 form. HTTPS only.
+      security: [ { bearerAuth: [] } ]
+      x-required-scope: "keymgmt:imp (prefix match); role M denied"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ label, pubkey, type ]
+              properties:
+                label: { type: string, minLength: 1, maxLength: 32 }
+                pubkey:
+                  type: string
+                  format: byte
+                  description: Base64 raw public key (compressed X9.63 for SECP*; raw for the rest).
+                type:
+                  type: string
+                  enum: [ SECP256R1, SECP384R1, SECP521R1, SECP256K1, CURVE25519, CURVE448, ED25519, ED448, MLKEM512, MLKEM768, MLKEM1024, MLDSA44, MLDSA65, MLDSA87 ]
+                mode:
+                  type: string
+                  enum: [ ECDH, 'ECDH,ExDSA', ExDSA ]
+                  description: Usage flags — meaningful for SECP* types only.
+                descr: { type: string, format: byte }
+      responses:
+        '200':
+          description: Key imported.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/KidResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '406': { description: "Unknown type, wrong key length, duplicate key, or repository failure. Empty body." }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '411': { $ref: '#/components/responses/LengthRequired' }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '418': { $ref: '#/components/responses/TlsRequired' }
+        '500': { $ref: '#/components/responses/ServerError' }
+
+  /api/keymgmt/derive:
+    post:
+      tags: [ keymgmt ]
+      operationId: deriveKey
+      summary: Derive a new key via ECDH + HKDF
+      description: |
+        Performs ECDH between the stored private key `kid` and a peer public key
+        (stored `ext_kid` — takes precedence — or raw base64 `pubkey`), runs
+        HKDF-SHA256 over the shared secret with a per-target-type context string
+        (`encedo-<type>`), and stores the result as a new key. ML-KEM/ML-DSA
+        targets are not supported. HTTPS only.
+
+        Known firmware quirk: an unrecognised `type` string that passes basic
+        validation returns 200 echoing the *source* `kid` without creating a key.
+      security: [ { bearerAuth: [] } ]
+      x-required-scope: "keymgmt:derive OR keymgmt:gen (prefix match); role M denied"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ kid, label, type ]
+              properties:
+                kid:
+                  type: string
+                  pattern: '^[0-9a-fA-F]{32}$'
+                  description: Stored private ECDH-capable key.
+                label: { type: string, minLength: 1, maxLength: 32 }
+                type:
+                  type: string
+                  enum: [ SECP256R1, SECP384R1, SECP521R1, SECP256K1, CURVE25519, CURVE448, ED25519, ED448, SHA2-256, SHA2-384, SHA2-512, SHA3-256, SHA3-384, SHA3-512, AES128, AES192, AES256 ]
+                  description: Target key type of the derived key.
+                ext_kid:
+                  type: string
+                  pattern: '^[0-9a-fA-F]{32}$'
+                  description: Stored peer public key (same curve, ECDH-capable). One of `ext_kid`/`pubkey` required.
+                pubkey:
+                  type: string
+                  format: byte
+                  description: Base64 raw peer public key. Used when `ext_kid` is absent.
+                mode:
+                  type: string
+                  enum: [ ECDH, 'ECDH,ExDSA', ExDSA ]
+                  description: Usage flags for a SECP* target.
+                descr: { type: string, format: byte, description: Silently dropped when malformed. }
+      responses:
+        '200':
+          description: Derived key created (see quirk in description).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/KidResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '406': { description: "ECDH/HKDF/generation failure (source key missing or not ECDH-capable, curve mismatch). Empty body." }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '411': { $ref: '#/components/responses/LengthRequired' }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '418': { $ref: '#/components/responses/TlsRequired' }
+        '500': { $ref: '#/components/responses/ServerError' }
+
+  ############################################################################
+  # CRYPTO
+  # All crypto operations: POST, HTTPS only, bearer token whose scope is
+  # EXACTLY "keymgmt:use:<kid>" for the key referenced in the body; role M denied.
+  ############################################################################
+
+  /api/crypto/hmac/hash:
+    post:
+      tags: [ crypto ]
+      operationId: cryptoHmacHash
+      summary: Compute an HMAC
+      description: |
+        HMAC over a base64 message with a stored symmetric key (`kid` alone — the
+        digest is fixed by the stored key type and the `alg` field is ignored) or an
+        ECDH-derived key (`kid` + `ext_kid`/`pubkey` — `alg` is then required).
+        Quirk: on this endpoint a plain-HTTP request returns 409, not 418.
+      security: [ { bearerAuth: [] } ]
+      x-required-scope: "keymgmt:use:<kid> (exact match); role M denied"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ kid, msg ]
+              properties:
+                kid: { type: string, pattern: '^[0-9a-fA-F]{32}$' }
+                msg: { type: string, format: byte, description: Base64 message (max 2048 decoded bytes nominal). }
+                alg:
+                  type: string
+                  enum: [ SHA2-256, SHA2-384, SHA2-512, SHA3-256, SHA3-384, SHA3-512 ]
+                  description: Digest — required in ECDH modes, ignored for a stored symmetric key.
+                ext_kid: { type: string, pattern: '^[0-9a-fA-F]{32}$', description: Stored peer public key (ECDH mode). }
+                pubkey: { type: string, format: byte, description: Base64 raw peer public key (ECDH mode). }
+      responses:
+        '200':
+          description: MAC computed.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ mac ]
+                properties:
+                  mac: { type: string, format: byte, description: Base64 digest (32/48/64 bytes). }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '406': { description: "Key not found, wrong key type, missing alg in ECDH mode, or operation failed. Empty body." }
+        '409': { description: Device busy/uninitialised — also returned for plain-HTTP requests on this endpoint. Empty body. }
+        '411': { $ref: '#/components/responses/LengthRequired' }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '500': { $ref: '#/components/responses/ServerError' }
+
+  /api/crypto/hmac/verify:
+    post:
+      tags: [ crypto ]
+      operationId: cryptoHmacVerify
+      summary: Verify an HMAC
+      description: Same key modes as hmac/hash, plus the tag to verify. Success is 200 with no body.
+      security: [ { bearerAuth: [] } ]
+      x-required-scope: "keymgmt:use:<kid> (exact match); role M denied"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ kid, msg, mac ]
+              properties:
+                kid: { type: string, pattern: '^[0-9a-fA-F]{32}$' }
+                msg: { type: string, format: byte }
+                mac: { type: string, format: byte, description: Base64 tag to verify (max 64 decoded bytes). }
+                alg:
+                  type: string
+                  enum: [ SHA2-256, SHA2-384, SHA2-512, SHA3-256, SHA3-384, SHA3-512 ]
+                ext_kid: { type: string, pattern: '^[0-9a-fA-F]{32}$' }
+                pubkey: { type: string, format: byte }
+      responses:
+        '200': { description: MAC valid. Empty body. }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '406': { description: MAC mismatch or operation failure. Empty body. }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '411': { $ref: '#/components/responses/LengthRequired' }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '418': { $ref: '#/components/responses/TlsRequired' }
+
+  /api/crypto/exdsa/sign:
+    post:
+      tags: [ crypto ]
+      operationId: cryptoExdsaSign
+      summary: Sign with ECDSA / EdDSA
+      description: |
+        Signs a message with a stored private signing key. The algorithm must match
+        the key's curve: `SHA256WithECDSA`/`SHA384WithECDSA`/`SHA512WithECDSA` for
+        SECP* keys, `Ed25519`/`Ed25519ph`/`Ed25519ctx` for Ed25519,
+        `Ed448`/`Ed448ph` for Ed448. `ctx` is consumed only by the ph/ctx variants.
+      security: [ { bearerAuth: [] } ]
+      x-required-scope: "keymgmt:use:<kid> (exact match); role M denied"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ kid, msg, alg ]
+              properties:
+                kid: { type: string, pattern: '^[0-9a-fA-F]{32}$' }
+                msg: { type: string, format: byte, description: Base64 message (max 2048 decoded bytes nominal). }
+                alg:
+                  type: string
+                  enum: [ SHA256WithECDSA, SHA384WithECDSA, SHA512WithECDSA, Ed25519, Ed25519ph, Ed25519ctx, Ed448, Ed448ph ]
+                ctx: { type: string, format: byte, description: "Base64 context (max 255 bytes, RFC 8032)." }
+      responses:
+        '200':
+          description: Signature computed.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ sign ]
+                properties:
+                  sign: { type: string, format: byte, description: Base64 signature. }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '406': { description: "Key missing, not a private signing key, or algorithm/curve mismatch. Empty body." }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '411': { $ref: '#/components/responses/LengthRequired' }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '418': { $ref: '#/components/responses/TlsRequired' }
+        '500': { $ref: '#/components/responses/ServerError' }
+
+  /api/crypto/exdsa/verify:
+    post:
+      tags: [ crypto ]
+      operationId: cryptoExdsaVerify
+      summary: Verify an ECDSA / EdDSA signature
+      description: Verifies with a stored **public** key. Same algorithm/curve pairing as sign. Success is 200 with no body.
+      security: [ { bearerAuth: [] } ]
+      x-required-scope: "keymgmt:use:<kid> (exact match); role M denied"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ kid, msg, sign, alg ]
+              properties:
+                kid: { type: string, pattern: '^[0-9a-fA-F]{32}$' }
+                msg: { type: string, format: byte }
+                sign: { type: string, format: byte, description: Base64 signature (max 148 decoded bytes nominal). }
+                alg:
+                  type: string
+                  enum: [ SHA256WithECDSA, SHA384WithECDSA, SHA512WithECDSA, Ed25519, Ed25519ph, Ed25519ctx, Ed448, Ed448ph ]
+                ctx: { type: string, format: byte }
+      responses:
+        '200': { description: Signature valid. Empty body. }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '406': { description: Invalid signature or operation failure. Empty body. }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '411': { $ref: '#/components/responses/LengthRequired' }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '418': { $ref: '#/components/responses/TlsRequired' }
+
+  /api/crypto/cipher/encrypt:
+    post:
+      tags: [ crypto ]
+      operationId: cryptoEncrypt
+      summary: AES encrypt (ECB/CBC/GCM)
+      description: |
+        Encrypts a base64 plaintext with a stored AES key or an ECDH+HKDF-derived
+        key (`info` = `encedo-aes` + decoded `ctx`). The device always generates a
+        fresh random 16-byte IV/nonce — it cannot be supplied — and returns it for
+        CBC/GCM. CBC input is PKCS#7-padded by the device; ECB input must already be
+        a multiple of 16 bytes; GCM uses a 16-byte nonce and 16-byte tag.
+      security: [ { bearerAuth: [] } ]
+      x-required-scope: "keymgmt:use:<kid> (exact match); role M denied"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ kid, msg, alg ]
+              properties:
+                kid: { type: string, pattern: '^[0-9a-fA-F]{32}$' }
+                msg: { type: string, format: byte, description: Base64 plaintext (max 2048 decoded bytes nominal). }
+                alg:
+                  type: string
+                  enum: [ AES128-ECB, AES128-CBC, AES128-GCM, AES192-ECB, AES192-CBC, AES192-GCM, AES256-ECB, AES256-CBC, AES256-GCM ]
+                ext_kid: { type: string, pattern: '^[0-9a-fA-F]{32}$', description: ECDH key-derivation mode. }
+                pubkey: { type: string, format: byte, description: ECDH key-derivation mode. }
+                ctx: { type: string, format: byte, description: "Base64 HKDF context suffix (max 64 bytes, ECDH modes only)." }
+                aad: { type: string, format: byte, description: "Base64 additional authenticated data (GCM only, max 16 bytes nominal)." }
+      responses:
+        '200':
+          description: Encrypted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ ciphertext ]
+                properties:
+                  ciphertext: { type: string, format: byte }
+                  iv: { type: string, format: byte, description: Base64 16-byte IV/nonce — CBC and GCM only. }
+                  tag: { type: string, format: byte, description: Base64 16-byte auth tag — GCM only. }
+        '400': { description: "Bad JSON/fields, missing or malformed `alg`, or ECB input not block-aligned. Empty body." }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '406': { description: "Key missing/wrong type/too small, or encryption failure. Empty body." }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '411': { $ref: '#/components/responses/LengthRequired' }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '418': { $ref: '#/components/responses/TlsRequired' }
+        '500': { $ref: '#/components/responses/ServerError' }
+
+  /api/crypto/cipher/decrypt:
+    post:
+      tags: [ crypto ]
+      operationId: cryptoDecrypt
+      summary: AES decrypt (ECB/CBC/GCM)
+      description: |
+        Decrypts with a stored AES key or ECDH+HKDF-derived key. `iv` (exactly
+        16 decoded bytes) is required for CBC/GCM; `tag` (exactly 16 bytes) for GCM.
+        CBC PKCS#7 padding is stripped by the device; a GCM tag/AAD mismatch
+        returns 406.
+      security: [ { bearerAuth: [] } ]
+      x-required-scope: "keymgmt:use:<kid> (exact match); role M denied"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ kid, msg, alg ]
+              properties:
+                kid: { type: string, pattern: '^[0-9a-fA-F]{32}$' }
+                msg: { type: string, format: byte, description: Base64 ciphertext. }
+                alg:
+                  type: string
+                  enum: [ AES128-ECB, AES128-CBC, AES128-GCM, AES192-ECB, AES192-CBC, AES192-GCM, AES256-ECB, AES256-CBC, AES256-GCM ]
+                iv: { type: string, format: byte, description: Base64 IV/nonce — must decode to exactly 16 bytes (CBC/GCM). }
+                tag: { type: string, format: byte, description: Base64 auth tag — must decode to exactly 16 bytes (GCM). }
+                aad: { type: string, format: byte, description: Base64 AAD (GCM only). }
+                ext_kid: { type: string, pattern: '^[0-9a-fA-F]{32}$' }
+                pubkey: { type: string, format: byte }
+                ctx: { type: string, format: byte, description: Base64 HKDF context suffix (ECDH modes). }
+      responses:
+        '200':
+          description: Decrypted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ plaintext ]
+                properties:
+                  plaintext: { type: string, format: byte }
+        '400': { description: "Bad JSON/fields, malformed `alg`, wrong `iv`/`tag` length, or ECB input not block-aligned. Empty body." }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '406': { description: "Decryption or GCM authentication failure, or wrong key type. Empty body." }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '411': { $ref: '#/components/responses/LengthRequired' }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '418': { $ref: '#/components/responses/TlsRequired' }
+        '500': { $ref: '#/components/responses/ServerError' }
+
+  /api/crypto/cipher/wrap:
+    post:
+      tags: [ crypto ]
+      operationId: cryptoWrap
+      summary: AES key wrap (RFC 3394)
+      description: |
+        Wraps a secret (must be a multiple of 8 bytes) with a stored AES KEK or an
+        ECDH+HKDF-derived KEK (`info` = `encedo-kek` + decoded `ctx`). Output is
+        input + 8 bytes. Optional `iv` overrides the default RFC 3394 ICV and must
+        decode to exactly 8 bytes.
+      security: [ { bearerAuth: [] } ]
+      x-required-scope: "keymgmt:use:<kid> (exact match); role M denied"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ kid, msg ]
+              properties:
+                kid: { type: string, pattern: '^[0-9a-fA-F]{32}$' }
+                msg: { type: string, format: byte, description: Base64 secret to wrap (multiple of 8 bytes). }
+                alg:
+                  type: string
+                  enum: [ AES128, AES192, AES256 ]
+                  default: AES256
+                  description: KEK size.
+                ext_kid: { type: string, pattern: '^[0-9a-fA-F]{32}$' }
+                pubkey: { type: string, format: byte }
+                ctx: { type: string, format: byte, description: "Base64 HKDF context suffix (max 64 bytes, ECDH modes)." }
+                iv: { type: string, format: byte, description: Base64 8-byte alternative ICV. }
+      responses:
+        '200':
+          description: Wrapped.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ wrapped ]
+                properties:
+                  wrapped: { type: string, format: byte, description: Base64 wrapped blob (input + 8 bytes). }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '406': { description: "Bad IV length, input not a multiple of 8, wrong KEK type, or key not found. Empty body." }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '411': { $ref: '#/components/responses/LengthRequired' }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '418': { $ref: '#/components/responses/TlsRequired' }
+        '500': { $ref: '#/components/responses/ServerError' }
+
+  /api/crypto/cipher/unwrap:
+    post:
+      tags: [ crypto ]
+      operationId: cryptoUnwrap
+      summary: AES key unwrap (RFC 3394)
+      description: Inverse of wrap — same fields; `msg` is the wrapped blob, output is 8 bytes shorter. Integrity failure returns 406.
+      security: [ { bearerAuth: [] } ]
+      x-required-scope: "keymgmt:use:<kid> (exact match); role M denied"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ kid, msg ]
+              properties:
+                kid: { type: string, pattern: '^[0-9a-fA-F]{32}$' }
+                msg: { type: string, format: byte, description: Base64 wrapped blob (multiple of 8 bytes). }
+                alg:
+                  type: string
+                  enum: [ AES128, AES192, AES256 ]
+                  default: AES256
+                ext_kid: { type: string, pattern: '^[0-9a-fA-F]{32}$' }
+                pubkey: { type: string, format: byte }
+                ctx: { type: string, format: byte }
+                iv: { type: string, format: byte, description: Base64 8-byte alternative ICV. }
+      responses:
+        '200':
+          description: Unwrapped.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ unwrapped ]
+                properties:
+                  unwrapped: { type: string, format: byte }
+        '400': { description: "Bad JSON/fields, or wrapped blob not a multiple of 8 bytes. Empty body." }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '406': { description: Integrity check failed or wrong KEK. Empty body. }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '411': { $ref: '#/components/responses/LengthRequired' }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '418': { $ref: '#/components/responses/TlsRequired' }
+        '500': { $ref: '#/components/responses/ServerError' }
+
+  /api/crypto/ecdh:
+    post:
+      tags: [ crypto ]
+      operationId: cryptoEcdh
+      summary: ECDH shared secret
+      description: |
+        ECDH between the stored private key `kid` and a peer public key (`ext_kid`
+        takes precedence over `pubkey`; one is required). Without `alg` the raw
+        shared secret is returned (always reported as 32 bytes); with `alg` the
+        secret is hashed with the chosen digest (32/48/64-byte output).
+      security: [ { bearerAuth: [] } ]
+      x-required-scope: "keymgmt:use:<kid> (exact match); role M denied"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ kid ]
+              properties:
+                kid: { type: string, pattern: '^[0-9a-fA-F]{32}$' }
+                alg:
+                  type: string
+                  enum: [ SHA2-256, SHA2-384, SHA2-512, SHA3-256, SHA3-384, SHA3-512 ]
+                  description: Optional digest over the shared secret.
+                ext_kid: { type: string, pattern: '^[0-9a-fA-F]{32}$' }
+                pubkey: { type: string, format: byte }
+      responses:
+        '200':
+          description: Shared secret.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ ecdh ]
+                properties:
+                  ecdh: { type: string, format: byte, description: Base64 shared secret or its digest. }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '406': { description: Derive failure or missing peer key. Empty body. }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '411': { $ref: '#/components/responses/LengthRequired' }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '418': { $ref: '#/components/responses/TlsRequired' }
+        '500': { $ref: '#/components/responses/ServerError' }
+
+  /api/crypto/pqc/mlkem/encaps:
+    post:
+      tags: [ crypto ]
+      operationId: cryptoMlkemEncaps
+      summary: ML-KEM encapsulation
+      description: |
+        Encapsulates against a stored ML-KEM key (device-generated, attested),
+        returning the 32-byte shared secret and the ciphertext (768/1088/1568 bytes
+        for ML-KEM-512/768/1024).
+      security: [ { bearerAuth: [] } ]
+      x-required-scope: "keymgmt:use:<kid> (exact match); role M denied"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ kid ]
+              properties:
+                kid: { type: string, pattern: '^[0-9a-fA-F]{32}$' }
+      responses:
+        '200':
+          description: Encapsulated.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ alg, ss, ct ]
+                properties:
+                  alg: { type: string, enum: [ MLKEM512, MLKEM768, MLKEM1024 ] }
+                  ss: { type: string, format: byte, description: Base64 32-byte shared secret. }
+                  ct: { type: string, format: byte, description: Base64 ciphertext. }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '406': { description: Key missing or not an ML-KEM private key. Empty body. }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '411': { $ref: '#/components/responses/LengthRequired' }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '418': { $ref: '#/components/responses/TlsRequired' }
+        '500': { $ref: '#/components/responses/ServerError' }
+
+  /api/crypto/pqc/mlkem/decaps:
+    post:
+      tags: [ crypto ]
+      operationId: cryptoMlkemDecaps
+      summary: ML-KEM decapsulation
+      description: |
+        Decapsulates a ciphertext (decoded length must exactly match the key's
+        parameter set) with a stored ML-KEM private key.
+
+        Known firmware defect (v1.2.2): the `alg` response field contains an
+        unrelated internal string, not the ML-KEM parameter-set name — treat it
+        as opaque.
+      security: [ { bearerAuth: [] } ]
+      x-required-scope: "keymgmt:use:<kid> (exact match); role M denied"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ kid, ct ]
+              properties:
+                kid: { type: string, pattern: '^[0-9a-fA-F]{32}$' }
+                ct: { type: string, format: byte, description: Base64 ciphertext — exact parameter-set length (768/1088/1568 bytes). }
+      responses:
+        '200':
+          description: Decapsulated.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ alg, ss ]
+                properties:
+                  alg: { type: string, description: Unreliable in v1.2.2 — see endpoint description. }
+                  ss: { type: string, format: byte, description: Base64 32-byte shared secret. }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '406': { description: "Key missing/wrong type, or ciphertext length mismatch. Empty body." }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '411': { $ref: '#/components/responses/LengthRequired' }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '418': { $ref: '#/components/responses/TlsRequired' }
+        '500': { $ref: '#/components/responses/ServerError' }
+
+  /api/crypto/pqc/mldsa/sign:
+    post:
+      tags: [ crypto ]
+      operationId: cryptoMldsaSign
+      summary: ML-DSA signature (FIPS 204)
+      description: |
+        Signs a message with a stored ML-DSA private key. With `ctx` the context
+        variant is used — the same context must be presented at verification.
+        Signature sizes: 2420 / 3309 / 4627 bytes for ML-DSA-44/65/87.
+      security: [ { bearerAuth: [] } ]
+      x-required-scope: "keymgmt:use:<kid> (exact match); role M denied"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ kid, msg ]
+              properties:
+                kid: { type: string, pattern: '^[0-9a-fA-F]{32}$' }
+                msg: { type: string, format: byte, description: Base64 message (max 2048 decoded bytes nominal). }
+                ctx: { type: string, format: byte, description: "Base64 context (max 255 bytes, FIPS 204)." }
+      responses:
+        '200':
+          description: Signed.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ alg, sign ]
+                properties:
+                  alg: { type: string, enum: [ MLDSA44, MLDSA65, MLDSA87 ] }
+                  sign: { type: string, format: byte }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '406': { description: Key missing or not an ML-DSA private key. Empty body. }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '411': { $ref: '#/components/responses/LengthRequired' }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '418': { $ref: '#/components/responses/TlsRequired' }
+        '500': { $ref: '#/components/responses/ServerError' }
+
+  /api/crypto/pqc/mldsa/verify:
+    post:
+      tags: [ crypto ]
+      operationId: cryptoMldsaVerify
+      summary: Verify an ML-DSA signature
+      description: |
+        Verifies with a stored ML-DSA key. Note (v1.2.2): verification requires the
+        device-generated private-key object — an imported public-only ML-DSA key is
+        rejected. Success is 200 with no body.
+
+        Known firmware defect (v1.2.2): on verification failure the raw internal
+        error code leaks into the HTTP status line (e.g. a bad signature yields
+        status 100) — treat any non-2xx not listed below as "verification failed".
+      security: [ { bearerAuth: [] } ]
+      x-required-scope: "keymgmt:use:<kid> (exact match); role M denied"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ kid, msg, sign ]
+              properties:
+                kid: { type: string, pattern: '^[0-9a-fA-F]{32}$' }
+                msg: { type: string, format: byte }
+                sign: { type: string, format: byte, description: Base64 signature (max 4627 decoded bytes). }
+                ctx: { type: string, format: byte, description: Base64 context — must match the signing context. }
+      responses:
+        '200': { description: Signature valid. Empty body. }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '411': { $ref: '#/components/responses/LengthRequired' }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '418': { $ref: '#/components/responses/TlsRequired' }
+
+  ############################################################################
+  # STORAGE (MSC build only)
+  ############################################################################
+
+  /api/storage/lock:
+    get:
+      tags: [ storage ]
+      operationId: storageLock
+      summary: Hide the SD-card slot from the USB host
+      description: |
+        Ejects the slot named in the token's scope (`storage:disk<N>`) from USB
+        mass storage and forces it read-only. The disk index comes from the JWT
+        scope, never from the URL. MSC build only.
+      security: [ { bearerAuth: [] } ]
+      x-required-scope: "storage:disk<N> (prefix storage:disk; N = 0 or 1)"
+      responses:
+        '200': { description: Slot hidden. Empty body. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '406': { description: Scope digit after `storage:disk` is not a valid slot. Empty body. }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+
+  /api/storage/unlock:
+    get:
+      tags: [ storage ]
+      operationId: storageUnlock
+      summary: Expose the SD-card slot to the USB host
+      description: |
+        Exposes the slot named in the token's scope. Writable only when the scope
+        carries the `:rw` suffix (`storage:disk<N>:rw`); otherwise read-only.
+        MSC build only.
+      security: [ { bearerAuth: [] } ]
+      x-required-scope: "storage:disk<N>[:rw]"
+      responses:
+        '200': { description: Slot exposed. Empty body. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '406': { description: Invalid slot in scope. Empty body. }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+
+  /api/storage/unlock/rw:
+    get:
+      tags: [ storage ]
+      operationId: storageUnlockRw
+      summary: Expose the slot read-write
+      description: Requires the `:rw` suffix in the token scope, else 406. MSC build only.
+      security: [ { bearerAuth: [] } ]
+      x-required-scope: "storage:disk<N>:rw"
+      responses:
+        '200': { description: Slot exposed read-write. Empty body. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '406': { description: "Scope lacks `:rw`, or invalid slot. Empty body." }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+
+  /api/storage/unlock/ro:
+    get:
+      tags: [ storage ]
+      operationId: storageUnlockRo
+      summary: Expose the slot read-only
+      description: MSC build only.
+      security: [ { bearerAuth: [] } ]
+      x-required-scope: "storage:disk<N>"
+      responses:
+        '200': { description: Slot exposed read-only. Empty body. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '406': { description: Invalid slot in scope. Empty body. }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+
+  ############################################################################
+  # LOGGER
+  ############################################################################
+
+  /api/logger/key:
+    get:
+      tags: [ logger ]
+      operationId: getLoggerKey
+      summary: Audit-log verification key + signed nonce
+      description: |
+        Returns the device's Ed25519 audit-log signing public key, a fresh nonce,
+        and the Ed25519 signature over that nonce — allowing a client to verify
+        log-file authenticity and confirm the device currently holds the private key.
+      security: [ { bearerAuth: [] } ]
+      x-required-scope: "logger:get (prefix match)"
+      responses:
+        '200':
+          description: Verification material.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ key, nonce, nonce_signed ]
+                properties:
+                  key: { type: string, format: byte, description: Base64 Ed25519 public key (32 bytes). }
+                  nonce: { type: string, format: byte, description: Base64 32-byte time-based nonce. }
+                  nonce_signed: { type: string, format: byte, description: Base64 Ed25519 signature over the raw nonce (64 bytes). }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+        '500': { $ref: '#/components/responses/ServerError' }
+
+  /api/logger/list:
+    get:
+      tags: [ logger ]
+      operationId: listLogFiles
+      summary: List audit-log file ids (MSC build only)
+      description: |
+        Lists up to 128 log-file ids (8 hex chars each — the power-up timestamp;
+        one file per boot, `.log` extension stripped). `total` counts all entries
+        in the log directory, not the length of `id`.
+      security: [ { bearerAuth: [] } ]
+      x-required-scope: "logger:get (prefix match)"
+      responses:
+        '200':
+          description: File listing.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ total, id ]
+                properties:
+                  total: { type: integer, description: Total entries in the log directory (unfiltered). }
+                  id:
+                    type: array
+                    maxItems: 128
+                    items: { type: string, pattern: '^[0-9a-f]{8}$' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { description: Listing failed. Empty body. }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+
+  /api/logger/list/{offset}:
+    get:
+      tags: [ logger ]
+      operationId: listLogFilesOffset
+      summary: List audit-log file ids from an offset (MSC build only)
+      security: [ { bearerAuth: [] } ]
+      x-required-scope: "logger:get (prefix match)"
+      parameters:
+        - name: offset
+          in: path
+          required: true
+          schema: { type: integer, minimum: 0 }
+          description: Directory-entry index to start from (decimal digits only).
+      responses:
+        '200':
+          description: File listing.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ total, id ]
+                properties:
+                  total: { type: integer }
+                  id:
+                    type: array
+                    maxItems: 128
+                    items: { type: string, pattern: '^[0-9a-f]{8}$' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { description: Listing failed. Empty body. }
+        '406': { description: Offset contained a non-digit. Empty body. }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+
+  /api/logger/{file}:
+    get:
+      tags: [ logger ]
+      operationId: getLogFile
+      summary: Download one audit-log file (MSC build only)
+      description: |
+        Streams the raw log file as text. Lines are HMAC-chained; the chain seed is
+        Ed25519-signed with the key from `/api/logger/key`. The id is exactly 8 hex
+        chars (any other length is 404); the file currently being written is not
+        accessible.
+      security: [ { bearerAuth: [] } ]
+      x-required-scope: "logger:get (prefix match)"
+      parameters:
+        - name: file
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9a-f]{8}$'
+          description: Log-file id from `/api/logger/list` (no extension).
+      responses:
+        '200':
+          description: Log file contents.
+          content:
+            text/plain:
+              schema: { type: string }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { description: Bad id format or file not found. Empty body. }
+        '406': { description: File currently locked by the logger task. Empty body. }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '412': { $ref: '#/components/responses/CorsRejected' }
+        '500': { $ref: '#/components/responses/ServerError' }
