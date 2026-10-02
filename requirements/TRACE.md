@@ -2,9 +2,9 @@
 
 # Traceability matrix
 
-Generated: 2026-10-02 (after STEP-M1A-010)
+Generated: 2026-10-02 (after STEP-M1A-020)
 
-Scan inputs: 117 REQ files (`requirements/`), 23 step files (`workplan/{todo,doing,done}/`: 22 todo, 0 doing, 1 done). Code tags (`implements: REQ-`) scanned across `src/` and the build and CI locations (`package.json`, `tsconfig*.json`, `vitest.config.ts`, `.github/workflows/`); test tags (`verifies:`/`supports: REQ-`) scanned across `tests/`. Unit suite passed in Node 24 and headless Chromium for this run.
+Scan inputs: 117 REQ files (`requirements/`), 23 step files (`workplan/{todo,doing,done}/`: 21 todo, 0 doing, 2 done). Code tags (`implements: REQ-`) scanned across `src/` and the build and CI locations (`package.json`, `tsconfig*.json`, `vitest.config.ts`, `.github/workflows/`); test tags (`verifies:`/`supports: REQ-`) scanned across `tests/`. Unit suite passed in Node 24 and headless Chromium for this run.
 
 | REQ | Title | Status | Priority | Architecture | Steps | Code | Tests |
 |---|---|---|---|---|---|---|---|
@@ -16,7 +16,7 @@ Scan inputs: 117 REQ files (`requirements/`), 23 step files (`workplan/{todo,doi
 | REQ-API-006 | Tolerant parsing of success responses | approved | must | §6 | STEP-M1A-110 (todo) | — | — |
 | REQ-API-007 | Every public operation documents its scope and milestone | approved | must | §4 | STEP-M1A-070 (todo), STEP-M1A-180 (todo) | — | — |
 | REQ-API-008 | Public API only grows between releases | approved | must | §4, §1 | STEP-M1A-070 (todo) | — | — |
-| REQ-API-009 | Secrets never logged, stored or put into error messages | approved | must | §1, §5.2 | STEP-M1A-020 (todo), STEP-M1A-090 (todo), STEP-M1A-180 (todo) | — | — |
+| REQ-API-009 | Secrets never logged, stored or put into error messages | approved | must | §1, §5.2 | STEP-M1A-090 (todo), STEP-M1A-180 (todo), STEP-M1A-020 (done) | — | tests/static/source-rules.test.ts:32, tests/static/source-rules.test.ts:44, supports tests/support/source-rules.ts:1 |
 | REQ-API-010 | Targeted API version exported | approved | must | §1, §4 | STEP-M1A-070 (todo), STEP-M1A-180 (todo) | — | — |
 | REQ-API-011 | Clear error for operations the hardware does not provide | approved | must | §6, §2 | STEP-M2A-000 (todo) | — | — |
 | REQ-API-012 | Destructive actions reachable only through dedicated calls | approved | must | §4 | STEP-M3A-000 (todo) | — | — |
@@ -50,9 +50,9 @@ Scan inputs: 117 REQ files (`requirements/`), 23 step files (`workplan/{todo,doi
 | REQ-AUTH-026 | Pairing through a replaceable relay | approved | must | §5.3, §6 | STEP-M3A-000 (todo) | — | — |
 | REQ-BUILD-001 | TypeScript source published as ESM with type declarations | verified | must | §1, §9 | STEP-M1A-010 (done) | tsconfig.build.json:1 | tests/static/package.test.ts:18, tests/static/package.test.ts:47, tests/static/package.test.ts:67, tests/static/package.test.ts:77, supports tests/support/global-build.ts:1 |
 | REQ-BUILD-002 | No runtime dependencies | verified | must | §1 | STEP-M1A-010 (done) | src/index.ts:2 | tests/static/package.test.ts:26, tests/static/package.test.ts:57 |
-| REQ-BUILD-003 | Only APIs present in both Node.js and browsers | approved | must | §1, §3 | STEP-M1A-020 (todo) | — | — |
-| REQ-BUILD-004 | Node.js 24 as the minimum version | approved | must | §1 | STEP-M1A-180 (todo), STEP-M1A-010 (done) | tsconfig.base.json:1 | tests/static/package.test.ts:38 |
-| REQ-BUILD-005 | Continuous integration for build and unit tests | approved | must | §8, §9 | STEP-M1A-020 (todo) | — | — |
+| REQ-BUILD-003 | Only APIs present in both Node.js and browsers | approved | must | §1, §3 | STEP-M1A-020 (done) | — | tests/static/source-rules.test.ts:19, tests/static/source-rules.test.ts:44, supports tests/support/source-rules.ts:1 |
+| REQ-BUILD-004 | Node.js 24 as the minimum version | approved | must | §1 | STEP-M1A-180 (todo), STEP-M1A-010 (done) | tsconfig.base.json:1, .github/workflows/ci.yml:1 | tests/static/package.test.ts:38 |
+| REQ-BUILD-005 | Continuous integration for build and unit tests | implemented | must | §8, §9 | STEP-M1A-020 (done) | .github/workflows/ci.yml:1 | — |
 | REQ-BUILD-006 | A versioned release at the end of each milestone | approved | must | §4, §10 | STEP-M1B-000 (todo) | — | — |
 | REQ-KEY-001 | Generate a key on the device | approved | must | §6 | STEP-M1A-140 (todo) | — | — |
 | REQ-KEY-002 | Read one key | approved | must | §6 | STEP-M1A-140 (todo) | — | — |
@@ -128,13 +128,13 @@ Scan inputs: 117 REQ files (`requirements/`), 23 step files (`workplan/{todo,doi
 
 ## Coverage report
 
-- Totals: 117 REQs (114 approved, 3 verified), 23 steps (22 in `todo/`, 0 in `doing/`, 1 in `done/`; cancelled: none).
+- Totals: 117 REQs (113 approved, 3 verified, 1 implemented), 23 steps (21 in `todo/`, 0 in `doing/`, 2 in `done/`; cancelled: none).
 - M1A REQs (64) lacking an `implements:` or a `verifies:` tag: REQ-API-001, REQ-API-002, REQ-API-003, REQ-API-004, REQ-API-005, REQ-API-006, REQ-API-007, REQ-API-008, REQ-API-009, REQ-API-010, REQ-AUTH-001, REQ-AUTH-002, REQ-AUTH-003, REQ-AUTH-004, REQ-AUTH-005, REQ-AUTH-006, REQ-AUTH-007, REQ-AUTH-008, REQ-AUTH-009, REQ-AUTH-010, REQ-AUTH-011, REQ-AUTH-012, REQ-AUTH-013, REQ-AUTH-014, REQ-AUTH-015, REQ-AUTH-016, REQ-AUTH-017, REQ-AUTH-018, REQ-AUTH-019, REQ-AUTH-020, REQ-BUILD-003, REQ-BUILD-005, REQ-KEY-001, REQ-KEY-002, REQ-KEY-003, REQ-KEY-004, REQ-KEY-005, REQ-NET-001, REQ-NET-002, REQ-NET-003, REQ-NET-004, REQ-NET-005, REQ-NET-006, REQ-NET-007, REQ-NET-008, REQ-NET-009, REQ-NET-010, REQ-NET-011, REQ-NET-012, REQ-OPS-001, REQ-OPS-002, REQ-OPS-003, REQ-SYS-001, REQ-SYS-002, REQ-SYS-003, REQ-SYS-004, REQ-SYS-005, REQ-SYS-006, REQ-SYS-007.
-- Approved REQs with no code tag (unimplemented): 112; of these in M1A: REQ-API-001, REQ-API-002, REQ-API-003, REQ-API-004, REQ-API-005, REQ-API-006, REQ-API-007, REQ-API-008, REQ-API-009, REQ-API-010, REQ-AUTH-001, REQ-AUTH-002, REQ-AUTH-003, REQ-AUTH-004, REQ-AUTH-005, REQ-AUTH-006, REQ-AUTH-007, REQ-AUTH-008, REQ-AUTH-009, REQ-AUTH-010, REQ-AUTH-011, REQ-AUTH-012, REQ-AUTH-013, REQ-AUTH-014, REQ-AUTH-015, REQ-AUTH-016, REQ-AUTH-017, REQ-AUTH-018, REQ-AUTH-019, REQ-AUTH-020, REQ-BUILD-003, REQ-BUILD-005, REQ-KEY-001, REQ-KEY-002, REQ-KEY-003, REQ-KEY-004, REQ-KEY-005, REQ-NET-001, REQ-NET-002, REQ-NET-003, REQ-NET-004, REQ-NET-005, REQ-NET-006, REQ-NET-007, REQ-NET-008, REQ-NET-009, REQ-NET-010, REQ-NET-011, REQ-NET-012, REQ-OPS-001, REQ-OPS-002, REQ-OPS-003, REQ-SYS-001, REQ-SYS-002, REQ-SYS-003, REQ-SYS-004, REQ-SYS-005, REQ-SYS-006, REQ-SYS-007; the rest belong to later milestones.
+- Approved REQs with no code tag (unimplemented): 111; of these in M1A: REQ-API-001, REQ-API-002, REQ-API-003, REQ-API-004, REQ-API-005, REQ-API-006, REQ-API-007, REQ-API-008, REQ-API-009, REQ-API-010, REQ-AUTH-001, REQ-AUTH-002, REQ-AUTH-003, REQ-AUTH-004, REQ-AUTH-005, REQ-AUTH-006, REQ-AUTH-007, REQ-AUTH-008, REQ-AUTH-009, REQ-AUTH-010, REQ-AUTH-011, REQ-AUTH-012, REQ-AUTH-013, REQ-AUTH-014, REQ-AUTH-015, REQ-AUTH-016, REQ-AUTH-017, REQ-AUTH-018, REQ-AUTH-019, REQ-AUTH-020, REQ-BUILD-003, REQ-KEY-001, REQ-KEY-002, REQ-KEY-003, REQ-KEY-004, REQ-KEY-005, REQ-NET-001, REQ-NET-002, REQ-NET-003, REQ-NET-004, REQ-NET-005, REQ-NET-006, REQ-NET-007, REQ-NET-008, REQ-NET-009, REQ-NET-010, REQ-NET-011, REQ-NET-012, REQ-OPS-001, REQ-OPS-002, REQ-OPS-003, REQ-SYS-001, REQ-SYS-002, REQ-SYS-003, REQ-SYS-004, REQ-SYS-005, REQ-SYS-006, REQ-SYS-007; the rest belong to later milestones.
 - Approved REQs with code tags whose steps are not all in `done/`: REQ-BUILD-004, REQ-TEST-001.
-- Implemented REQs with no passing tagged test (unverified): none.
+- Implemented REQs with no passing tagged test (unverified): REQ-BUILD-005.
 - Orphan tags (naming a nonexistent REQ): none.
 - Steps in `done/` with empty evidence: none.
 - Broken architecture anchors: none.
 - REQs in `needs-reverify`: none.
-- Status transitions applied in this run: REQ-BUILD-001: approved → implemented, REQ-BUILD-001: implemented → verified, REQ-BUILD-002: approved → implemented, REQ-BUILD-002: implemented → verified, REQ-TEST-002: approved → implemented, REQ-TEST-002: implemented → verified.
+- Status transitions applied in this run: REQ-BUILD-005: approved → implemented.

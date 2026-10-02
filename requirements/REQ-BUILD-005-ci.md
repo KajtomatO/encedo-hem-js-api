@@ -1,7 +1,7 @@
 ---
 id: REQ-BUILD-005
 title: Continuous integration for build and unit tests
-status: approved
+status: implemented
 priority: must
 revision: 1
 source: ARCHITECTURE.md §8; ARCHITECTURE.md §1
