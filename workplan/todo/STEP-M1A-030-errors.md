@@ -1,0 +1,38 @@
+---
+id: STEP-M1A-030
+title: Error classes and status mapping
+milestone: M1A
+implements: ["REQ-API-002", "REQ-API-003"]
+traces:
+  architecture: ["ARCHITECTURE.md#4-public-api--conventions", "ARCHITECTURE.md#2-context--constraints"]
+depends_on: ["STEP-M1A-010"]
+evidence:
+  commits: []
+  tests: []
+  notes: null
+reopened: []
+cancelled: null
+---
+
+**Goal:** `src/errors.ts` defines `HemError` and every subclass of
+ARCHITECTURE.md §4, plus a mapping from an HTTP response (status, headers,
+body text) to an error instance that never requires a body.
+
+**Notes:** Classes: `HemBadRequestError` 400, `HemUnauthenticatedError`
+401, `HemForbiddenError` 403, `HemOperationFailedError` 406,
+`HemDeviceStateError` 409, `HemOriginRejectedError` 412,
+`HemPayloadTooLargeError` 413, `HemTlsRequiredError` 418, `HemDeviceError`
+(500 and any other unexpected status), `HemTimeoutError`,
+`HemUnreachableError`, `HemAbortError`, `HemValidationError`,
+`HemProtocolError`, `HemUnsupportedError`, `HemApprovalRejectedError`,
+`HemApprovalTimeoutError`. The base carries `code`, `status`, `operation`
+and `cause`; the body is exposed as raw text and, when it parses, as JSON.
+The transport classes are defined here and raised in STEP-M1A-050; the
+one-retry semantics of 401 belong to STEP-M1A-100.
+
+**Definition of done**
+- [ ] A table-driven test maps each listed status to its own class; 404, 410 and 411 map to `HemDeviceError` with the raw status preserved
+- [ ] All classes extend one exported base with a stable `code`, the HTTP `status` when a response exists, and the operation name; `instanceof` works
+- [ ] An empty body with `Content-Type: application/json` maps to its class with no parse exception
+- [ ] A non-JSON body maps to its class with the raw text available; a JSON body is exposed parsed
+- [ ] All classes are exported from the package root
