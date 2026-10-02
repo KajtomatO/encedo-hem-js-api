@@ -27,3 +27,4 @@ tmp/
 # Packing and browser-test output
 *.tgz
 .vitest-attachments/
+.vitest/

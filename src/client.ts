@@ -5,9 +5,10 @@ import { AuthApiImpl, type AuthApi } from "./api/auth.js";
 import { CryptoApiImpl, type CryptoApi } from "./api/crypto.js";
 import { KeysApiImpl, type KeysApi } from "./api/keymgmt.js";
 import { SystemApiImpl, type SystemApi } from "./api/system.js";
+import { ApprovalEngine } from "./auth/approval.js";
 import { DEFAULT_TOKEN_LIFETIME_SECONDS, Session } from "./auth/session.js";
 import { validateInteger } from "./codec/validate.js";
-import { HemValidationError } from "./errors.js";
+import { HemUnsupportedError, HemValidationError } from "./errors.js";
 import type { ClientContext } from "./internal/context.js";
 import { EncedoApprovalRelay, type ApprovalRelay } from "./relay/approval.js";
 import { EncedoCheckinRelay, type CheckinRelay } from "./relay/checkin.js";
@@ -105,6 +106,23 @@ export class HemClient {
       lifetimeSeconds,
       clockRecovery: options.clockRecovery,
     });
+    const mobile = options.mobileApproval;
+    const mobileOptions: MobileApprovalOptions = typeof mobile === "object" && mobile !== null ? mobile : {};
+    ctx.approval = new ApprovalEngine(ctx, {
+      pollIntervalMs: mobileOptions.pollIntervalMs,
+      waitTimeoutMs: mobileOptions.waitTimeoutMs,
+      ctx: mobileOptions.ctx,
+      note: mobileOptions.note,
+    });
+    if (mobile !== undefined && mobile !== false) {
+      if (options.passphrase !== undefined) {
+        throw new HemValidationError("mobileApproval", "a client uses either a passphrase or mobile approval, not both");
+      }
+      if (approvalRelay === null) {
+        throw new HemUnsupportedError("mobile approval needs an approval relay; approvalRelay is null");
+      }
+      ctx.session.tokenSource = (scope, call) => ctx.approval.approve(scope, call);
+    }
     this.auth = new AuthApiImpl(ctx);
     this.system = new SystemApiImpl(ctx);
     this.keys = new KeysApiImpl(ctx);

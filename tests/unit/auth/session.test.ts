@@ -10,7 +10,6 @@ import type { DeviceRequest } from "../../../src/transport/transport.js";
 import { emptyResponse, jsonResponse } from "../../support/fake-fetch.js";
 import { fakeDevice, jwtClaims, makeJwt, nowSec } from "../../support/device.js";
 import { makeSession } from "../../support/session.js";
-import { advanceUntilSettled } from "../../support/timers.js";
 import { LOGIN_VECTOR as V } from "../../support/vectors.js";
 
 afterEach(() => vi.useRealTimers());
@@ -224,14 +223,24 @@ describe("roles", () => {
 describe("time limit per request", () => {
   // verifies: REQ-NET-004
   it("applies the limit to each request of a call that logs in first, not to the sum", async () => {
-    vi.useFakeTimers();
-    const slow = (r: Response) => () => new Promise<Response>((res) => setTimeout(() => res(r), 800));
+    // three requests of 200 ms each (600 ms in total) under a 300 ms limit, real timers
+    const slow = (make: () => Response) => () => new Promise<Response>((res) => setTimeout(() => res(make()), 200));
     const d = fakeDevice();
-    d.once("GET /api/auth/token", slow(jsonResponse(200, { exp: nowSec() + 60, ...d.challenge })));
-    d.once("GET /api/keymgmt/list", slow(ok()));
-    const { session } = makeSession(d, { timeoutMs: 1000 });
-    const res = await advanceUntilSettled(session.authorized(LIST, "keymgmt:list"));
+    d.once("GET /api/auth/token", slow(() => jsonResponse(200, { exp: nowSec() + 60, ...d.challenge })));
+    d.once("POST /api/auth/token", (req) =>
+      new Promise<Response>((res) =>
+        setTimeout(() => {
+          const c = jwtClaims((req.json as { auth: string }).auth);
+          res(jsonResponse(200, { token: makeJwt({ sub: "U", scope: c["scope"], exp: c["exp"] }) }));
+        }, 200),
+      ),
+    );
+    d.once("GET /api/keymgmt/list", slow(ok));
+    const { session } = makeSession(d, { timeoutMs: 300 });
+    const started = Date.now();
+    const res = await session.authorized(LIST, "keymgmt:list");
     expect(res.status).toBe(200);
+    expect(Date.now() - started).toBeGreaterThanOrEqual(590);
   });
 });
 

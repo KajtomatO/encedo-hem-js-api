@@ -1,6 +1,7 @@
 // State shared by the namespaces of one client. Every client owns its own.
 
 import { errorFromStatus } from "../errors.js";
+import type { ApprovalEngine } from "../auth/approval.js";
 import type { Session } from "../auth/session.js";
 import type { ApprovalRelay } from "../relay/approval.js";
 import type { CheckinRelay } from "../relay/checkin.js";
@@ -10,6 +11,8 @@ export interface ClientContext {
   readonly transport: Transport;
   /** Set right after construction of the context. */
   session: Session;
+  /** Set right after construction of the context. */
+  approval: ApprovalEngine;
   /** `null` when check-in through a relay is disabled. */
   readonly checkinRelay: CheckinRelay | null;
   /** `null` when mobile approval through a relay is disabled. */

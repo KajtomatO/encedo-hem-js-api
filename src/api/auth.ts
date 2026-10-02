@@ -1,5 +1,7 @@
 // Bindings of the auth group.
 
+import type { ApprovalAttempt, ApprovalRequestOptions, ApprovalWaitOptions } from "../auth/approval.js";
+import type { TokenEntry } from "../auth/session.js";
 import type { HemRole } from "../auth/token.js";
 import { callOptions, type ClientContext } from "../internal/context.js";
 import { validateScope } from "../internal/scope.js";
@@ -63,6 +65,47 @@ export interface AuthApi {
   extToken(params: { authreply: string; scope: string }, options?: CallOptions): Promise<string>;
 
   /**
+   * Starts a mobile approval of `scope`: obtains the relay key, calls
+   * `ext/request` and submits the request through the approval relay. A
+   * broker rejection caused by device clock drift runs one check-in and
+   * submits a fresh request. Requires an approval relay.
+   *
+   * @scope none
+   * @milestone M1
+   */
+  beginApproval(scope: string, options?: ApprovalRequestOptions): Promise<ApprovalAttempt>;
+
+  /**
+   * Checks an approval once. Returns `pending`, or `approved` after the reply
+   * was redeemed and the token cached under the attempt's scope. A rejection
+   * raises `HemApprovalRejectedError`; an expired request raises
+   * `HemApprovalTimeoutError`.
+   *
+   * @scope none
+   * @milestone M1
+   */
+  pollApproval(attempt: ApprovalAttempt, options?: CallOptions): Promise<"pending" | "approved">;
+
+  /**
+   * Polls an approval (every 5 s, for up to 60 s by default, at least once)
+   * until it is approved, rejected (`HemApprovalRejectedError`) or not
+   * answered in time (`HemApprovalTimeoutError`). A transport error in one
+   * poll does not end the wait; the signal cancels it.
+   *
+   * @scope none
+   * @milestone M1
+   */
+  waitForApproval(attempt: ApprovalAttempt, options?: ApprovalWaitOptions): Promise<SessionInfo>;
+
+  /**
+   * Begins and waits for a mobile approval of `scope` in one call.
+   *
+   * @scope none
+   * @milestone M1
+   */
+  approve(scope: string, options?: ApprovalRequestOptions & ApprovalWaitOptions): Promise<SessionInfo>;
+
+  /**
    * The role the device granted in the most recently obtained token: user
    * (`sub` `U`), master (`M`) or a paired app (its key id). `undefined`
    * before the first login.
@@ -94,8 +137,7 @@ export class AuthApiImpl implements AuthApi {
 
   async login(scope: string, options?: CallOptions): Promise<SessionInfo> {
     const s = validateScope(scope);
-    const entry = await this.#ctx.session.token(s, callOptions(options));
-    return { scope: entry.scope, role: entry.role, expiresAt: entry.exp };
+    return info(await this.#ctx.session.token(s, callOptions(options)));
   }
 
   extRequest(params: ExtRequestParams, options?: CallOptions): Promise<ExtRequestResult> {
@@ -106,6 +148,22 @@ export class AuthApiImpl implements AuthApi {
     return (await extToken(this.#ctx, params, options)).token;
   }
 
+  beginApproval(scope: string, options?: ApprovalRequestOptions): Promise<ApprovalAttempt> {
+    return this.#ctx.approval.begin(scope, options);
+  }
+
+  async pollApproval(attempt: ApprovalAttempt, options?: CallOptions): Promise<"pending" | "approved"> {
+    return (await this.#ctx.approval.poll(attempt, options)) === "pending" ? "pending" : "approved";
+  }
+
+  async waitForApproval(attempt: ApprovalAttempt, options?: ApprovalWaitOptions): Promise<SessionInfo> {
+    return info(await this.#ctx.approval.wait(attempt, options));
+  }
+
+  async approve(scope: string, options?: ApprovalRequestOptions & ApprovalWaitOptions): Promise<SessionInfo> {
+    return info(await this.#ctx.approval.approve(scope, options));
+  }
+
   getRole(): HemRole | undefined {
     return this.#ctx.session.role;
   }
@@ -113,4 +171,8 @@ export class AuthApiImpl implements AuthApi {
   logout(): void {
     this.#ctx.session.logout();
   }
+}
+
+function info(entry: TokenEntry): SessionInfo {
+  return { scope: entry.scope, role: entry.role, expiresAt: entry.exp };
 }

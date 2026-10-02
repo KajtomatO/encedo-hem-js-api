@@ -7,6 +7,7 @@ export { HEM_API_VERSION } from "./version.js";
 export type { AuthApi, SessionInfo } from "./api/auth.js";
 export type { LoginChallenge } from "./api/auth-calls.js";
 export type { HemRole } from "./auth/token.js";
+export type { ApprovalAttempt, ApprovalRequestOptions, ApprovalWaitOptions } from "./auth/approval.js";
 export type { SystemApi, SystemStatus, SystemVersion, HealthReport } from "./api/system.js";
 export type {
   KeysApi,

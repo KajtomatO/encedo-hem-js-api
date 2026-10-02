@@ -1,3 +1,10 @@
+ApprovalAttempt
+ApprovalAttempt: export interface ApprovalAttempt {
+ApprovalAttempt: readonly authreq: string;
+ApprovalAttempt: readonly epk: string;
+ApprovalAttempt: readonly id: string;
+ApprovalAttempt: readonly scope: string;
+ApprovalAttempt: }
 ApprovalCheck
 ApprovalCheck: export type ApprovalCheck = {
 ApprovalCheck: readonly authreply: string;
@@ -21,8 +28,20 @@ ApprovalRelayKey: epk: string;
 ApprovalRelayKey: exp?: number | undefined;
 ApprovalRelayKey: export interface ApprovalRelayKey {
 ApprovalRelayKey: }
+ApprovalRequestOptions
+ApprovalRequestOptions: ctx?: string | undefined;
+ApprovalRequestOptions: export interface ApprovalRequestOptions extends CallOptions {
+ApprovalRequestOptions: note?: string | undefined;
+ApprovalRequestOptions: }
+ApprovalWaitOptions
+ApprovalWaitOptions: export interface ApprovalWaitOptions extends CallOptions {
+ApprovalWaitOptions: pollIntervalMs?: number | undefined;
+ApprovalWaitOptions: waitTimeoutMs?: number | undefined;
+ApprovalWaitOptions: }
 AuthApi
+AuthApi: approve(scope: string, options?: ApprovalRequestOptions & ApprovalWaitOptions): Promise<SessionInfo>;
 AuthApi: authreply: string;
+AuthApi: beginApproval(scope: string, options?: ApprovalRequestOptions): Promise<ApprovalAttempt>;
 AuthApi: export interface AuthApi {
 AuthApi: extRequest(params: ExtRequestParams, options?: CallOptions): Promise<ExtRequestResult>;
 AuthApi: extToken(params: {
@@ -30,7 +49,9 @@ AuthApi: getChallenge(options?: CallOptions): Promise<LoginChallenge>;
 AuthApi: getRole(): HemRole | undefined;
 AuthApi: login(scope: string, options?: CallOptions): Promise<SessionInfo>;
 AuthApi: logout(): void;
+AuthApi: pollApproval(attempt: ApprovalAttempt, options?: CallOptions): Promise<"pending" | "approved">;
 AuthApi: scope: string;
+AuthApi: waitForApproval(attempt: ApprovalAttempt, options?: ApprovalWaitOptions): Promise<SessionInfo>;
 AuthApi: }
 AuthApi: }, options?: CallOptions): Promise<string>;
 CREATABLE_KEY_TYPES
