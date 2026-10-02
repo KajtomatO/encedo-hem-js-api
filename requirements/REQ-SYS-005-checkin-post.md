@@ -1,7 +1,7 @@
 ---
 id: REQ-SYS-005
 title: Check-in step 2
-status: approved
+status: verified
 priority: must
 revision: 1
 source: start_point M1.3; ref/api/hem-api-1.2.2.yaml

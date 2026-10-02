@@ -2,9 +2,9 @@
 
 # Traceability matrix
 
-Generated: 2026-10-02 (after STEP-M1A-110)
+Generated: 2026-10-02 (after STEP-M1A-120)
 
-Scan inputs: 117 REQ files (`requirements/`), 23 step files (`workplan/{todo,doing,done}/`: 12 todo, 0 doing, 11 done). Code tags (`implements: REQ-`) scanned across `src/` and the build and CI locations (`package.json`, `tsconfig*.json`, `vitest.config.ts`, `.github/workflows/`); test tags (`verifies:`/`supports: REQ-`) scanned across `tests/`. Unit suite passed in Node 24 and headless Chromium for this run.
+Scan inputs: 117 REQ files (`requirements/`), 23 step files (`workplan/{todo,doing,done}/`: 11 todo, 0 doing, 12 done). Code tags (`implements: REQ-`) scanned across `src/` and the build and CI locations (`package.json`, `tsconfig*.json`, `vitest.config.ts`, `.github/workflows/`); test tags (`verifies:`/`supports: REQ-`) scanned across `tests/`. Unit suite passed in Node 24 and headless Chromium for this run.
 
 | REQ | Title | Status | Priority | Architecture | Steps | Code | Tests |
 |---|---|---|---|---|---|---|---|
@@ -69,7 +69,7 @@ Scan inputs: 117 REQ files (`requirements/`), 23 step files (`workplan/{todo,doi
 | REQ-NET-004 | Time limit on every call | verified | must | §7 | STEP-M1A-050 (done) | src/transport/transport.ts:2 | tests/unit/auth/session.test.ts:225, tests/unit/transport/transport.test.ts:84, tests/unit/transport/transport.test.ts:99, tests/unit/transport/transport.test.ts:114 |
 | REQ-NET-005 | Cancellation of every call | verified | must | §7 | STEP-M1A-050 (done) | src/transport/transport.ts:2 | tests/unit/auth/session.test.ts:167, tests/unit/transport/queue.test.ts:75, tests/unit/transport/transport.test.ts:127, tests/unit/transport/transport.test.ts:138 |
 | REQ-NET-006 | Transport failures classified | verified | must | §7, §4 | STEP-M1A-050 (done) | src/transport/transport.ts:2 | tests/unit/transport/transport.test.ts:127, tests/unit/transport/transport.test.ts:149, tests/unit/transport/transport.test.ts:158 |
-| REQ-NET-007 | One device request at a time | verified | must | §7, §11 | STEP-M1A-060 (done) | src/transport/transport.ts:3 | tests/unit/transport/queue.test.ts:46, tests/unit/transport/queue.test.ts:66 |
+| REQ-NET-007 | One device request at a time | verified | must | §7, §11 | STEP-M1A-060 (done) | src/relay/http.ts:3, src/transport/transport.ts:3 | tests/unit/api/checkin.test.ts:113, tests/unit/transport/queue.test.ts:46, tests/unit/transport/queue.test.ts:66 |
 | REQ-NET-008 | Optional minimum interval between requests | verified | should | §7 | STEP-M1A-060 (done) | src/transport/transport.ts:3 | tests/unit/transport/queue.test.ts:96, tests/unit/transport/queue.test.ts:106 |
 | REQ-NET-009 | Only headers the device's CORS policy allows | approved | must | §7 | STEP-M1A-180 (todo), STEP-M1A-050 (done) | src/transport/transport.ts:2 | tests/unit/transport/transport.test.ts:180 |
 | REQ-NET-010 | Redirects not followed | verified | should | §7 | STEP-M1A-050 (done) | src/transport/transport.ts:2 | tests/unit/transport/transport.test.ts:193, tests/unit/transport/transport.test.ts:204 |
@@ -93,10 +93,10 @@ Scan inputs: 117 REQ files (`requirements/`), 23 step files (`workplan/{todo,doi
 | REQ-SYS-001 | Device status | verified | must | §6 | STEP-M1A-110 (done) | src/api/system.ts:2 | tests/unit/api/system.test.ts:40, tests/unit/api/system.test.ts:54 |
 | REQ-SYS-002 | Hardware and firmware version | verified | must | §6 | STEP-M1A-110 (done) | src/api/system.ts:2 | tests/unit/api/system.test.ts:75, tests/unit/api/system.test.ts:86 |
 | REQ-SYS-003 | Single health operation | verified | must | §6 | STEP-M1A-110 (done) | src/api/system.ts:2 | tests/unit/api/system.test.ts:99, tests/unit/api/system.test.ts:113, tests/unit/api/system.test.ts:120, tests/unit/api/system.test.ts:130 |
-| REQ-SYS-004 | Check-in step 1 | approved | must | §6 | STEP-M1A-120 (todo) | — | — |
-| REQ-SYS-005 | Check-in step 2 | approved | must | §6 | STEP-M1A-120 (todo) | — | — |
-| REQ-SYS-006 | Check-in relay, replaceable, with a default for the Encedo backend | approved | must | §6, §3, §11 | STEP-M1A-120 (todo) | — | — |
-| REQ-SYS-007 | One-call check-in | approved | must | §6 | STEP-M1A-120 (todo) | — | — |
+| REQ-SYS-004 | Check-in step 1 | verified | must | §6 | STEP-M1A-120 (done) | src/api/checkin.ts:2, src/api/system.ts:2 | tests/unit/api/checkin.test.ts:37, tests/unit/api/checkin.test.ts:49 |
+| REQ-SYS-005 | Check-in step 2 | verified | must | §6 | STEP-M1A-120 (done) | src/api/checkin.ts:2, src/api/system.ts:2 | tests/unit/api/checkin.test.ts:57, tests/unit/api/checkin.test.ts:68 |
+| REQ-SYS-006 | Check-in relay, replaceable, with a default for the Encedo backend | verified | must | §6, §3, §11 | STEP-M1A-120 (done) | src/relay/checkin.ts:3 | tests/unit/api/checkin.test.ts:78, tests/unit/api/checkin.test.ts:89, tests/unit/api/checkin.test.ts:104, tests/unit/api/checkin.test.ts:128 |
+| REQ-SYS-007 | One-call check-in | verified | must | §6 | STEP-M1A-120 (done) | src/api/checkin.ts:2, src/api/system.ts:2 | tests/unit/api/checkin.test.ts:128, tests/unit/api/checkin.test.ts:140, tests/unit/api/checkin.test.ts:160 |
 | REQ-SYS-008 | Read device configuration | approved | must | §6 | STEP-M2A-000 (todo) | — | — |
 | REQ-SYS-009 | Audit-log verification key | approved | must | §6 | STEP-M2A-000 (todo) | — | — |
 | REQ-SYS-010 | Paged audit-log listing | approved | must | §6 | STEP-M2A-000 (todo) | — | — |
@@ -128,13 +128,13 @@ Scan inputs: 117 REQ files (`requirements/`), 23 step files (`workplan/{todo,doi
 
 ## Coverage report
 
-- Totals: 117 REQs (30 verified, 86 approved, 1 implemented), 23 steps (12 in `todo/`, 0 in `doing/`, 11 in `done/`; cancelled: none).
-- M1A REQs (64) lacking an `implements:` or a `verifies:` tag: REQ-API-007, REQ-API-008, REQ-AUTH-009, REQ-AUTH-014, REQ-AUTH-015, REQ-AUTH-016, REQ-AUTH-017, REQ-AUTH-018, REQ-AUTH-019, REQ-AUTH-020, REQ-BUILD-005, REQ-KEY-001, REQ-KEY-002, REQ-KEY-003, REQ-KEY-004, REQ-KEY-005, REQ-NET-011, REQ-NET-012, REQ-OPS-001, REQ-OPS-002, REQ-OPS-003, REQ-SYS-004, REQ-SYS-005, REQ-SYS-006, REQ-SYS-007.
-- Approved REQs with no code tag (unimplemented): 77; of these in M1A: REQ-API-007, REQ-API-008, REQ-AUTH-009, REQ-AUTH-014, REQ-AUTH-015, REQ-AUTH-016, REQ-AUTH-017, REQ-AUTH-018, REQ-AUTH-019, REQ-AUTH-020, REQ-KEY-001, REQ-KEY-002, REQ-KEY-003, REQ-KEY-004, REQ-KEY-005, REQ-NET-011, REQ-NET-012, REQ-OPS-001, REQ-OPS-002, REQ-OPS-003, REQ-SYS-004, REQ-SYS-005, REQ-SYS-006, REQ-SYS-007; the rest belong to later milestones.
+- Totals: 117 REQs (34 verified, 82 approved, 1 implemented), 23 steps (11 in `todo/`, 0 in `doing/`, 12 in `done/`; cancelled: none).
+- M1A REQs (64) lacking an `implements:` or a `verifies:` tag: REQ-API-007, REQ-API-008, REQ-AUTH-009, REQ-AUTH-014, REQ-AUTH-015, REQ-AUTH-016, REQ-AUTH-017, REQ-AUTH-018, REQ-AUTH-019, REQ-AUTH-020, REQ-BUILD-005, REQ-KEY-001, REQ-KEY-002, REQ-KEY-003, REQ-KEY-004, REQ-KEY-005, REQ-NET-011, REQ-NET-012, REQ-OPS-001, REQ-OPS-002, REQ-OPS-003.
+- Approved REQs with no code tag (unimplemented): 73; of these in M1A: REQ-API-007, REQ-API-008, REQ-AUTH-009, REQ-AUTH-014, REQ-AUTH-015, REQ-AUTH-016, REQ-AUTH-017, REQ-AUTH-018, REQ-AUTH-019, REQ-AUTH-020, REQ-KEY-001, REQ-KEY-002, REQ-KEY-003, REQ-KEY-004, REQ-KEY-005, REQ-NET-011, REQ-NET-012, REQ-OPS-001, REQ-OPS-002, REQ-OPS-003; the rest belong to later milestones.
 - Approved REQs with code tags whose steps are not all in `done/`: REQ-API-005, REQ-API-009, REQ-API-010, REQ-AUTH-005, REQ-AUTH-012, REQ-BUILD-004, REQ-NET-003, REQ-NET-009, REQ-TEST-001.
 - Implemented REQs with no passing tagged test (unverified): REQ-BUILD-005.
 - Orphan tags (naming a nonexistent REQ): none.
 - Steps in `done/` with empty evidence: none.
 - Broken architecture anchors: none.
 - REQs in `needs-reverify`: none.
-- Status transitions applied in this run: REQ-API-006: approved → implemented, REQ-API-006: implemented → verified, REQ-SYS-001: approved → implemented, REQ-SYS-001: implemented → verified, REQ-SYS-002: approved → implemented, REQ-SYS-002: implemented → verified, REQ-SYS-003: approved → implemented, REQ-SYS-003: implemented → verified.
+- Status transitions applied in this run: REQ-SYS-004: approved → implemented, REQ-SYS-004: implemented → verified, REQ-SYS-005: approved → implemented, REQ-SYS-005: implemented → verified, REQ-SYS-006: approved → implemented, REQ-SYS-006: implemented → verified, REQ-SYS-007: approved → implemented, REQ-SYS-007: implemented → verified.
