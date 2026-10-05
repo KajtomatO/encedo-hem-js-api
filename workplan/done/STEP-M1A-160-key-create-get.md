@@ -7,9 +7,9 @@ traces:
   architecture: ["ARCHITECTURE.md#6-protocol-bindings"]
 depends_on: ["STEP-M1A-130"]
 evidence:
-  commits: []
-  tests: []
-  notes: null
+  commits: ["efc4047"]
+  tests: ["verifies: REQ-KEY-001 (tests/unit/keys-create-get.test.ts)", "verifies: REQ-KEY-002 (tests/unit/keys-create-get.test.ts)", "verifies: REQ-KEY-005 (tests/unit/key-type.test.ts, tests/unit/keys-create-get.test.ts)", "verifies: REQ-AUTH-010 (tests/unit/keys-create-get.test.ts)", "supports: REQ-TEST-001 (tests/support/device.ts)"]
+  notes: "npm run check: 40 files, 776 tests passed in Node v24.21.0 and headless Chromium. Found and fixed: on an http: client a TLS-only call would have logged in (GET+POST /api/auth/token) before the transport refused it; the guard now also runs in the binding core before any token is requested, so zero requests are made. Exported constant tables (KEY_TYPES, KEY_MODES, KEY_FLAGS, KEY_ALGORITHMS) are frozen so they are not mutable module state (REQ-API-001). KEY_ALGORITHMS includes GENERIC_DER (list/search) and DER_PKEY (key get), both named in the reference."
 reopened: []
 cancelled: null
 ---
@@ -42,29 +42,29 @@ presented as flags plus an algorithm name.
   operation).
 
 **Definition of done**
-- [ ] Create: the body is `{label, type}` plus `mode` and `descr` (base64)
+- [x] Create: the body is `{label, type}` plus `mode` and `descr` (base64)
       when given; the scope used is `keymgmt:gen`; the result is the key id.
-- [ ] Create: a type outside the list, or a mode outside the three literals,
+- [x] Create: a type outside the list, or a mode outside the three literals,
       raises `HemValidationError`; label and description limits are enforced
       per REQ-API-005.
-- [ ] Create: the TSDoc states the default mode of `SECP*` keys.
-- [ ] Get: the scope used is `keymgmt:use:<kid>` with a lower-case key id;
+- [x] Create: the TSDoc states the default mode of `SECP*` keys.
+- [x] Get: the scope used is `keymgmt:use:<kid>` with a lower-case key id;
       the result contains `updated`, and `type`, `pubkey` (bytes), `der`
       (bytes) and `descr` (bytes) when present.
-- [ ] Get: a 406 raises `HemOperationFailedError`; the TSDoc states the
+- [x] Get: a 406 raises `HemOperationFailedError`; the TSDoc states the
       public-key formats and that label and description are read through
       list or search.
-- [ ] Type parsing: the flags `ATT`, `PKEY`, `ECDH`, `ExDSA`, `CERT` and
+- [x] Type parsing: the flags `ATT`, `PKEY`, `ECDH`, `ExDSA`, `CERT` and
       `PQC` and every algorithm name of the reference are recognised; a bare
       algorithm name parses to that algorithm with no flags; an unknown token
       raises no error and the original string stays available.
-- [ ] A master-role session that calls a key operation gets the device's 403
+- [x] A master-role session that calls a key operation gets the device's 403
       as `HemForbiddenError`.
-- [ ] Both operations raise `HemTlsRequiredError` on an `http:` client with
+- [x] Both operations raise `HemTlsRequiredError` on an `http:` client with
       zero `fetch` calls.
-- [ ] Each operation has unit tests asserting method, path, headers, body and
+- [x] Each operation has unit tests asserting method, path, headers, body and
       response mapping, and TSDoc stating scope and milestone.
-- [ ] The suite passes in Node 24 and in the browser run.
-- [ ] `implements:` and `verifies:` tags exist for the REQs above.
-- [ ] The non-`(M1B)` acceptance boxes this step closes are ticked in the REQ
+- [x] The suite passes in Node 24 and in the browser run.
+- [x] `implements:` and `verifies:` tags exist for the REQs above.
+- [x] The non-`(M1B)` acceptance boxes this step closes are ticked in the REQ
       files (revision bumped).

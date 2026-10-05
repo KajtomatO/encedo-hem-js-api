@@ -3,7 +3,7 @@ id: REQ-API-005
 title: Inputs validated against the documented hard limits before sending
 status: verified
 priority: must
-revision: 3
+revision: 4
 source: start_point G17; ref/api/hem-api-1.2.2.yaml; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: ["REQ-API-002"]
 supersedes: null
@@ -30,7 +30,7 @@ pointless request. Introduced in M1.
       parameter, with zero `fetch` calls.
 - [x] Boundary values are accepted: a 32-character label, a 64-byte
       description, a 2048-byte message, a 7300-byte body.
-- [ ] A key id given in upper-case hex is accepted and sent in lower case.
+- [x] A key id given in upper-case hex is accepted and sent in lower case.
 - [x] An empty message is rejected for operations where the reference
       requires one.
 - [ ] (M1B) the device accepts a 32-character label and a 64-byte
