@@ -14,7 +14,13 @@ import type { CallOptions, Transport, TransportResponse } from '../transport/tra
 /** API group of an operation, as in the reference. */
 export type ApiGroup = 'auth' | 'system' | 'keymgmt' | 'crypto' | 'logger' | 'storage';
 
-/** Description of one device operation. */
+/**
+ * Description of one device operation. The public method that runs it
+ * states, in its TSDoc, the token scope (`Token scope: …`, "none" when
+ * `scope` is `null`) and the milestone that introduced it (`Introduced in
+ * M<n>.`); a test checks this against the emitted declarations.
+ */
+// implements: REQ-API-007
 export interface OperationSpec {
   /** Public name, `<namespace>.<method>`, used in errors. */
   readonly name: string;
@@ -140,6 +146,7 @@ export async function invoke(context: BindingContext, spec: OperationSpec, invoc
     });
 
   try {
+    // implements: REQ-AUTH-012 — an operation without a scope never gets a token, even when tokens are cached.
     const response =
       spec.scope === null
         ? await send(undefined)
