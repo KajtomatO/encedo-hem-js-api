@@ -1,9 +1,9 @@
 ---
 id: REQ-BUILD-003
 title: Only APIs present in both Node.js and browsers
-status: approved
+status: verified
 priority: must
-revision: 2
+revision: 3
 source: start_point G3; ARCHITECTURE.md §1
 depends_on: ["REQ-TEST-002"]
 supersedes: null

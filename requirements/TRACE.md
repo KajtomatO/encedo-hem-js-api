@@ -52,7 +52,7 @@ Steps column: step ID and its folder. A REQ listed in several steps becomes `imp
 | REQ-AUTH-026 | Pairing through a replaceable relay | approved | must | §5.3, §6 | STEP-M3A-000 (todo) | — | — |
 | REQ-BUILD-001 | TypeScript source published as ESM with type declarations | verified | must | §1, §9 | STEP-M1A-010 (done) | package.json:38, tsconfig.json:3, tsconfig.base.json:2, tsconfig.build.json:3 | tests/unit/package.node.test.ts:57, tests/unit/package.node.test.ts:72, tests/unit/package.node.test.ts:114, tests/unit/package.node.test.ts:125 |
 | REQ-BUILD-002 | No runtime dependencies | verified | must | §1 | STEP-M1A-010 (done) | package.json:38 | tests/unit/package.node.test.ts:38, tests/unit/package.node.test.ts:47, tests/unit/package.node.test.ts:87 |
-| REQ-BUILD-003 | Only APIs present in both Node.js and browsers | approved | must | §1, §3 | STEP-M1A-030 (done) | — | tests/unit/source-check.test.ts:9, tests/unit/source-check.test.ts:50, tests/unit/source-check.test.ts:70, tests/unit/source-check.test.ts:76, tests/unit/source-tree.node.test.ts:21, tests/unit/source-tree.node.test.ts:27, tests/unit/source-tree.node.test.ts:33, supports tests/support/source-check.ts:3 |
+| REQ-BUILD-003 | Only APIs present in both Node.js and browsers | verified | must | §1, §3 | STEP-M1A-030 (done) | tsconfig.build.json:4 | tests/unit/source-check.test.ts:9, tests/unit/source-check.test.ts:50, tests/unit/source-check.test.ts:70, tests/unit/source-check.test.ts:76, tests/unit/source-tree.node.test.ts:21, tests/unit/source-tree.node.test.ts:27, tests/unit/source-tree.node.test.ts:33, supports tests/support/source-check.ts:3 |
 | REQ-BUILD-004 | Node.js 24 as the minimum version | approved | must | §1 | STEP-M1A-010 (done), STEP-M1A-030 (done), STEP-M1A-220 (todo) | package.json:38, .github/workflows/ci.yml:2 | tests/unit/ci.node.test.ts:30, tests/unit/package.node.test.ts:65 |
 | REQ-BUILD-005 | Continuous integration for build and unit tests | verified | must | §8, §9 | STEP-M1A-030 (done) | .github/workflows/ci.yml:2 | tests/unit/ci.node.test.ts:15, tests/unit/ci.node.test.ts:24, tests/unit/ci.node.test.ts:35 |
 | REQ-BUILD-006 | A versioned release at the end of each milestone | approved | must | §4, §10 | STEP-M1B-000 (todo) | — | — |
@@ -130,16 +130,16 @@ Steps column: step ID and its folder. A REQ listed in several steps becomes `imp
 
 ## Coverage report
 
-- Totals: 117 REQs (114 approved, 3 verified), 28 steps (25 todo, 0 doing, 3 done; 0 cancelled).
+- Totals: 117 REQs (113 approved, 4 verified), 28 steps (25 todo, 0 doing, 3 done; 0 cancelled).
 - By area: API 14, AUTH 26, BUILD 6, KEY 9, NET 12, OPS 15, SYS 31, TEST 4.
 - Steps by milestone: M1A 23, M1B 1, M2A 1, M2B 1, M3A 1, M3B 1.
 - REQs with no step: none.
 - REQs listed in more than one step: 21 (criteria that close in a later step; see the Notes of the steps).
-- Approved REQs with no code tag (unimplemented): 110.
+- Approved REQs with no code tag (unimplemented): 109.
 - Approved REQs with code tags whose steps are not all in `done/` (in progress): REQ-API-010, REQ-BUILD-004, REQ-TEST-001, REQ-TEST-002.
 - Implemented REQs with no passing tagged test (unverified): none.
 - Orphan tags: none.
 - Steps in `done/` with empty evidence: none.
 - Broken architecture anchors: none.
 - REQs in `needs-reverify`: none.
-- Status transitions applied in this run: REQ-BUILD-005: approved → verified.
+- Status transitions applied in this run: REQ-BUILD-003: approved → verified.
