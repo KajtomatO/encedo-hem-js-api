@@ -26,7 +26,8 @@
     "test:node": "vitest run --project node",
     "test:browser": "vitest run --project browser",
     "test:unit": "vitest run",
-    "check": "npm run build && npm run typecheck && vitest run"
+    "check": "npm run build && npm run typecheck && vitest run",
+    "surface:update": "npm run build && HEM_UPDATE_SURFACE=1 vitest run --project node tests/unit/surface.node.test.ts"
   },
   "devDependencies": {
     "@types/node": "^24.19.1",

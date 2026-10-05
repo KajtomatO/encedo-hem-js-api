@@ -4,6 +4,9 @@
  * @packageDocumentation
  */
 
+// implements: REQ-API-008 — everything exported here is recorded in
+// tests/surface/public-api.txt; entries may be added, never changed or removed.
+
 /**
  * Version of the HEM REST API this library is written against.
  *
@@ -43,6 +46,7 @@ export type { ApprovalRequest, ApprovalRequestParams, AuthApi, RedeemApprovalPar
 export { EncedoApprovalRelay, ENCEDO_NOTIFY_URL } from './relay/approval.js';
 export type { ApprovalCheck, ApprovalRelay, ApprovalSubmission, EncedoApprovalRelayOptions } from './relay/approval.js';
 export type { Role } from './auth/session.js';
+export type { Clock } from './auth/login.js';
 export type { ApprovalDetails, ApprovalPoll, PendingApproval, WaitOptions } from './auth/approval.js';
 export type { HemClientOptions, MobileApprovalOptions } from './client.js';
 export type { CheckinResult, HealthReport, SystemApi, SystemStatus, SystemVersion } from './api/system.js';
