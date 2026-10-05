@@ -249,13 +249,7 @@ const statusClasses: ReadonlyMap<number, readonly [StatusErrorClass, string]> = 
  * Read an error response's body without ever failing: empty → nothing,
  * JSON → parsed value, anything else → the raw text.
  */
-async function readErrorBody(response: Response): Promise<{ body?: unknown; bodyText?: string }> {
-  let text: string;
-  try {
-    text = await response.text();
-  } catch {
-    return {};
-  }
+function parseErrorBody(text: string): { body?: unknown; bodyText?: string } {
   if (text.trim() === '') return {};
   try {
     return { body: JSON.parse(text) as unknown, bodyText: text };
@@ -265,14 +259,23 @@ async function readErrorBody(response: Response): Promise<{ body?: unknown; body
 }
 
 /**
- * Map a non-success device response to its error class. The status alone
- * decides the class; the body is attached when there is one, and is never
- * required to be present or well-formed.
+ * Map a non-success status and the response's body text to its error class.
+ * The status alone decides the class; the body is attached when there is
+ * one, and is never required to be present or well-formed.
  */
 // implements: REQ-API-002, REQ-API-003
-export async function errorFromResponse(response: Response, operation: string): Promise<HemError> {
-  const { status } = response;
+export function errorFromStatus(status: number, bodyText: string, operation: string): HemError {
   const [ErrorClass, meaning] = statusClasses.get(status) ?? [HemDeviceError, 'unexpected status'];
-  const body = await readErrorBody(response);
-  return new ErrorClass(`${operation}: HTTP ${status} (${meaning})`, { status, operation, ...body });
+  return new ErrorClass(`${operation}: HTTP ${status} (${meaning})`, { status, operation, ...parseErrorBody(bodyText) });
+}
+
+/** {@link errorFromStatus} for a `Response` whose body has not been read yet. */
+export async function errorFromResponse(response: Response, operation: string): Promise<HemError> {
+  let text = '';
+  try {
+    text = await response.text();
+  } catch {
+    // An unreadable body is treated as empty; the status still decides.
+  }
+  return errorFromStatus(response.status, text, operation);
 }
