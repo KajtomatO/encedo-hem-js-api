@@ -39,6 +39,8 @@ export {
 export type { HemErrorCode, HemErrorOptions } from './errors.js';
 
 export { HemClient } from './client.js';
+export type { AuthApi } from './api/auth-api.js';
+export type { Role } from './auth/session.js';
 export type { HemClientOptions } from './client.js';
 export type { CheckinResult, HealthReport, SystemApi, SystemStatus, SystemVersion } from './api/system.js';
 export { EncedoCheckinRelay, ENCEDO_CHECKIN_URL } from './relay/checkin.js';

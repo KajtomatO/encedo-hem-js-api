@@ -113,7 +113,7 @@ export class FakeFetch {
     return this;
   }
 
-  /** Answer every matching request with the same reply. */
+  /** Answer every matching request with the same reply, unless a one-shot reply from `on()` matches first. */
   always(method: string, path: string | RegExp, reply: Reply): this {
     this.#routes.push({ method: method.toUpperCase(), path, replies: [reply], sticky: true });
     return this;
@@ -167,9 +167,11 @@ export class FakeFetch {
     const signal = init?.signal ?? undefined;
     if (signal?.aborted) throw abortReason(signal);
 
-    const route = this.#routes.find(
+    // One-shot replies take precedence over sticky ones, so `on()` can override an `always()` fallback.
+    const candidates = this.#routes.filter(
       (candidate) => candidate.replies.length > 0 && FakeFetch.#matches(recorded, candidate.method, candidate.path),
     );
+    const route = candidates.find((candidate) => !candidate.sticky) ?? candidates[0];
     if (!route) {
       throw new Error(`FakeFetch: unexpected request ${recorded.method} ${url.href}`);
     }

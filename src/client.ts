@@ -3,7 +3,9 @@
  *
  * @packageDocumentation
  */
-import { type BindingContext, type TokenProvider, noTokens } from './api/core.js';
+import { AuthApi } from './api/auth-api.js';
+import { type BindingContext, noTokens } from './api/core.js';
+import { Session } from './auth/session.js';
 import { type Clock, DEFAULT_TOKEN_LIFETIME_SECONDS, PassphraseLogin, validateLifetime } from './auth/login.js';
 import { HemValidationError } from './errors.js';
 import { SystemApi } from './api/system.js';
@@ -72,6 +74,8 @@ export function contextOf(client: HemClient): BindingContext {
  */
 // implements: REQ-API-001
 export class HemClient {
+  /** Session: role and logout. */
+  readonly auth: AuthApi;
   /** Device-wide calls: status, version, health, check-in. */
   readonly system: SystemApi;
 
@@ -82,22 +86,17 @@ export class HemClient {
       timeoutMs: options?.timeoutMs,
       minIntervalMs: options?.minIntervalMs,
     });
-    const now = options.now ?? Date.now;
+    const now = options.now ?? ((): number => Date.now());
     const lifetime = options.tokenLifetimeSeconds === undefined ? DEFAULT_TOKEN_LIFETIME_SECONDS : validateLifetime(options.tokenLifetimeSeconds);
-    let tokens: TokenProvider = noTokens;
-    const context: BindingContext = { transport, get tokens() { return tokens; } };
-    if (options.passphrase !== undefined) {
-      if (typeof options.passphrase !== 'string' || options.passphrase === '') {
-        throw new HemValidationError('Invalid passphrase: must be a non-empty string', { parameter: 'passphrase' });
-      }
-      const login = new PassphraseLogin(context, options.passphrase, lifetime, now);
-      tokens = {
-        async withToken(scope, callOptions, send) {
-          const { token } = await login.acquire(scope, callOptions);
-          return send(token);
-        },
-      };
+    if (options.passphrase !== undefined && (typeof options.passphrase !== 'string' || options.passphrase === '')) {
+      throw new HemValidationError('Invalid passphrase: must be a non-empty string', { parameter: 'passphrase' });
     }
+    // The login requests themselves are public operations and never go through the session.
+    const publicContext: BindingContext = { transport, tokens: noTokens };
+    const source = options.passphrase === undefined ? null : new PassphraseLogin(publicContext, options.passphrase, lifetime, now);
+    const session = new Session(source, now);
+    const context: BindingContext = { transport, tokens: session };
+    this.auth = new AuthApi(session);
     const checkinRelay = options.checkinRelay === undefined ? new EncedoCheckinRelay() : options.checkinRelay;
     this.system = new SystemApi(context, checkinRelay);
     contexts.set(this, context);

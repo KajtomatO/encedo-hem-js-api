@@ -50,6 +50,13 @@ describe('FakeFetch', () => {
   });
 
   // verifies: REQ-TEST-001
+  it('lets one-shot replies override a sticky fallback, which takes over again once they are used', async () => {
+    const fake = new FakeFetch().always('GET', '/api/x', { status: 200 }).on('GET', '/api/x', { status: 500 });
+    expect((await fake.fetch('https://hem.test/api/x')).status).toBe(500);
+    expect((await fake.fetch('https://hem.test/api/x')).status).toBe(200);
+  });
+
+  // verifies: REQ-TEST-001
   it('rejects an unscripted request with a message naming it', async () => {
     const fake = new FakeFetch().on('GET', '/api/a', {});
 
