@@ -7,9 +7,9 @@ traces:
   architecture: ["ARCHITECTURE.md#1-decisions-fixed", "ARCHITECTURE.md#8-testing-policy"]
 depends_on: ["STEP-M1A-020"]
 evidence:
-  commits: ["c9166bd"]
+  commits: ["c9166bd", "22be228"]
   tests: ["verifies: REQ-BUILD-003 (tests/unit/source-check.test.ts, tests/unit/source-tree.node.test.ts)", "verifies: REQ-API-009 (tests/unit/source-check.test.ts, tests/unit/source-tree.node.test.ts)", "verifies: REQ-BUILD-005 (tests/unit/ci.node.test.ts)", "verifies: REQ-BUILD-004 (tests/unit/ci.node.test.ts)", "verifies: REQ-TEST-002 (tests/unit/ci.node.test.ts)", "supports: REQ-BUILD-003, REQ-API-009 (tests/support/source-check.ts)"]
-  notes: "npm run check (build, typecheck, Vitest in Node v24.21.0 and headless Chromium): 13 files, 106 tests passed. The workflow has not been observed running on GitHub because nothing is pushed (CLAUDE.md); the A gate relies on the local script."
+  notes: "npm run check (build, typecheck, Vitest in Node v24.21.0 and headless Chromium): 13 files, 106 tests passed. The workflow has not been observed running on GitHub because nothing is pushed (CLAUDE.md); the A gate relies on the local script. REQ-API-009 gets no implements: tag here: this step adds only its static check (under tests/); the redaction code it guards, and its tag, come with STEP-M1A-120 and STEP-M1A-130."
 reopened: []
 cancelled: null
 ---
