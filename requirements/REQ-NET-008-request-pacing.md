@@ -1,9 +1,9 @@
 ---
 id: REQ-NET-008
 title: Optional minimum interval between requests
-status: approved
+status: verified
 priority: should
-revision: 3
+revision: 4
 source: ARCHITECTURE.md §7; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: ["REQ-NET-007"]
 supersedes: null

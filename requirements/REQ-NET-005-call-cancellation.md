@@ -1,9 +1,9 @@
 ---
 id: REQ-NET-005
 title: Cancellation of every call
-status: approved
+status: verified
 priority: must
-revision: 4
+revision: 5
 source: start_point G7
 depends_on: ["REQ-API-002"]
 supersedes: null

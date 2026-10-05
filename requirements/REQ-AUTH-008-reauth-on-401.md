@@ -1,9 +1,9 @@
 ---
 id: REQ-AUTH-008
 title: Re-authentication after a 401
-status: approved
+status: verified
 priority: must
-revision: 2
+revision: 3
 source: start_point G11; ref/api/hem-api-1.2.2.yaml
 depends_on: ["REQ-AUTH-004", "REQ-API-002"]
 supersedes: null

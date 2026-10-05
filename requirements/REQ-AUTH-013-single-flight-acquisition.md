@@ -1,9 +1,9 @@
 ---
 id: REQ-AUTH-013
 title: Concurrent calls share one login
-status: approved
+status: verified
 priority: should
-revision: 2
+revision: 3
 source: ARCHITECTURE.md §5; ref/api/hem-api-1.2.2.yaml
 depends_on: ["REQ-AUTH-004"]
 supersedes: null
