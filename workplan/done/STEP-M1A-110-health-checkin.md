@@ -7,9 +7,9 @@ traces:
   architecture: ["ARCHITECTURE.md#6-protocol-bindings", "ARCHITECTURE.md#3-component-overview", "ARCHITECTURE.md#7-transport"]
 depends_on: ["STEP-M1A-100"]
 evidence:
-  commits: []
-  tests: []
-  notes: null
+  commits: ["123704f", "976f6d3"]
+  tests: ["verifies: REQ-SYS-003 (tests/unit/health.test.ts)", "verifies: REQ-SYS-004 (tests/unit/checkin.test.ts)", "verifies: REQ-SYS-005 (tests/unit/checkin.test.ts)", "verifies: REQ-SYS-006 (tests/unit/checkin.test.ts)", "verifies: REQ-SYS-007 (tests/unit/checkin.test.ts)", "verifies: REQ-NET-007 (tests/unit/checkin.test.ts)"]
+  notes: "npm run check: 33 files, 544 tests passed in Node v24.21.0 and headless Chromium. Open point resolved by the user on 2026-10-05: a failed relay call raises the new HemRelayError (code RELAY), added as a row to the ARCHITECTURE.md §4 error table (additive; no REQ changed meaning). Relay fetch is resolved at call time (configured, else global), with its own time limit and the caller's signal. health() reports any non-abort failure of the status request as a result (reachable false only for unreachable or timeout) instead of throwing. newfws/newuis are returned as strings: the reference does not mark them as base64 (format: byte)."
 reopened: []
 cancelled: null
 ---
@@ -49,32 +49,32 @@ as its two device calls, a replaceable relay, and a one-call convenience.
   closed here: REQ-NET-007 (relay requests outside the queue).
 
 **Definition of done**
-- [ ] `system.health()` makes exactly one request, the status request.
-- [ ] An unreachable device or an elapsed time limit yields a result with
+- [x] `system.health()` makes exactly one request, the status request.
+- [x] An unreachable device or an elapsed time limit yields a result with
       reachable false and no throw; a caller abort raises `HemAbortError`.
-- [ ] Health maps initialised, `fls_state` equal to 0 and clock set from the
+- [x] Health maps initialised, `fls_state` equal to 0 and clock set from the
       status result; the summary flag is true only when all four facts are.
-- [ ] Check-in step 1: no `Authorization` header; the result is the `check`
+- [x] Check-in step 1: no `Authorization` header; the result is the `check`
       string unmodified; a reply without `check` raises `HemProtocolError`.
-- [ ] Check-in step 2: body `{checked}` with the reply unmodified, no
+- [x] Check-in step 2: body `{checked}` with the reply unmodified, no
       `Authorization` header; the result has `status`, and `newcrt`,
       `newfws` and `newuis` when present.
-- [ ] Check-in step 2: a 401 raises `HemUnauthenticatedError` without a login
+- [x] Check-in step 2: a 401 raises `HemUnauthenticatedError` without a login
       attempt; its TSDoc lists the management actions and when they run.
-- [ ] Default relay: a POST with JSON `{check}` returns the `checked` string;
+- [x] Default relay: a POST with JSON `{check}` returns the `checked` string;
       it uses its own `fetch`, never the device `fetch`; the URL is
       configurable; a status other than 200 raises an error carrying the
       status and body.
-- [ ] The relay interface is exported and the client accepts any
+- [x] The relay interface is exported and the client accepts any
       implementation; a test runs a check-in with an in-memory relay and
       makes no request to `api.encedo.com`.
-- [ ] One-call check-in: the three legs happen in order and each value is
+- [x] One-call check-in: the three legs happen in order and each value is
       passed on unchanged; the result is that of step 2; a failure names the
       leg; with no relay configured it raises `HemUnsupportedError`.
-- [ ] Relay requests do not pass through the device request queue.
-- [ ] Each operation has unit tests asserting method, path, headers, body and
+- [x] Relay requests do not pass through the device request queue.
+- [x] Each operation has unit tests asserting method, path, headers, body and
       response mapping, and TSDoc stating scope and milestone.
-- [ ] The suite passes in Node 24 and in the browser run.
-- [ ] `implements:` and `verifies:` tags exist for the REQs above.
-- [ ] The non-`(M1B)` acceptance boxes this step closes are ticked in the REQ
+- [x] The suite passes in Node 24 and in the browser run.
+- [x] `implements:` and `verifies:` tags exist for the REQs above.
+- [x] The non-`(M1B)` acceptance boxes this step closes are ticked in the REQ
       files (revision bumped).
