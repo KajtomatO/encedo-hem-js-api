@@ -9,6 +9,7 @@ import { ClockRecovery } from './auth/recovery.js';
 import { Session } from './auth/session.js';
 import { type Clock, DEFAULT_TOKEN_LIFETIME_SECONDS, PassphraseLogin, validateLifetime } from './auth/login.js';
 import { HemValidationError } from './errors.js';
+import { CryptoApi } from './api/crypto.js';
 import { KeysApi } from './api/keymgmt.js';
 import { SystemApi } from './api/system.js';
 import { type CheckinRelay, EncedoCheckinRelay } from './relay/checkin.js';
@@ -91,6 +92,8 @@ export class HemClient {
   readonly system: SystemApi;
   /** Key repository: create, get, list, search. */
   readonly keys: KeysApi;
+  /** Operations with stored keys: HMAC, wrap, unwrap. */
+  readonly crypto: CryptoApi;
 
   constructor(options: HemClientOptions) {
     const transport = new Transport({
@@ -116,6 +119,7 @@ export class HemClient {
     this.auth = new AuthApi(session);
     this.system = new SystemApi(context, checkinRelay);
     this.keys = new KeysApi(context);
+    this.crypto = new CryptoApi(context);
     contexts.set(this, context);
   }
 }
