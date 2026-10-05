@@ -14,3 +14,25 @@
  */
 // implements: REQ-API-010
 export const HEM_API_VERSION = '1.2.2';
+
+export {
+  HemAbortError,
+  HemApprovalRejectedError,
+  HemApprovalTimeoutError,
+  HemBadRequestError,
+  HemDeviceError,
+  HemDeviceStateError,
+  HemError,
+  HemForbiddenError,
+  HemOperationFailedError,
+  HemOriginRejectedError,
+  HemPayloadTooLargeError,
+  HemProtocolError,
+  HemTimeoutError,
+  HemTlsRequiredError,
+  HemUnauthenticatedError,
+  HemUnreachableError,
+  HemUnsupportedError,
+  HemValidationError,
+} from './errors.js';
+export type { HemErrorCode, HemErrorOptions } from './errors.js';
