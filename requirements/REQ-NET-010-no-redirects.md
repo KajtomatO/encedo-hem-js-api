@@ -1,9 +1,9 @@
 ---
 id: REQ-NET-010
 title: Redirects not followed
-status: approved
+status: verified
 priority: should
-revision: 2
+revision: 3
 source: ARCHITECTURE.md §7
 depends_on: ["REQ-API-002"]
 supersedes: null

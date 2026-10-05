@@ -1,9 +1,9 @@
 ---
 id: REQ-NET-001
 title: Caller-supplied fetch implementation
-status: approved
+status: verified
 priority: must
-revision: 2
+revision: 3
 source: start_point G6
 depends_on: []
 supersedes: null
