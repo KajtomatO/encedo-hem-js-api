@@ -1,7 +1,8 @@
 {
   // Build: src/ only, emits ESM .js and .d.ts into dist/.
   // implements: REQ-BUILD-001
-  // No Node typings here, so src/ cannot compile against Node-only APIs.
+  // implements: REQ-BUILD-003 — no Node typings and only the DOM/ES libraries here,
+  // so src/ cannot compile against Node-only APIs.
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "rootDir": "src",
