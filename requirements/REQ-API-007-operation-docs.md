@@ -1,9 +1,9 @@
 ---
 id: REQ-API-007
 title: Every public operation documents its scope and milestone
-status: approved
+status: verified
 priority: must
-revision: 2
+revision: 3
 source: start_point G23
 depends_on: []
 supersedes: null
