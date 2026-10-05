@@ -142,8 +142,11 @@ Multiple REQ IDs may appear comma-separated in one tag. Tag the few load-bearing
 points, not every touched line. The greppable ground-truth patterns are
 `implements: REQ-`, `verifies: REQ-` and `supports: REQ-`. A `supports:` tag
 is reported in the trace matrix but never counts as verification evidence.
-Build/CI REQs may be realized outside `src/` (e.g. `package.json`,
-`.github/workflows/`); scan those locations too and say so in TRACE.md.
+Build/CI REQs, test-infrastructure REQs (`TEST`) and REQs whose normative
+statement is about the README may be realized outside `src/` (e.g.
+`package.json`, `tsconfig.json`, `vitest.config.ts`, `.github/workflows/`,
+the test setup under `tests/`, `README.md`); scan those locations too and say
+so in TRACE.md (user decision 2026-10-05).
 
 ### 4.3 PROCEDURE: regenerate the trace matrix
 
