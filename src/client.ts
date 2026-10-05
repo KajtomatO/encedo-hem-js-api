@@ -6,7 +6,7 @@
 import { AuthApi } from './api/auth-api.js';
 import { type BindingContext, noTokens } from './api/core.js';
 import { ClockRecovery } from './auth/recovery.js';
-import { Session } from './auth/session.js';
+import { Session, type TokenSource } from './auth/session.js';
 import { type Clock, DEFAULT_TOKEN_LIFETIME_SECONDS, PassphraseLogin, validateLifetime } from './auth/login.js';
 import { HemValidationError } from './errors.js';
 import { CryptoApi } from './api/crypto.js';
@@ -58,6 +58,20 @@ export interface HemClientOptions {
    */
   passphrase?: string | undefined;
   /**
+   * Mobile login mode, instead of a passphrase: every token the client needs
+   * is obtained by asking the paired mobile apps to approve its scope,
+   * through the approval relay. `true` uses the defaults (poll every 5 s,
+   * wait up to 60 s). A client has either a passphrase or mobile mode, not
+   * both.
+   *
+   * Observed with the real Encedo app by
+   * https://github.com/KajtomatO/encedo-hem-c-api, to be confirmed in M1B:
+   * approved tokens live 15 minutes, and since crypto operations need a
+   * per-key scope (`keymgmt:use:<kid>`), each key used means one push
+   * notification to approve.
+   */
+  mobileApproval?: true | MobileApprovalOptions | undefined;
+  /**
    * Requested lifetime of each token in seconds; default 28 800 (8 hours).
    * The largest value the device accepts is not documented.
    */
@@ -73,6 +87,18 @@ export interface HemClientOptions {
   clockRecovery?: boolean | undefined;
   /** Clock in milliseconds since the Unix epoch; default `Date.now`. Meant for tests. */
   now?: Clock | undefined;
+}
+
+/** Settings of mobile login mode. */
+export interface MobileApprovalOptions {
+  /** How long to wait for each approval, in milliseconds; default 60 000. */
+  timeoutMs?: number | undefined;
+  /** Interval between checks for the outcome, in milliseconds; default 5 000. */
+  intervalMs?: number | undefined;
+  /** Note shown to the approver, 1 to 128 characters. */
+  note?: string | undefined;
+  /** Context copied into each request, 1 to 64 characters. */
+  ctx?: string | undefined;
 }
 
 // Binding context of each client, for the library's own tests and internal
@@ -121,7 +147,23 @@ export class HemClient {
     const recovery = new ClockRecovery(
       checkinRelay !== null && options.clockRecovery !== false ? (callOptions) => this.system.checkin(callOptions) : null,
     );
-    const source = options.passphrase === undefined ? null : new PassphraseLogin(publicContext, options.passphrase, lifetime, now, recovery);
+    if (options.passphrase !== undefined && options.mobileApproval !== undefined) {
+      throw new HemValidationError('Invalid options: give either a passphrase or mobileApproval, not both', { parameter: 'mobileApproval' });
+    }
+    let source: TokenSource | null = null;
+    if (options.passphrase !== undefined) {
+      source = new PassphraseLogin(publicContext, options.passphrase, lifetime, now, recovery);
+    } else if (options.mobileApproval !== undefined) {
+      // implements: REQ-AUTH-019 — every token comes from an approval of exactly the scope the operation needs.
+      const mobile: MobileApprovalOptions = options.mobileApproval === true ? {} : options.mobileApproval;
+      source = {
+        acquire: async (scope) => ({
+          token: await this.auth.engine.approve(scope, { note: mobile.note, ctx: mobile.ctx }, { timeoutMs: mobile.timeoutMs, intervalMs: mobile.intervalMs }),
+          requestedExp: Number.POSITIVE_INFINITY,
+        }),
+        discard: () => undefined,
+      };
+    }
     const session = new Session(source, now);
     const context: BindingContext = { transport, tokens: session };
     const approvalRelay = options.approvalRelay === undefined ? new EncedoApprovalRelay() : options.approvalRelay;

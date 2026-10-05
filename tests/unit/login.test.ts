@@ -176,6 +176,7 @@ describe('credential handling', () => {
       checkinRelay: null,
       approvalRelay: null,
       passphrase: 'p',
+      mobileApproval: true,
       tokenLifetimeSeconds: 1,
       clockRecovery: true,
       now: Date.now,
