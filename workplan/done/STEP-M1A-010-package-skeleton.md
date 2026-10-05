@@ -7,9 +7,9 @@ traces:
   architecture: ["ARCHITECTURE.md#1-decisions-fixed", "ARCHITECTURE.md#9-directory-layout"]
 depends_on: []
 evidence:
-  commits: []
-  tests: []
-  notes: null
+  commits: ["3bb0bf2"]
+  tests: ["verifies: REQ-API-010 (tests/unit/index.test.ts, tests/unit/package.node.test.ts)", "verifies: REQ-BUILD-001 (tests/unit/package.node.test.ts)", "verifies: REQ-BUILD-002 (tests/unit/package.node.test.ts)", "verifies: REQ-BUILD-004 (tests/unit/package.node.test.ts)"]
+  notes: "npm test (build + Vitest, Node v24.21.0): 2 files, 9 tests passed; npm run typecheck passes. Toolchain: TypeScript 7.0.2, Vitest 5.0.3."
 reopened: []
 cancelled: null
 ---
@@ -38,20 +38,20 @@ exports the targeted API version, and tests guard the packaging rules.
   risk text is left as it is until the user says to update it.
 
 **Definition of done**
-- [ ] `package.json` declares `"type": "module"`, an `exports` map with types
+- [x] `package.json` declares `"type": "module"`, an `exports` map with types
       and `engines.node` `>=24`; it has no `dependencies`, `peerDependencies`
       or `optionalDependencies`, no install scripts, and there is no CommonJS
       output.
-- [ ] `tsconfig.json` enables strict type-checking; the build command emits
+- [x] `tsconfig.json` enables strict type-checking; the build command emits
       `.js` and `.d.ts` files into `dist/`; the type-check command passes.
-- [ ] `src/index.ts` exports the targeted API version `1.2.2` as a constant,
+- [x] `src/index.ts` exports the targeted API version `1.2.2` as a constant,
       and a unit test checks its value.
-- [ ] A Node-only test asserts the dependency and install-script rules of
+- [x] A Node-only test asserts the dependency and install-script rules of
       REQ-BUILD-002 and that the build output imports nothing outside itself.
-- [ ] A Node-only smoke test imports the built package from a plain ESM file.
-- [ ] A Node-only test checks that the packed archive contains only the build
+- [x] A Node-only smoke test imports the built package from a plain ESM file.
+- [x] A Node-only test checks that the packed archive contains only the build
       output, README, LICENSE and `package.json`.
-- [ ] `npm test` runs Vitest in Node 24 and passes.
-- [ ] `implements:` and `verifies:` tags exist for the REQs above.
-- [ ] The non-`(M1B)` acceptance boxes this step closes are ticked in the REQ
+- [x] `npm test` runs Vitest in Node 24 and passes.
+- [x] `implements:` and `verifies:` tags exist for the REQs above.
+- [x] The non-`(M1B)` acceptance boxes this step closes are ticked in the REQ
       files (revision bumped).

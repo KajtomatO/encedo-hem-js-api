@@ -3,7 +3,7 @@ id: REQ-BUILD-002
 title: No runtime dependencies
 status: approved
 priority: must
-revision: 1
+revision: 2
 source: start_point G2
 depends_on: []
 supersedes: null
@@ -21,7 +21,7 @@ third-party code into the consumer's process, and nothing native to compile.
 Introduced in M1.
 
 **Acceptance criteria:**
-- [ ] A test asserts that `package.json` has no `dependencies`,
+- [x] A test asserts that `package.json` has no `dependencies`,
       `peerDependencies` or `optionalDependencies` entries.
-- [ ] The package has no install scripts and no native addon.
-- [ ] The build output imports nothing outside itself.
+- [x] The package has no install scripts and no native addon.
+- [x] The build output imports nothing outside itself.
