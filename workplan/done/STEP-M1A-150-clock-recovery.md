@@ -7,9 +7,9 @@ traces:
   architecture: ["ARCHITECTURE.md#52-session-behaviour", "ARCHITECTURE.md#11-risks--open-questions"]
 depends_on: ["STEP-M1A-110", "STEP-M1A-130"]
 evidence:
-  commits: []
-  tests: []
-  notes: null
+  commits: ["74c6018"]
+  tests: ["verifies: REQ-AUTH-009 (tests/unit/clock-recovery.test.ts)", "verifies: REQ-SYS-007 (tests/unit/clock-recovery.test.ts)"]
+  notes: "npm run check: 38 files, 672 tests passed in Node v24.21.0 and headless Chromium. ClockRecovery (src/auth/recovery.ts) is the reusable 'recover once through check-in' part, with showsDrift() for the drift test; STEP-M1A-190/200 reuse it. New client option clockRecovery (default true). Check-in uses only public operations, so it can never reach a login and trigger another check-in."
 reopened: []
 cancelled: null
 ---
@@ -38,20 +38,20 @@ passphrase never causes cloud traffic.
   check-in), which can only be shown once recovery exists.
 
 **Definition of done**
-- [ ] A 403 on the challenge leads to one check-in and a repeated login that
+- [x] A 403 on the challenge leads to one check-in and a repeated login that
       succeeds.
-- [ ] A 401 on the proof with drift evidence does the same, using a fresh
+- [x] A 401 on the proof with drift evidence does the same, using a fresh
       challenge.
-- [ ] A 401 on the proof without drift evidence raises
+- [x] A 401 on the proof without drift evidence raises
       `HemUnauthenticatedError` with zero check-in requests.
-- [ ] At most one recovery check-in happens per token acquisition; a second
+- [x] At most one recovery check-in happens per token acquisition; a second
       failure is reported.
-- [ ] With recovery switched off, or with no check-in relay configured, the
+- [x] With recovery switched off, or with no check-in relay configured, the
       original error is reported and no check-in is attempted.
-- [ ] If the check-in itself fails, the login error is reported with the
+- [x] If the check-in itself fails, the login error is reported with the
       check-in failure attached as its cause.
-- [ ] A check-in never triggers another check-in.
-- [ ] The suite passes in Node 24 and in the browser run.
-- [ ] `implements:` and `verifies:` tags exist for the REQs above.
-- [ ] The non-`(M1B)` acceptance boxes this step closes are ticked in the REQ
+- [x] A check-in never triggers another check-in.
+- [x] The suite passes in Node 24 and in the browser run.
+- [x] `implements:` and `verifies:` tags exist for the REQs above.
+- [x] The non-`(M1B)` acceptance boxes this step closes are ticked in the REQ
       files (revision bumped).
