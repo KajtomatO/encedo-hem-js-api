@@ -3,7 +3,7 @@ id: REQ-API-009
 title: Secrets never logged, stored or put into error messages
 status: approved
 priority: must
-revision: 3
+revision: 4
 source: start_point G13; ARCHITECTURE.md §1
 depends_on: []
 supersedes: null
@@ -28,5 +28,5 @@ protection than the process memory. Introduced in M1.
 - [x] A unit test inspects the error of a failed login — message, properties
       and JSON form — and finds neither the passphrase, the eJWT nor a
       token.
-- [ ] A unit test does the same for a failed authenticated call and finds no
+- [x] A unit test does the same for a failed authenticated call and finds no
       token.

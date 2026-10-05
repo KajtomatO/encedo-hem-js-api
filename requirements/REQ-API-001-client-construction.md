@@ -3,7 +3,7 @@ id: REQ-API-001
 title: Client object created from options, with no global state
 status: approved
 priority: must
-revision: 2
+revision: 3
 source: ARCHITECTURE.md §4; start_point G5
 depends_on: []
 supersedes: null
@@ -26,7 +26,7 @@ side effects. Introduced in M1.
 **Acceptance criteria:**
 - [x] Constructing a client with a valid URL and a substituted `fetch` makes
       zero `fetch` calls.
-- [ ] Two clients for different URLs used in the same test do not share
+- [x] Two clients for different URLs used in the same test do not share
       tokens, credentials or request queues.
 - [x] Constructing without a URL, or with a URL whose scheme is neither
       `http:` nor `https:`, throws `HemValidationError`.

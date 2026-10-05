@@ -7,9 +7,9 @@ traces:
   architecture: ["ARCHITECTURE.md#52-session-behaviour", "ARCHITECTURE.md#6-protocol-bindings"]
 depends_on: ["STEP-M1A-120"]
 evidence:
-  commits: []
-  tests: []
-  notes: null
+  commits: ["eeb69c0"]
+  tests: ["verifies: REQ-AUTH-004 (tests/unit/session.test.ts)", "verifies: REQ-AUTH-005 (tests/unit/session.test.ts)", "verifies: REQ-AUTH-007 (tests/unit/session.test.ts)", "verifies: REQ-AUTH-010 (tests/unit/session.test.ts)", "verifies: REQ-AUTH-012 (tests/unit/session.test.ts)", "verifies: REQ-API-001 (tests/unit/session.test.ts)", "verifies: REQ-API-009 (tests/unit/session.test.ts)", "verifies: REQ-AUTH-011 (tests/unit/session.test.ts)", "verifies: REQ-NET-004 (tests/unit/session.test.ts)"]
+  notes: "npm run check: 36 files, 634 tests passed in Node v24.21.0 and headless Chromium. Session engine in src/auth/session.ts; client.auth exposes role (Role: user | master | app with id) and logout(). Authenticated behaviour is driven by test-only operation descriptions until STEP-M1A-160. REQ-AUTH-012 is tested here for status, version, both check-in steps and both login steps; ext/request and ext/token are added in STEP-M1A-230. The fake fetch now lets one-shot replies override an always() fallback (supporting change, with its own test)."
 reopened: []
 cancelled: null
 ---
@@ -46,30 +46,30 @@ and logout empties everything.
   `ext/token` in STEP-M1A-230; REQ-AUTH-010 master 403 in STEP-M1A-160.
 
 **Definition of done**
-- [ ] Two calls needing the same scope cause one login; calls needing
+- [x] Two calls needing the same scope cause one login; calls needing
       different scopes obtain separate tokens.
-- [ ] The cache key is the exact string: `keymgmt:use:<kid A>` and
+- [x] The cache key is the exact string: `keymgmt:use:<kid A>` and
       `keymgmt:use:<kid B>` are different entries, and a `keymgmt:list` token
       is not used for `keymgmt:search`.
-- [ ] The expiry is read from the token's own `exp` claim, falling back to
+- [x] The expiry is read from the token's own `exp` claim, falling back to
       the requested expiry when the token cannot be decoded.
-- [ ] The token is sent as `Authorization: Bearer <token>`.
-- [ ] With an injected clock: at 61 seconds before expiry the cached token is
+- [x] The token is sent as `Authorization: Bearer <token>`.
+- [x] With an injected clock: at 61 seconds before expiry the cached token is
       used; at 60 seconds a login happens before the call. No background
       timer is started.
-- [ ] A token with `sub` `U` reports the user role, `M` the master role, and
+- [x] A token with `sub` `U` reports the user role, `M` the master role, and
       any other value the app role together with that value.
-- [ ] With tokens cached, the calls for status, version, both check-in steps
+- [x] With tokens cached, the calls for status, version, both check-in steps
       and both login steps carry no `Authorization` header.
-- [ ] After logout an authenticated call raises `HemUnauthenticatedError`
+- [x] After logout an authenticated call raises `HemUnauthenticatedError`
       without any request, and the token cache is empty.
-- [ ] Two clients used in the same test do not share tokens or credentials;
+- [x] Two clients used in the same test do not share tokens or credentials;
       the cache exists only in memory.
-- [ ] A call that needs a login first applies the time limit to each request,
+- [x] A call that needs a login first applies the time limit to each request,
       not to the sum.
-- [ ] The error of a failed authenticated call — message, properties and JSON
+- [x] The error of a failed authenticated call — message, properties and JSON
       form — contains no token.
-- [ ] The suite passes in Node 24 and in the browser run.
-- [ ] `implements:` and `verifies:` tags exist for the REQs above.
-- [ ] The non-`(M1B)` acceptance boxes this step closes are ticked in the REQ
+- [x] The suite passes in Node 24 and in the browser run.
+- [x] `implements:` and `verifies:` tags exist for the REQs above.
+- [x] The non-`(M1B)` acceptance boxes this step closes are ticked in the REQ
       files (revision bumped).

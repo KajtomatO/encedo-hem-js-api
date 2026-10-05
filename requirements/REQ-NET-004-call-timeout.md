@@ -3,7 +3,7 @@ id: REQ-NET-004
 title: Time limit on every call
 status: approved
 priority: must
-revision: 2
+revision: 3
 source: start_point G7; https://github.com/KajtomatO/encedo-hem-c-api; ref/api/hem-api-1.2.2.yaml
 depends_on: ["REQ-API-002"]
 supersedes: null
@@ -27,7 +27,7 @@ login delay of 0.5 to 1.5 seconds [YAML]. Introduced in M1.
       with `HemTimeoutError` at the limit, and the signal given to `fetch`
       is aborted.
 - [x] The limit also covers reading the response body.
-- [ ] A call that needs a login first applies the limit to each request, not
+- [x] A call that needs a login first applies the limit to each request, not
       to the sum.
 - [ ] (M1B) the default limit is enough for login and for every M1
       operation; the slowest observed time is recorded.
