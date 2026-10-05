@@ -3,7 +3,7 @@ id: REQ-AUTH-002
 title: Login proof encoding (eJWT)
 status: approved
 priority: must
-revision: 1
+revision: 2
 source: start_point §6 Q1; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: ["REQ-AUTH-003"]
 supersedes: null
@@ -53,9 +53,9 @@ The firmware reads only the `ecdh` header field [C-SDK]; the full header is
 kept so the vector stays shared with the C client. Introduced in M1.
 
 **Acceptance criteria:**
-- [ ] A unit test feeds the vector inputs through the real derivation
+- [x] A unit test feeds the vector inputs through the real derivation
       (600 000 PBKDF2 iterations included) and obtains the three output
       segments exactly.
-- [ ] The claims are serialised without whitespace, in the stated order,
+- [x] The claims are serialised without whitespace, in the stated order,
       with `/` not escaped.
-- [ ] The vector test passes in Node 24 and in the browser run.
+- [x] The vector test passes in Node 24 and in the browser run.

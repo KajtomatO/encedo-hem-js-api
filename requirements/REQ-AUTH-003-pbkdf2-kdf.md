@@ -3,7 +3,7 @@ id: REQ-AUTH-003
 title: PBKDF2 as the only login key derivation
 status: approved
 priority: must
-revision: 1
+revision: 2
 source: user decision 2026-10-02; start_point §6 Q1; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: []
 supersedes: null
@@ -26,13 +26,13 @@ device [C-SDK]. Descriptions of an Argon2 derivation in [DOC] and in older
 other derivation is offered. Introduced in M1.
 
 **Acceptance criteria:**
-- [ ] The PBKDF2 wrapper reproduces a published PBKDF2-HMAC-SHA256 test
+- [x] The PBKDF2 wrapper reproduces a published PBKDF2-HMAC-SHA256 test
       vector.
-- [ ] The passphrase is used as its UTF-8 bytes, without normalisation.
-- [ ] The salt is the UTF-8 bytes of the `eid` text as received, not its
+- [x] The passphrase is used as its UTF-8 bytes, without normalisation.
+- [x] The salt is the UTF-8 bytes of the `eid` text as received, not its
       base64-decoded bytes.
-- [ ] The 32-byte output is used as the X25519 private key; for the vector
+- [x] The 32-byte output is used as the X25519 private key; for the vector
       of REQ-AUTH-002 the derived public key equals the stated `iss`.
-- [ ] The X25519 wrapper reproduces the RFC 7748 test vectors in Node 24 and
+- [x] The X25519 wrapper reproduces the RFC 7748 test vectors in Node 24 and
       in the browser run (ARCHITECTURE.md §11, risk 1).
 - [ ] The public API offers no way to select another derivation.

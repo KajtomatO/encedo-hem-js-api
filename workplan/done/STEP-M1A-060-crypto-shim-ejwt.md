@@ -7,9 +7,9 @@ traces:
   architecture: ["ARCHITECTURE.md#51-passphrase-login", "ARCHITECTURE.md#3-component-overview", "ARCHITECTURE.md#11-risks--open-questions"]
 depends_on: ["STEP-M1A-050"]
 evidence:
-  commits: []
-  tests: []
-  notes: null
+  commits: ["2a2e997"]
+  tests: ["verifies: REQ-AUTH-002 (tests/unit/ejwt.test.ts, tests/unit/webcrypto.test.ts)", "verifies: REQ-AUTH-003 (tests/unit/ejwt.test.ts, tests/unit/webcrypto.test.ts)", "verifies: REQ-TEST-002 (tests/unit/ejwt.test.ts, tests/unit/webcrypto.test.ts)", "supports: REQ-AUTH-002, REQ-AUTH-003 (tests/support/vectors.ts)"]
+  notes: "npm run check: 23 files, 272 tests passed. Risk 1 finding (ARCHITECTURE.md §11): in headless Chromium (Chrome for Testing 153.0.8010.12, Playwright 1.63) as in Node v24.21.0, a raw 32-byte X25519 scalar wrapped in a PKCS#8 header imports as a non-extractable key, and X25519 against the base point u=9 yields its public key; the RFC 7748 §5.2 (first vector) and §6.1 vectors and the REQ-AUTH-002 login vector (600 000 iterations) reproduce in both runtimes. Other browsers are not covered by this run. REQ-AUTH-003 'no way to select another derivation' closes in STEP-M1A-120."
 reopened: []
 cancelled: null
 ---
@@ -42,19 +42,19 @@ REQ-AUTH-002 byte for byte — in Node 24 and in the browser run.
   another derivation" in STEP-M1A-120.
 
 **Definition of done**
-- [ ] The PBKDF2 wrapper reproduces a published PBKDF2-HMAC-SHA256 test
+- [x] The PBKDF2 wrapper reproduces a published PBKDF2-HMAC-SHA256 test
       vector.
-- [ ] The X25519 wrapper reproduces the RFC 7748 test vectors.
-- [ ] The HMAC-SHA256 wrapper reproduces a published test vector.
-- [ ] The REQ-AUTH-002 vector inputs, fed through the real derivation with
+- [x] The X25519 wrapper reproduces the RFC 7748 test vectors.
+- [x] The HMAC-SHA256 wrapper reproduces a published test vector.
+- [x] The REQ-AUTH-002 vector inputs, fed through the real derivation with
       600 000 iterations, give the stated `iss` and the three segments
       exactly.
-- [ ] Tests show the passphrase is used as UTF-8 without normalisation and
+- [x] Tests show the passphrase is used as UTF-8 without normalisation and
       the salt is the `eid` text, not its base64-decoded bytes.
-- [ ] Tests show the claims are serialised without whitespace, in the stated
+- [x] Tests show the claims are serialised without whitespace, in the stated
       order, with `/` not escaped.
-- [ ] All of the above pass in Node 24 and in the browser run; the risk 1
+- [x] All of the above pass in Node 24 and in the browser run; the risk 1
       finding for the browser is written into this step's evidence.
-- [ ] `implements:` and `verifies:` tags exist for the REQs above.
-- [ ] The non-`(M1B)` acceptance boxes this step closes are ticked in the REQ
+- [x] `implements:` and `verifies:` tags exist for the REQs above.
+- [x] The non-`(M1B)` acceptance boxes this step closes are ticked in the REQ
       files (revision bumped).
