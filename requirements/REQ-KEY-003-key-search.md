@@ -1,9 +1,9 @@
 ---
 id: REQ-KEY-003
 title: Find keys by description
-status: approved
+status: verified
 priority: must
-revision: 2
+revision: 3
 source: start_point §3; ref/api/hem-api-1.2.2.yaml; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: ["REQ-AUTH-005", "REQ-API-005", "REQ-KEY-005"]
 supersedes: null

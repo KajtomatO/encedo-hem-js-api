@@ -2,9 +2,9 @@
 
 # Traceability matrix
 
-Generated: 2026-10-05 (STEP-M1A-160 done)
+Generated: 2026-10-05 (STEP-M1A-170 done)
 
-Scan inputs: 117 REQ files (`requirements/`), 28 step files (`workplan/{todo,doing,done}/`: 12 in `todo/`, 0 in `doing/`, 16 in `done/`). Code tags (`implements: REQ-`) scanned across `src/`; test tags (`verifies:`/`supports: REQ-`) scanned across `tests/`. Build/CI, test-infrastructure and README requirements are realised outside `src/` per REQUIREMENTS-MANAGEMENT.md §4.2, so `implements:` tags are also scanned in `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `.github/workflows`, `README.md`. Locations present: `src/`, `tests/`, `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `.github/workflows`, `README.md`. Unit suite: passed (`npm test`) at generation.
+Scan inputs: 117 REQ files (`requirements/`), 28 step files (`workplan/{todo,doing,done}/`: 11 in `todo/`, 0 in `doing/`, 17 in `done/`). Code tags (`implements: REQ-`) scanned across `src/`; test tags (`verifies:`/`supports: REQ-`) scanned across `tests/`. Build/CI, test-infrastructure and README requirements are realised outside `src/` per REQUIREMENTS-MANAGEMENT.md §4.2, so `implements:` tags are also scanned in `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `.github/workflows`, `README.md`. Locations present: `src/`, `tests/`, `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `.github/workflows`, `README.md`. Unit suite: passed (`npm test`) at generation.
 
 Steps column: step ID and its folder. A REQ listed in several steps becomes `implemented` only when all of them are in `done/` (§3.2). Tests column: `verifies:` locations; `supports …` entries are test support and never count as verification.
 
@@ -56,10 +56,10 @@ Steps column: step ID and its folder. A REQ listed in several steps becomes `imp
 | REQ-BUILD-004 | Node.js 24 as the minimum version | approved | must | §1 | STEP-M1A-010 (done), STEP-M1A-030 (done), STEP-M1A-220 (todo) | package.json:38, .github/workflows/ci.yml:2 | tests/unit/ci.node.test.ts:30, tests/unit/package.node.test.ts:65 |
 | REQ-BUILD-005 | Continuous integration for build and unit tests | verified | must | §8, §9 | STEP-M1A-030 (done) | .github/workflows/ci.yml:2 | tests/unit/ci.node.test.ts:15, tests/unit/ci.node.test.ts:24, tests/unit/ci.node.test.ts:35 |
 | REQ-BUILD-006 | A versioned release at the end of each milestone | approved | must | §4, §10 | STEP-M1B-000 (todo) | — | — |
-| REQ-KEY-001 | Generate a key on the device | verified | must | §6 | STEP-M1A-160 (done) | src/api/keymgmt.ts:97 | tests/unit/keys-create-get.test.ts:19, tests/unit/keys-create-get.test.ts:34, tests/unit/keys-create-get.test.ts:47, tests/unit/keys-create-get.test.ts:54 |
-| REQ-KEY-002 | Read one key | verified | must | §6 | STEP-M1A-160 (done) | src/api/keymgmt.ts:127 | tests/unit/keys-create-get.test.ts:86, tests/unit/keys-create-get.test.ts:100, tests/unit/keys-create-get.test.ts:115 |
-| REQ-KEY-003 | Find keys by description | approved | must | §6, §11 | STEP-M1A-170 (todo) | — | — |
-| REQ-KEY-004 | Paged key listing | approved | must | §6 | STEP-M1A-170 (todo) | — | — |
+| REQ-KEY-001 | Generate a key on the device | verified | must | §6 | STEP-M1A-160 (done) | src/api/keymgmt.ts:227 | tests/unit/keys-create-get.test.ts:19, tests/unit/keys-create-get.test.ts:34, tests/unit/keys-create-get.test.ts:47, tests/unit/keys-create-get.test.ts:54 |
+| REQ-KEY-002 | Read one key | verified | must | §6 | STEP-M1A-160 (done) | src/api/keymgmt.ts:257 | tests/unit/keys-create-get.test.ts:86, tests/unit/keys-create-get.test.ts:100, tests/unit/keys-create-get.test.ts:115 |
+| REQ-KEY-003 | Find keys by description | verified | must | §6, §11 | STEP-M1A-170 (done) | src/api/keymgmt.ts:332, src/api/keymgmt.ts:361 | tests/unit/keys-list-search.test.ts:115, tests/unit/keys-list-search.test.ts:129, tests/unit/keys-list-search.test.ts:144, tests/unit/keys-list-search.test.ts:159, tests/unit/keys-list-search.test.ts:166, tests/unit/keys-list-search.test.ts:182 |
+| REQ-KEY-004 | Paged key listing | verified | must | §6 | STEP-M1A-170 (done) | src/api/keymgmt.ts:282, src/api/keymgmt.ts:306 | tests/unit/keys-list-search.test.ts:19, tests/unit/keys-list-search.test.ts:53, tests/unit/keys-list-search.test.ts:69, tests/unit/keys-list-search.test.ts:88, tests/unit/keys-list-search.test.ts:100 |
 | REQ-KEY-005 | Key type presented as flags and algorithm | verified | must | §6 | STEP-M1A-160 (done) | src/api/key-type.ts:74 | tests/unit/key-type.test.ts:5, tests/unit/key-type.test.ts:16, tests/unit/key-type.test.ts:32, tests/unit/key-type.test.ts:37, tests/unit/keys-create-get.test.ts:100 |
 | REQ-KEY-006 | Change a key's label or description | approved | must | §6 | STEP-M2A-000 (todo) | — | — |
 | REQ-KEY-007 | Delete a key | approved | must | §6 | STEP-M2A-000 (todo) | — | — |
@@ -67,7 +67,7 @@ Steps column: step ID and its folder. A REQ listed in several steps becomes `imp
 | REQ-KEY-009 | Derive a key by ECDH and HKDF | approved | must | §6 | STEP-M2A-000 (todo) | — | — |
 | REQ-NET-001 | Caller-supplied fetch implementation | verified | must | §7 | STEP-M1A-070 (done) | src/transport/transport.ts:166 | tests/unit/transport.test.ts:25, tests/unit/transport.test.ts:37, tests/unit/transport.test.ts:49, tests/unit/transport.test.ts:55 |
 | REQ-NET-002 | Configurable device address | verified | must | §7 | STEP-M1A-070 (done) | src/transport/transport.ts:81 | tests/unit/transport.test.ts:74, tests/unit/transport.test.ts:92 |
-| REQ-NET-003 | Key-management and crypto calls refused over plain HTTP | approved | must | §7, §6 | STEP-M1A-070 (done), STEP-M1A-230 (todo) | src/api/core.ts:123, src/transport/transport.ts:189 | tests/unit/keys-create-get.test.ts:141, tests/unit/transport.test.ts:116, tests/unit/transport.test.ts:124, tests/unit/transport.test.ts:135 |
+| REQ-NET-003 | Key-management and crypto calls refused over plain HTTP | approved | must | §7, §6 | STEP-M1A-070 (done), STEP-M1A-230 (todo) | src/api/core.ts:123, src/transport/transport.ts:189 | tests/unit/keys-create-get.test.ts:141, tests/unit/keys-list-search.test.ts:200, tests/unit/transport.test.ts:116, tests/unit/transport.test.ts:124, tests/unit/transport.test.ts:135 |
 | REQ-NET-004 | Time limit on every call | verified | must | §7 | STEP-M1A-080 (done), STEP-M1A-130 (done) | src/transport/transport.ts:254 | tests/unit/session.test.ts:238, tests/unit/transport-timeout.test.ts:25, tests/unit/transport-timeout.test.ts:42, tests/unit/transport-timeout.test.ts:58, tests/unit/transport-timeout.test.ts:72 |
 | REQ-NET-005 | Cancellation of every call | verified | must | §7 | STEP-M1A-080 (done), STEP-M1A-090 (done), STEP-M1A-140 (done) | src/auth/session.ts:158, src/transport/transport.ts:254, src/transport/transport.ts:293 | tests/unit/reauth.test.ts:127, tests/unit/transport-queue.test.ts:99, tests/unit/transport-timeout.test.ts:89, tests/unit/transport-timeout.test.ts:106, tests/unit/transport-timeout.test.ts:114 |
 | REQ-NET-006 | Transport failures classified | verified | must | §7, §4 | STEP-M1A-080 (done) | src/transport/transport.ts:254 | tests/unit/transport-timeout.test.ts:89, tests/unit/transport-timeout.test.ts:127, tests/unit/transport-timeout.test.ts:137, tests/unit/transport-timeout.test.ts:149, tests/unit/transport-timeout.test.ts:162 |
@@ -130,16 +130,16 @@ Steps column: step ID and its folder. A REQ listed in several steps becomes `imp
 
 ## Coverage report
 
-- Totals: 117 REQs (77 approved, 40 verified), 28 steps (12 todo, 0 doing, 16 done; 0 cancelled).
+- Totals: 117 REQs (75 approved, 42 verified), 28 steps (11 todo, 0 doing, 17 done; 0 cancelled).
 - By area: API 14, AUTH 26, BUILD 6, KEY 9, NET 12, OPS 15, SYS 31, TEST 4.
 - Steps by milestone: M1A 23, M1B 1, M2A 1, M2B 1, M3A 1, M3B 1.
 - REQs with no step: none.
 - REQs listed in more than one step: 21 (criteria that close in a later step; see the Notes of the steps).
-- Approved REQs with no code tag (unimplemented): 70.
+- Approved REQs with no code tag (unimplemented): 68.
 - Approved REQs with code tags whose steps are not all in `done/` (in progress): REQ-API-004, REQ-API-010, REQ-AUTH-005, REQ-BUILD-004, REQ-NET-003, REQ-NET-009, REQ-TEST-001.
 - Implemented REQs with no passing tagged test (unverified): none.
 - Orphan tags: none.
 - Steps in `done/` with empty evidence: none.
 - Broken architecture anchors: none.
 - REQs in `needs-reverify`: none.
-- Status transitions applied in this run: REQ-AUTH-010: approved → verified, REQ-KEY-001: approved → verified, REQ-KEY-002: approved → verified, REQ-KEY-005: approved → verified.
+- Status transitions applied in this run: REQ-KEY-003: approved → verified, REQ-KEY-004: approved → verified.
