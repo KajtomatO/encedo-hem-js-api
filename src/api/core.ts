@@ -8,7 +8,7 @@
 import { base64ToBytes, hexToBytes } from '../codec/base64.js';
 import { utf8Decode } from '../codec/utf8.js';
 import { validateBodySize } from '../codec/validate.js';
-import { HemProtocolError, HemUnsupportedError } from '../errors.js';
+import { HemError, type HemErrorOptions, HemProtocolError, HemUnsupportedError } from '../errors.js';
 import type { CallOptions, Transport, TransportResponse } from '../transport/transport.js';
 
 /** API group of an operation, as in the reference. */
@@ -30,6 +30,11 @@ export interface OperationSpec {
   readonly required: readonly string[];
   /** The success response is documented as empty. */
   readonly emptyResponse?: boolean;
+  /**
+   * The request or response carries secrets (login proof, token): errors of
+   * this operation never carry the response body or an underlying cause.
+   */
+  readonly sensitive?: boolean;
 }
 
 /** Runs a request with a bearer token for a scope (supplied by the session engine). */
@@ -130,11 +135,30 @@ export async function invoke(context: BindingContext, spec: OperationSpec, invoc
       timeoutMs: options.timeoutMs,
     });
 
-  const response =
-    spec.scope === null
-      ? await send(undefined)
-      : await context.tokens.withToken(fillTemplate(spec.scope, params, false), options, (bearer) => send(bearer));
-  return parseResponse(spec, response);
+  try {
+    const response =
+      spec.scope === null
+        ? await send(undefined)
+        : await context.tokens.withToken(fillTemplate(spec.scope, params, false), options, (bearer) => send(bearer));
+    return parseResponse(spec, response);
+  } catch (error) {
+    throw spec.sensitive ? redact(error) : error;
+  }
+}
+
+/**
+ * The same error without the response body and without its cause (a JSON
+ * parse error quotes the text it failed on), for operations whose responses
+ * carry secrets.
+ */
+// implements: REQ-API-009
+export function redact(error: unknown): unknown {
+  if (!(error instanceof HemError) || (error.body === undefined && error.bodyText === undefined && error.cause === undefined)) return error;
+  const options: HemErrorOptions = {};
+  if (error.status !== undefined) options.status = error.status;
+  if (error.operation !== undefined) options.operation = error.operation;
+  const ErrorClass = error.constructor as new (message: string, options?: HemErrorOptions) => HemError;
+  return new ErrorClass(error.message, options);
 }
 
 // ----- typed field readers: a field of the wrong type is a protocol error naming it -----
