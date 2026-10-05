@@ -1,9 +1,9 @@
 ---
 id: REQ-API-003
 title: Error mapping independent of the response body
-status: approved
+status: verified
 priority: must
-revision: 2
+revision: 3
 source: start_point G15; ref/api/hem-api-1.2.2.yaml
 depends_on: ["REQ-API-002"]
 supersedes: null

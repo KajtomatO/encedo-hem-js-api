@@ -1,9 +1,9 @@
 ---
 id: REQ-API-002
 title: Typed errors that identify the cause of a failure
-status: approved
+status: verified
 priority: must
-revision: 2
+revision: 3
 source: start_point G14; ARCHITECTURE.md §4; ref/api/hem-api-1.2.2.yaml
 depends_on: []
 supersedes: null
