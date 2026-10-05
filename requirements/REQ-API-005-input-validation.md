@@ -1,9 +1,9 @@
 ---
 id: REQ-API-005
 title: Inputs validated against the documented hard limits before sending
-status: approved
+status: verified
 priority: must
-revision: 2
+revision: 3
 source: start_point G17; ref/api/hem-api-1.2.2.yaml; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: ["REQ-API-002"]
 supersedes: null

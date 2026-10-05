@@ -1,9 +1,9 @@
 ---
 id: REQ-SYS-002
 title: Hardware and firmware version
-status: approved
+status: verified
 priority: must
-revision: 2
+revision: 3
 source: start_point §3; start_point G19; ref/api/hem-api-1.2.2.yaml
 depends_on: ["REQ-API-006", "REQ-API-004"]
 supersedes: null

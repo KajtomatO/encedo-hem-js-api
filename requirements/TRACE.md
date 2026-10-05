@@ -2,20 +2,20 @@
 
 # Traceability matrix
 
-Generated: 2026-10-05 (STEP-M1A-090 done)
+Generated: 2026-10-05 (STEP-M1A-100 done)
 
-Scan inputs: 117 REQ files (`requirements/`), 28 step files (`workplan/{todo,doing,done}/`: 19 in `todo/`, 0 in `doing/`, 9 in `done/`). Code tags (`implements: REQ-`) scanned across `src/`; test tags (`verifies:`/`supports: REQ-`) scanned across `tests/`. Build/CI, test-infrastructure and README requirements are realised outside `src/` per REQUIREMENTS-MANAGEMENT.md §4.2, so `implements:` tags are also scanned in `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `.github/workflows`, `README.md`. Locations present: `src/`, `tests/`, `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `.github/workflows`, `README.md`. Unit suite: passed (`npm test`) at generation.
+Scan inputs: 117 REQ files (`requirements/`), 28 step files (`workplan/{todo,doing,done}/`: 18 in `todo/`, 0 in `doing/`, 10 in `done/`). Code tags (`implements: REQ-`) scanned across `src/`; test tags (`verifies:`/`supports: REQ-`) scanned across `tests/`. Build/CI, test-infrastructure and README requirements are realised outside `src/` per REQUIREMENTS-MANAGEMENT.md §4.2, so `implements:` tags are also scanned in `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `.github/workflows`, `README.md`. Locations present: `src/`, `tests/`, `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `.github/workflows`, `README.md`. Unit suite: passed (`npm test`) at generation.
 
 Steps column: step ID and its folder. A REQ listed in several steps becomes `implemented` only when all of them are in `done/` (§3.2). Tests column: `verifies:` locations; `supports …` entries are test support and never count as verification.
 
 | REQ | Title | Status | Priority | Architecture | Steps | Code | Tests |
 |---|---|---|---|---|---|---|---|
-| REQ-API-001 | Client object created from options, with no global state | approved | must | §4, §3 | STEP-M1A-100 (todo), STEP-M1A-130 (todo) | — | — |
+| REQ-API-001 | Client object created from options, with no global state | approved | must | §4, §3 | STEP-M1A-100 (done), STEP-M1A-130 (todo) | src/client.ts:37 | tests/unit/client.test.ts:9, tests/unit/client.test.ts:17, tests/unit/client.test.ts:22, tests/unit/client.test.ts:27, tests/unit/client.test.ts:46 |
 | REQ-API-002 | Typed errors that identify the cause of a failure | verified | must | §4 | STEP-M1A-040 (done) | src/errors.ts:50, src/errors.ts:266 | tests/unit/errors.test.ts:47, tests/unit/errors.test.ts:84, tests/unit/errors.test.ts:99, tests/unit/errors.test.ts:109, tests/unit/errors.test.ts:114 |
 | REQ-API-003 | Error mapping independent of the response body | verified | must | §4, §2 | STEP-M1A-040 (done) | src/errors.ts:266 | tests/unit/errors.test.ts:123, tests/unit/errors.test.ts:131, tests/unit/errors.test.ts:138, tests/unit/errors.test.ts:146, tests/unit/errors.test.ts:154 |
-| REQ-API-004 | Binary values exchanged as byte arrays | approved | must | §4 | STEP-M1A-050 (done), STEP-M1A-230 (todo) | src/codec/base64.ts:38, src/codec/base64.ts:54 | tests/unit/codec.test.ts:23, tests/unit/codec.test.ts:29, tests/unit/codec.test.ts:41, tests/unit/codec.test.ts:50, tests/unit/codec.test.ts:59, tests/unit/codec.test.ts:75 |
-| REQ-API-005 | Inputs validated against the documented hard limits before sending | approved | must | §6, §2 | STEP-M1A-050 (done), STEP-M1A-100 (todo) | src/codec/validate.ts:33, src/codec/validate.ts:40, src/codec/validate.ts:49, src/codec/validate.ts:57, src/codec/validate.ts:66 | tests/unit/validate.test.ts:24, tests/unit/validate.test.ts:30, tests/unit/validate.test.ts:46, tests/unit/validate.test.ts:55, tests/unit/validate.test.ts:63, tests/unit/validate.test.ts:71, tests/unit/validate.test.ts:78, tests/unit/validate.test.ts:85, tests/unit/validate.test.ts:97, tests/unit/validate.test.ts:111 |
-| REQ-API-006 | Tolerant parsing of success responses | approved | must | §6 | STEP-M1A-100 (todo) | — | — |
+| REQ-API-004 | Binary values exchanged as byte arrays | approved | must | §4 | STEP-M1A-050 (done), STEP-M1A-230 (todo) | src/codec/base64.ts:38, src/codec/base64.ts:54 | tests/unit/codec.test.ts:23, tests/unit/codec.test.ts:29, tests/unit/codec.test.ts:41, tests/unit/codec.test.ts:50, tests/unit/codec.test.ts:59, tests/unit/codec.test.ts:75, tests/unit/system.test.ts:112 |
+| REQ-API-005 | Inputs validated against the documented hard limits before sending | verified | must | §6, §2 | STEP-M1A-050 (done), STEP-M1A-100 (done) | src/api/core.ts:116, src/codec/validate.ts:33, src/codec/validate.ts:40, src/codec/validate.ts:49, src/codec/validate.ts:57, src/codec/validate.ts:66 | tests/unit/binding-core.test.ts:69, tests/unit/binding-core.test.ts:80, tests/unit/validate.test.ts:24, tests/unit/validate.test.ts:30, tests/unit/validate.test.ts:46, tests/unit/validate.test.ts:55, tests/unit/validate.test.ts:63, tests/unit/validate.test.ts:71, tests/unit/validate.test.ts:78, tests/unit/validate.test.ts:85, tests/unit/validate.test.ts:97, tests/unit/validate.test.ts:111 |
+| REQ-API-006 | Tolerant parsing of success responses | verified | must | §6 | STEP-M1A-100 (done) | src/api/core.ts:69 | tests/unit/binding-core.test.ts:24, tests/unit/binding-core.test.ts:30, tests/unit/binding-core.test.ts:43, tests/unit/binding-core.test.ts:49, tests/unit/binding-core.test.ts:55 |
 | REQ-API-007 | Every public operation documents its scope and milestone | approved | must | §4 | STEP-M1A-220 (todo) | — | — |
 | REQ-API-008 | Public API only grows between releases | approved | must | §4, §1 | STEP-M1A-230 (todo) | — | — |
 | REQ-API-009 | Secrets never logged, stored or put into error messages | approved | must | §1, §5.2 | STEP-M1A-030 (done), STEP-M1A-120 (todo), STEP-M1A-130 (todo) | — | tests/unit/source-check.test.ts:33, tests/unit/source-check.test.ts:50, tests/unit/source-check.test.ts:70, tests/unit/source-check.test.ts:76, tests/unit/source-tree.node.test.ts:27, supports tests/support/source-check.ts:3 |
@@ -92,8 +92,8 @@ Steps column: step ID and its folder. A REQ listed in several steps becomes `imp
 | REQ-OPS-013 | ML-DSA signature | approved | must | §6 | STEP-M2A-000 (todo) | — | — |
 | REQ-OPS-014 | Verify an ML-DSA signature | approved | must | §6, §11 | STEP-M2A-000 (todo) | — | — |
 | REQ-OPS-015 | ECDH-agreed keys for HMAC, cipher and wrap | approved | must | §6 | STEP-M2A-000 (todo) | — | — |
-| REQ-SYS-001 | Device status | approved | must | §6 | STEP-M1A-100 (todo) | — | — |
-| REQ-SYS-002 | Hardware and firmware version | approved | must | §6 | STEP-M1A-100 (todo) | — | — |
+| REQ-SYS-001 | Device status | verified | must | §6 | STEP-M1A-100 (done) | src/api/system.ts:125 | tests/unit/system.test.ts:9, tests/unit/system.test.ts:19, tests/unit/system.test.ts:34, tests/unit/system.test.ts:73 |
+| REQ-SYS-002 | Hardware and firmware version | verified | must | §6 | STEP-M1A-100 (done) | src/api/system.ts:160 | tests/unit/system.test.ts:97, tests/unit/system.test.ts:112, tests/unit/system.test.ts:131 |
 | REQ-SYS-003 | Single health operation | approved | must | §6 | STEP-M1A-110 (todo) | — | — |
 | REQ-SYS-004 | Check-in step 1 | approved | must | §6 | STEP-M1A-110 (todo) | — | — |
 | REQ-SYS-005 | Check-in step 2 | approved | must | §6 | STEP-M1A-110 (todo) | — | — |
@@ -130,16 +130,16 @@ Steps column: step ID and its folder. A REQ listed in several steps becomes `imp
 
 ## Coverage report
 
-- Totals: 117 REQs (105 approved, 12 verified), 28 steps (19 todo, 0 doing, 9 done; 0 cancelled).
+- Totals: 117 REQs (101 approved, 16 verified), 28 steps (18 todo, 0 doing, 10 done; 0 cancelled).
 - By area: API 14, AUTH 26, BUILD 6, KEY 9, NET 12, OPS 15, SYS 31, TEST 4.
 - Steps by milestone: M1A 23, M1B 1, M2A 1, M2B 1, M3A 1, M3B 1.
 - REQs with no step: none.
 - REQs listed in more than one step: 21 (criteria that close in a later step; see the Notes of the steps).
-- Approved REQs with no code tag (unimplemented): 93.
-- Approved REQs with code tags whose steps are not all in `done/` (in progress): REQ-API-004, REQ-API-005, REQ-API-010, REQ-AUTH-003, REQ-BUILD-004, REQ-NET-003, REQ-NET-004, REQ-NET-005, REQ-NET-007, REQ-NET-008, REQ-NET-009, REQ-TEST-001.
+- Approved REQs with no code tag (unimplemented): 89.
+- Approved REQs with code tags whose steps are not all in `done/` (in progress): REQ-API-001, REQ-API-004, REQ-API-010, REQ-AUTH-003, REQ-BUILD-004, REQ-NET-003, REQ-NET-004, REQ-NET-005, REQ-NET-007, REQ-NET-008, REQ-NET-009, REQ-TEST-001.
 - Implemented REQs with no passing tagged test (unverified): none.
 - Orphan tags: none.
 - Steps in `done/` with empty evidence: none.
 - Broken architecture anchors: none.
 - REQs in `needs-reverify`: none.
-- Status transitions applied in this run: none.
+- Status transitions applied in this run: REQ-API-005: approved → verified, REQ-API-006: approved → verified, REQ-SYS-001: approved → verified, REQ-SYS-002: approved → verified.
