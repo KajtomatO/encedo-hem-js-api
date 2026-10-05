@@ -1,9 +1,9 @@
 ---
 id: REQ-SYS-003
 title: Single health operation
-status: approved
+status: verified
 priority: must
-revision: 2
+revision: 3
 source: start_point M1.5
 depends_on: ["REQ-SYS-001", "REQ-NET-006"]
 supersedes: null

@@ -1,9 +1,9 @@
 ---
 id: REQ-NET-007
 title: One device request at a time
-status: approved
+status: verified
 priority: must
-revision: 3
+revision: 4
 source: ARCHITECTURE.md §7; start_point §6 Q5; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: []
 supersedes: null

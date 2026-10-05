@@ -1,9 +1,9 @@
 ---
 id: REQ-SYS-004
 title: Check-in step 1
-status: approved
+status: verified
 priority: must
-revision: 2
+revision: 3
 source: start_point M1.3; ref/api/hem-api-1.2.2.yaml
 depends_on: ["REQ-API-006"]
 supersedes: null

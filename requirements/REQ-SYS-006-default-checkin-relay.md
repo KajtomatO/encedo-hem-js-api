@@ -1,9 +1,9 @@
 ---
 id: REQ-SYS-006
 title: Check-in relay, replaceable, with a default for the Encedo backend
-status: approved
+status: verified
 priority: must
-revision: 2
+revision: 3
 source: user decision 2026-10-02; start_point M1.3; start_point §6 Q3; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: []
 supersedes: null
