@@ -7,9 +7,9 @@ traces:
   architecture: ["ARCHITECTURE.md#8-testing-policy", "ARCHITECTURE.md#9-directory-layout"]
 depends_on: ["STEP-M1A-010"]
 evidence:
-  commits: ["34531a7"]
-  tests: ["verifies: REQ-TEST-001 (tests/unit/network-guard.test.ts, tests/unit/network-guard.node.test.ts, tests/unit/fake-fetch.test.ts)", "supports: REQ-TEST-001 (tests/support/fake-fetch.ts)"]
-  notes: "npm test (Node v24.21.0, headless Chromium via Playwright 1.63 / Chrome for Testing 153): node project 5 files, browser project 3 files, 31 tests passed; typecheck passes. The guard is proven by a separate Vitest run over fixtures (tests/fixtures/network-guard/), where both tests fail."
+  commits: ["34531a7", "827afb9"]
+  tests: ["verifies: REQ-TEST-001 (tests/unit/network-guard.test.ts, tests/unit/network-guard.node.test.ts, tests/unit/fake-fetch.test.ts)", "verifies: REQ-TEST-002 (tests/unit/test-projects.node.test.ts)", "supports: REQ-TEST-001 (tests/support/fake-fetch.ts)"]
+  notes: "npm test (Node v24.21.0, headless Chromium via Playwright 1.63 / Chrome for Testing 153): node project 5 files, browser project 3 files, 31 tests passed (33 after the REQ-TEST-002 config test was added); typecheck passes. The guard is proven by a separate Vitest run over fixtures (tests/fixtures/network-guard/), where both tests fail."
 reopened: []
 cancelled: null
 ---
