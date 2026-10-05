@@ -3,7 +3,7 @@ id: REQ-BUILD-004
 title: Node.js 24 as the minimum version
 status: approved
 priority: must
-revision: 3
+revision: 4
 source: user decision 2026-10-02; start_point G3
 depends_on: []
 supersedes: null
@@ -23,5 +23,5 @@ keeps the A parts' test matrix small. Introduced in M1.
 **Acceptance criteria:**
 - [x] `package.json` declares `engines.node` as `>=24`.
 - [x] CI runs on Node 24.
-- [ ] The README states the Node requirement and the browser requirement
+- [x] The README states the Node requirement and the browser requirement
       (Web Crypto with X25519).

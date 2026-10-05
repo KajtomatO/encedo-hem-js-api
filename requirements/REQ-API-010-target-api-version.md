@@ -3,7 +3,7 @@ id: REQ-API-010
 title: Targeted API version exported
 status: approved
 priority: must
-revision: 2
+revision: 3
 source: start_point G19
 depends_on: []
 supersedes: null
@@ -22,5 +22,5 @@ version operation (REQ-SYS-002). Introduced in M1.
 
 **Acceptance criteria:**
 - [x] The exported constant equals `1.2.2`.
-- [ ] The README explains how to compare it with the firmware version read
+- [x] The README explains how to compare it with the firmware version read
       from the device.
