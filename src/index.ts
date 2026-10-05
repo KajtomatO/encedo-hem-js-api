@@ -47,6 +47,6 @@ export { EncedoCheckinRelay, ENCEDO_CHECKIN_URL } from './relay/checkin.js';
 export type { CheckinRelay, EncedoCheckinRelayOptions } from './relay/checkin.js';
 export type { RelayCallOptions } from './relay/http.js';
 export type { CallOptions, FetchFunction } from './transport/transport.js';
-export type { CreateKeyParams, KeyDetails, KeysApi } from './api/keymgmt.js';
+export type { CreateKeyParams, DescriptionMatch, KeyDetails, KeyEntry, KeyPage, KeysApi, ListKeysParams, SearchKeysParams } from './api/keymgmt.js';
 export { KEY_ALGORITHMS, KEY_FLAGS, KEY_MODES, KEY_TYPES } from './api/key-type.js';
 export type { KeyFlag, KeyMode, KeyType, KeyTypeInfo } from './api/key-type.js';
