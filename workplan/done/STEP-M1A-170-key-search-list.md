@@ -7,9 +7,9 @@ traces:
   architecture: ["ARCHITECTURE.md#6-protocol-bindings", "ARCHITECTURE.md#11-risks--open-questions"]
 depends_on: ["STEP-M1A-160"]
 evidence:
-  commits: []
-  tests: []
-  notes: null
+  commits: ["6a95001"]
+  tests: ["verifies: REQ-KEY-003 (tests/unit/keys-list-search.test.ts)", "verifies: REQ-KEY-004 (tests/unit/keys-list-search.test.ts)"]
+  notes: "npm run check: 41 files, 824 tests passed in Node v24.21.0 and headless Chromium. keys.list chooses /list, /list/{offset} or /list/{offset}/{count} from the parameters (three operation descriptions, one call); count must be 1 to 15. keys.search defaults to a 'contains' needle, like the device's bare needle; an empty needle is rejected. Risk 10 (base64 alignment of prefix needles) is stated in the TSDoc of search and left to M1B, with no workaround."
 reopened: []
 cancelled: null
 ---
@@ -41,30 +41,30 @@ case: exact-description lookup and walking every page.
   TLS-only (REQ-NET-003).
 
 **Definition of done**
-- [ ] Search: the body is `{descr}` plus `offset` and `limit` when given; the
+- [x] Search: the body is `{descr}` plus `offset` and `limit` when given; the
       scope used is `keymgmt:search`; the result is a page with `total` and
       the matching keys.
-- [ ] Search: prefix, suffix and contains needles are sent as base64 with a
+- [x] Search: prefix, suffix and contains needles are sent as base64 with a
       leading `^`, a trailing `$`, or neither.
-- [ ] Search: a needle longer than 64 bytes, or a limit above 15, raises
+- [x] Search: a needle longer than 64 bytes, or a limit above 15, raises
       `HemValidationError`.
-- [ ] Search: a 200 with an empty list and a 404 both give an empty result.
-- [ ] A helper returns the keys whose description equals given bytes exactly,
+- [x] Search: a 200 with an empty list and a 404 both give an empty result.
+- [x] A helper returns the keys whose description equals given bytes exactly,
       by searching with a prefix and comparing the results.
-- [ ] List: the scope used is `keymgmt:list`; any offset and any count from 1
+- [x] List: the scope used is `keymgmt:list`; any offset and any count from 1
       to 15 produce a valid request on the matching path.
-- [ ] List: a count above 15, or a negative or non-integer offset, raises
+- [x] List: a count above 15, or a negative or non-integer offset, raises
       `HemValidationError`.
-- [ ] List: a page contains `offset`, `total`, `listed` and the keys, each
+- [x] List: a page contains `offset`, `total`, `listed` and the keys, each
       with `kid`, `type`, `label`, `created`, `updated` and `descr` (bytes)
       when present.
-- [ ] The iteration helper walks all pages and stops when the offset reaches
+- [x] The iteration helper walks all pages and stops when the offset reaches
       `total` or a page comes back empty, not when a page is short.
-- [ ] Both operations raise `HemTlsRequiredError` on an `http:` client with
+- [x] Both operations raise `HemTlsRequiredError` on an `http:` client with
       zero `fetch` calls.
-- [ ] Each operation has unit tests asserting method, path, headers, body and
+- [x] Each operation has unit tests asserting method, path, headers, body and
       response mapping, and TSDoc stating scope and milestone.
-- [ ] The suite passes in Node 24 and in the browser run.
-- [ ] `implements:` and `verifies:` tags exist for the REQs above.
-- [ ] The non-`(M1B)` acceptance boxes this step closes are ticked in the REQ
+- [x] The suite passes in Node 24 and in the browser run.
+- [x] `implements:` and `verifies:` tags exist for the REQs above.
+- [x] The non-`(M1B)` acceptance boxes this step closes are ticked in the REQ
       files (revision bumped).
