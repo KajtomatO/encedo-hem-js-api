@@ -7,9 +7,9 @@ traces:
   architecture: ["ARCHITECTURE.md#6-protocol-bindings"]
 depends_on: ["STEP-M1A-130"]
 evidence:
-  commits: []
-  tests: []
-  notes: null
+  commits: ["92fa3ac"]
+  tests: ["verifies: REQ-OPS-001 (tests/unit/crypto.test.ts)", "verifies: REQ-OPS-002 (tests/unit/crypto.test.ts)", "verifies: REQ-OPS-003 (tests/unit/crypto.test.ts)"]
+  notes: "npm run check: 42 files, 872 tests passed in Node v24.21.0 and headless Chromium. Response fields from the reference: mac, wrapped, unwrapped. Unwrap input must be a non-empty multiple of 8 bytes (no upper bound beyond the 7300-byte body limit: the reference states none). With this step every validator of REQ-API-005 has been shown through a binding to make zero fetch calls (key id and label/description in keys tests, message here, body size in the binding-core tests), so that criterion is ticked; so is REQ-AUTH-005's per-key scope for key get and the crypto operations."
 reopened: []
 cancelled: null
 ---
@@ -32,25 +32,25 @@ anything is sent.
   implementing; the REQs name only what the result is.
 
 **Definition of done**
-- [ ] HMAC: the body is `{kid, msg}` with the message in base64 and no `alg`;
+- [x] HMAC: the body is `{kid, msg}` with the message in base64 and no `alg`;
       the scope used is `keymgmt:use:<kid>`; the result is the MAC as bytes.
-- [ ] HMAC: an empty message, or one longer than 2048 bytes, raises
+- [x] HMAC: an empty message, or one longer than 2048 bytes, raises
       `HemValidationError`; a 406 raises `HemOperationFailedError`.
-- [ ] Wrap: the body is `{kid, msg}` plus `alg` (`AES128`, `AES192` or
+- [x] Wrap: the body is `{kid, msg}` plus `alg` (`AES128`, `AES192` or
       `AES256`) and `iv` when given; the scope used is `keymgmt:use:<kid>`;
       the result is the wrapped bytes.
-- [ ] Wrap: input that is not a multiple of 8 bytes, shorter than 16 bytes or
+- [x] Wrap: input that is not a multiple of 8 bytes, shorter than 16 bytes or
       longer than 2048 bytes, or an `iv` that is not 8 bytes, raises
       `HemValidationError`.
-- [ ] Unwrap: the body is `{kid, msg}` plus `alg` and `iv` when given; the
+- [x] Unwrap: the body is `{kid, msg}` plus `alg` and `iv` when given; the
       scope used is `keymgmt:use:<kid>`; the result is the unwrapped bytes.
-- [ ] Unwrap: input that is not a multiple of 8 bytes raises
+- [x] Unwrap: input that is not a multiple of 8 bytes raises
       `HemValidationError`; a 406 raises `HemOperationFailedError`.
-- [ ] All three raise `HemTlsRequiredError` on an `http:` client with zero
+- [x] All three raise `HemTlsRequiredError` on an `http:` client with zero
       `fetch` calls.
-- [ ] Each operation has unit tests asserting method, path, headers, body and
+- [x] Each operation has unit tests asserting method, path, headers, body and
       response mapping, and TSDoc stating scope and milestone.
-- [ ] The suite passes in Node 24 and in the browser run.
-- [ ] `implements:` and `verifies:` tags exist for the REQs above.
-- [ ] The non-`(M1B)` acceptance boxes this step closes are ticked in the REQ
+- [x] The suite passes in Node 24 and in the browser run.
+- [x] `implements:` and `verifies:` tags exist for the REQs above.
+- [x] The non-`(M1B)` acceptance boxes this step closes are ticked in the REQ
       files (revision bumped).
