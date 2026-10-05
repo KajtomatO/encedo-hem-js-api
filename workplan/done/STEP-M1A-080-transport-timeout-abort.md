@@ -7,9 +7,9 @@ traces:
   architecture: ["ARCHITECTURE.md#7-transport"]
 depends_on: ["STEP-M1A-070"]
 evidence:
-  commits: []
-  tests: []
-  notes: null
+  commits: ["f51074c"]
+  tests: ["verifies: REQ-NET-004 (tests/unit/transport-timeout.test.ts)", "verifies: REQ-NET-005 (tests/unit/transport-timeout.test.ts)", "verifies: REQ-NET-006 (tests/unit/transport-timeout.test.ts)"]
+  notes: "npm run check: 26 files, 378 tests passed in Node v24.21.0 and headless Chromium (fake timers in both). The fetch promise and the body read are each raced against the internal abort signal, so a fetch implementation that ignores its signal still ends at the limit."
 reopened: []
 cancelled: null
 ---
@@ -35,22 +35,22 @@ out, aborted by the caller, device unreachable.
   listed in those steps too.
 
 **Definition of done**
-- [ ] The default limit is 30 000 ms; a per-client value and a per-call value
+- [x] The default limit is 30 000 ms; a per-client value and a per-call value
       override it.
-- [ ] With a `fetch` that never settles and fake timers, the call rejects
+- [x] With a `fetch` that never settles and fake timers, the call rejects
       with `HemTimeoutError` at the limit and the signal given to `fetch` is
       aborted.
-- [ ] A response whose body never finishes arriving also ends in
+- [x] A response whose body never finishes arriving also ends in
       `HemTimeoutError`.
-- [ ] Aborting during the request rejects with `HemAbortError` and aborts the
+- [x] Aborting during the request rejects with `HemAbortError` and aborts the
       signal given to `fetch`.
-- [ ] A signal that is already aborted rejects the call without calling
+- [x] A signal that is already aborted rejects the call without calling
       `fetch`.
-- [ ] A rejected `fetch` raises `HemUnreachableError` with the original error
+- [x] A rejected `fetch` raises `HemUnreachableError` with the original error
       attached as its cause.
-- [ ] When the time limit and a caller abort race, the one that fired first
+- [x] When the time limit and a caller abort race, the one that fired first
       decides the error.
-- [ ] The suite passes in Node 24 and in the browser run.
-- [ ] `implements:` and `verifies:` tags exist for the REQs above.
-- [ ] The non-`(M1B)` acceptance boxes this step closes are ticked in the REQ
+- [x] The suite passes in Node 24 and in the browser run.
+- [x] `implements:` and `verifies:` tags exist for the REQs above.
+- [x] The non-`(M1B)` acceptance boxes this step closes are ticked in the REQ
       files (revision bumped).
