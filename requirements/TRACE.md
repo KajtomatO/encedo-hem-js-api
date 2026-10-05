@@ -2,9 +2,9 @@
 
 # Traceability matrix
 
-Generated: 2026-10-05 (STEP-M1A-050 done)
+Generated: 2026-10-05 (STEP-M1A-060 done)
 
-Scan inputs: 117 REQ files (`requirements/`), 28 step files (`workplan/{todo,doing,done}/`: 23 in `todo/`, 0 in `doing/`, 5 in `done/`). Code tags (`implements: REQ-`) scanned across `src/`; test tags (`verifies:`/`supports: REQ-`) scanned across `tests/`. Build/CI, test-infrastructure and README requirements are realised outside `src/` per REQUIREMENTS-MANAGEMENT.md §4.2, so `implements:` tags are also scanned in `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `.github/workflows`, `README.md`. Locations present: `src/`, `tests/`, `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `.github/workflows`, `README.md`. Unit suite: passed (`npm test`) at generation.
+Scan inputs: 117 REQ files (`requirements/`), 28 step files (`workplan/{todo,doing,done}/`: 22 in `todo/`, 0 in `doing/`, 6 in `done/`). Code tags (`implements: REQ-`) scanned across `src/`; test tags (`verifies:`/`supports: REQ-`) scanned across `tests/`. Build/CI, test-infrastructure and README requirements are realised outside `src/` per REQUIREMENTS-MANAGEMENT.md §4.2, so `implements:` tags are also scanned in `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `.github/workflows`, `README.md`. Locations present: `src/`, `tests/`, `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `.github/workflows`, `README.md`. Unit suite: passed (`npm test`) at generation.
 
 Steps column: step ID and its folder. A REQ listed in several steps becomes `implemented` only when all of them are in `done/` (§3.2). Tests column: `verifies:` locations; `supports …` entries are test support and never count as verification.
 
@@ -25,8 +25,8 @@ Steps column: step ID and its folder. A REQ listed in several steps becomes `imp
 | REQ-API-013 | Dropped connection after a restart request is not an error | approved | must | §6 | STEP-M3A-000 (todo) | — | — |
 | REQ-API-014 | Coverage document for all 58 operations | approved | must | §6, §10 | STEP-M3A-000 (todo) | — | — |
 | REQ-AUTH-001 | Unattended passphrase login | approved | must | §5.1 | STEP-M1A-120 (todo) | — | — |
-| REQ-AUTH-002 | Login proof encoding (eJWT) | approved | must | §5.1 | STEP-M1A-060 (todo) | — | — |
-| REQ-AUTH-003 | PBKDF2 as the only login key derivation | approved | must | §5.1, §1 | STEP-M1A-060 (todo), STEP-M1A-120 (todo) | — | — |
+| REQ-AUTH-002 | Login proof encoding (eJWT) | verified | must | §5.1 | STEP-M1A-060 (done) | src/auth/ejwt.ts:75 | tests/unit/ejwt.test.ts:48, tests/unit/ejwt.test.ts:56, tests/unit/webcrypto.test.ts:21, supports tests/support/vectors.ts:3 |
+| REQ-AUTH-003 | PBKDF2 as the only login key derivation | approved | must | §5.1, §1 | STEP-M1A-060 (done), STEP-M1A-120 (todo) | src/auth/ejwt.ts:54, src/crypto/webcrypto.ts:33 | tests/unit/ejwt.test.ts:12, tests/unit/ejwt.test.ts:21, tests/unit/ejwt.test.ts:33, tests/unit/webcrypto.test.ts:8, tests/unit/webcrypto.test.ts:34, tests/unit/webcrypto.test.ts:42, tests/unit/webcrypto.test.ts:56, supports tests/support/vectors.ts:3 |
 | REQ-AUTH-004 | One cached token per scope | approved | must | §5.2 | STEP-M1A-130 (todo) | — | — |
 | REQ-AUTH-005 | Scope chosen and token attached by the library | approved | must | §5.2, §6 | STEP-M1A-130 (todo), STEP-M1A-230 (todo) | — | — |
 | REQ-AUTH-006 | Requested token lifetime | approved | must | §5.2, §11 | STEP-M1A-120 (todo) | — | — |
@@ -124,22 +124,22 @@ Steps column: step ID and its folder. A REQ listed in several steps becomes `imp
 | REQ-SYS-030 | Hide a storage slot | approved | must | §6 | STEP-M3A-000 (todo) | — | — |
 | REQ-SYS-031 | Expose a storage slot | approved | must | §6 | STEP-M3A-000 (todo) | — | — |
 | REQ-TEST-001 | Unit tests run without a device | approved | must | §8, §9 | STEP-M1A-020 (done), STEP-M1A-230 (todo) | vitest.config.ts:3 | tests/unit/fake-fetch.test.ts:5, tests/unit/fake-fetch.test.ts:28, tests/unit/fake-fetch.test.ts:38, tests/unit/fake-fetch.test.ts:52, tests/unit/fake-fetch.test.ts:62, tests/unit/fake-fetch.test.ts:81, tests/unit/fake-fetch.test.ts:93, tests/unit/fake-fetch.test.ts:106, tests/unit/fake-fetch.test.ts:116, tests/unit/network-guard.node.test.ts:13, tests/unit/network-guard.test.ts:5, supports tests/support/fake-fetch.ts:3 |
-| REQ-TEST-002 | Unit tests pass in Node.js and in a browser | approved | must | §8 | STEP-M1A-020 (done), STEP-M1A-030 (done), STEP-M1A-060 (todo) | vitest.config.ts:2, .github/workflows/ci.yml:2 | tests/unit/ci.node.test.ts:24, tests/unit/test-projects.node.test.ts:11, tests/unit/test-projects.node.test.ts:25 |
+| REQ-TEST-002 | Unit tests pass in Node.js and in a browser | verified | must | §8 | STEP-M1A-020 (done), STEP-M1A-030 (done), STEP-M1A-060 (done) | vitest.config.ts:2, .github/workflows/ci.yml:2 | tests/unit/ci.node.test.ts:24, tests/unit/ejwt.test.ts:48, tests/unit/test-projects.node.test.ts:11, tests/unit/test-projects.node.test.ts:25, tests/unit/webcrypto.test.ts:8, tests/unit/webcrypto.test.ts:21, tests/unit/webcrypto.test.ts:42 |
 | REQ-TEST-003 | Device tests run only when explicitly configured | approved | must | §8, §1 | STEP-M1B-000 (todo) | — | — |
 | REQ-TEST-004 | Disruptive tests never run automatically | approved | must | §8, §1 | STEP-M1B-000 (todo) | — | — |
 
 ## Coverage report
 
-- Totals: 117 REQs (111 approved, 6 verified), 28 steps (23 todo, 0 doing, 5 done; 0 cancelled).
+- Totals: 117 REQs (109 approved, 8 verified), 28 steps (22 todo, 0 doing, 6 done; 0 cancelled).
 - By area: API 14, AUTH 26, BUILD 6, KEY 9, NET 12, OPS 15, SYS 31, TEST 4.
 - Steps by milestone: M1A 23, M1B 1, M2A 1, M2B 1, M3A 1, M3B 1.
 - REQs with no step: none.
 - REQs listed in more than one step: 21 (criteria that close in a later step; see the Notes of the steps).
-- Approved REQs with no code tag (unimplemented): 105.
-- Approved REQs with code tags whose steps are not all in `done/` (in progress): REQ-API-004, REQ-API-005, REQ-API-010, REQ-BUILD-004, REQ-TEST-001, REQ-TEST-002.
+- Approved REQs with no code tag (unimplemented): 103.
+- Approved REQs with code tags whose steps are not all in `done/` (in progress): REQ-API-004, REQ-API-005, REQ-API-010, REQ-AUTH-003, REQ-BUILD-004, REQ-TEST-001.
 - Implemented REQs with no passing tagged test (unverified): none.
 - Orphan tags: none.
 - Steps in `done/` with empty evidence: none.
 - Broken architecture anchors: none.
 - REQs in `needs-reverify`: none.
-- Status transitions applied in this run: none.
+- Status transitions applied in this run: REQ-AUTH-002: approved → verified, REQ-TEST-002: approved → verified.

@@ -1,9 +1,9 @@
 ---
 id: REQ-TEST-002
 title: Unit tests pass in Node.js and in a browser
-status: approved
+status: verified
 priority: must
-revision: 4
+revision: 5
 source: start_point G3; ARCHITECTURE.md §1
 depends_on: ["REQ-TEST-001"]
 supersedes: null
