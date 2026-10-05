@@ -49,6 +49,9 @@ describe('HemClient construction', () => {
       if (typeof value === 'function') {
         // Only classes are exported as functions.
         expect(Function.prototype.toString.call(value), name).toMatch(/^class\b/);
+      } else if (typeof value === 'object' && value !== null) {
+        // Constant tables are frozen.
+        expect(Object.isFrozen(value), name).toBe(true);
       } else {
         expect(['string', 'number', 'boolean'], name).toContain(typeof value);
       }

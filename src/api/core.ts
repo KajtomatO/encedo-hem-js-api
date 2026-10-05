@@ -8,7 +8,7 @@
 import { base64ToBytes, hexToBytes } from '../codec/base64.js';
 import { utf8Decode } from '../codec/utf8.js';
 import { validateBodySize } from '../codec/validate.js';
-import { HemError, type HemErrorOptions, HemProtocolError, HemUnsupportedError } from '../errors.js';
+import { HemError, type HemErrorOptions, HemProtocolError, HemTlsRequiredError, HemUnsupportedError } from '../errors.js';
 import type { CallOptions, Transport, TransportResponse } from '../transport/transport.js';
 
 /** API group of an operation, as in the reference. */
@@ -120,6 +120,10 @@ export interface Invocation {
  */
 // implements: REQ-API-005
 export async function invoke(context: BindingContext, spec: OperationSpec, invocation: Invocation, options: CallOptions = {}): Promise<ResponseObject> {
+  // implements: REQ-NET-003 — refused before any request, including the login a token would need.
+  if (spec.tlsOnly && !context.transport.secure) {
+    throw new HemTlsRequiredError(`${spec.name}: refused to send over plain HTTP; the device URL must use https:`, { operation: spec.name });
+  }
   const params = invocation.params ?? {};
   const path = fillTemplate(spec.path, params, true);
   const body = invocation.body === undefined ? undefined : validateBodySize(JSON.stringify(invocation.body));
