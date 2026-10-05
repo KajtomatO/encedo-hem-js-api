@@ -42,10 +42,11 @@ describe('time limit', () => {
   // verifies: REQ-NET-004
   it('takes a per-client limit, and a per-call limit overrides it', async () => {
     const fake = new FakeFetch().always('GET', '/api/system/status', 'hang');
-    const transport = new Transport({ url: 'https://hem.test', fetch: fake.fetch, timeoutMs: 5_000 });
+    // Two clients, because one client sends its requests one at a time.
+    const options = { url: 'https://hem.test', fetch: fake.fetch, timeoutMs: 5_000 };
 
-    const perClient = outcome(transport.send(request()));
-    const perCall = outcome(transport.send(request({ timeoutMs: 100 })));
+    const perClient = outcome(new Transport(options).send(request()));
+    const perCall = outcome(new Transport(options).send(request({ timeoutMs: 100 })));
     await vi.advanceTimersByTimeAsync(100);
     expect(await perCall).toBeInstanceOf(HemTimeoutError);
     await vi.advanceTimersByTimeAsync(4_899);

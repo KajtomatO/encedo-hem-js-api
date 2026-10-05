@@ -44,6 +44,8 @@ export interface TransportOptions {
   fetch?: FetchFunction | undefined;
   /** Default time limit of each request in milliseconds (30 000). */
   timeoutMs?: number | undefined;
+  /** Minimum time between the starts of consecutive requests, in milliseconds (default 0: none). */
+  minIntervalMs?: number | undefined;
 }
 
 /** One device request. */
@@ -117,6 +119,14 @@ function untilAborted<T>(promise: Promise<T>, signal: AbortSignal): Promise<T> {
   });
 }
 
+/** Check a minimum request interval given in the options. */
+export function validateInterval(value: unknown, parameter = 'minIntervalMs'): number {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
+    throw new HemValidationError(`Invalid ${parameter}: must be zero or a positive number of milliseconds`, { parameter });
+  }
+  return value;
+}
+
 function abortError(operation: string, signal: AbortSignal): HemAbortError {
   return new HemAbortError(`${operation}: cancelled by the caller`, { operation, cause: signal.reason });
 }
@@ -125,7 +135,15 @@ function isRedirect(response: Response): boolean {
   return response.type === 'opaqueredirect' || (response.status >= 300 && response.status < 400);
 }
 
-/** Sends device requests for one client. */
+interface Waiter {
+  readonly grant: () => void;
+}
+
+/**
+ * Sends device requests for one client, one at a time: a request is sent
+ * only after the previous one has settled and its body was read, in the
+ * order the calls were made, optionally at a minimum interval.
+ */
 export class Transport {
   /** Device base URL as given. */
   readonly baseUrl: URL;
@@ -133,8 +151,14 @@ export class Transport {
   readonly #prefix: string;
   readonly #fetch: FetchFunction;
   readonly #timeoutMs: number;
+  readonly #minIntervalMs: number;
+  // Request queue state; per instance, never module-level.
+  #busy = false;
+  readonly #waiters: Waiter[] = [];
+  #lastStart: number | undefined;
 
   constructor(options: TransportOptions) {
+    this.#minIntervalMs = options.minIntervalMs === undefined ? 0 : validateInterval(options.minIntervalMs);
     this.#timeoutMs = options.timeoutMs === undefined ? DEFAULT_TIMEOUT_MS : validateTimeout(options.timeoutMs);
     const { url, prefix } = parseDeviceUrl(options.url);
     this.baseUrl = url;
@@ -187,7 +211,18 @@ export class Transport {
       init.body = typeof request.body === 'string' ? request.body : (new Uint8Array(request.body) as Uint8Array<ArrayBuffer>);
     }
 
-    const { response, body } = await this.#exchange(request, init);
+    if (request.timeoutMs !== undefined) validateTimeout(request.timeoutMs);
+    if (request.signal?.aborted) throw abortError(request.operation, request.signal);
+
+    await this.#acquire(request);
+    let exchanged: { response: Response; body: Uint8Array };
+    try {
+      await this.#pace(request);
+      exchanged = await this.#exchange(request, init);
+    } finally {
+      this.#release();
+    }
+    const { response, body } = exchanged;
     if (isRedirect(response)) {
       throw new HemDeviceError(`${request.operation}: the device answered with a redirect, which is not followed`, {
         operation: request.operation,
@@ -249,5 +284,64 @@ export class Transport {
       clearTimeout(timer);
       signal?.removeEventListener('abort', onAbort);
     }
+  }
+
+  /**
+   * Wait for this client's turn. A waiting call whose signal fires leaves the
+   * queue and is never sent.
+   */
+  // implements: REQ-NET-007, REQ-NET-005
+  #acquire(request: TransportRequest): Promise<void> {
+    if (!this.#busy) {
+      this.#busy = true;
+      return Promise.resolve();
+    }
+    const { signal, operation } = request;
+    return new Promise<void>((resolve, reject) => {
+      const onAbort = (): void => {
+        const index = this.#waiters.indexOf(waiter);
+        if (index >= 0) this.#waiters.splice(index, 1);
+        reject(abortError(operation, signal as AbortSignal));
+      };
+      const waiter: Waiter = {
+        grant: () => {
+          signal?.removeEventListener('abort', onAbort);
+          resolve();
+        },
+      };
+      this.#waiters.push(waiter);
+      signal?.addEventListener('abort', onAbort, { once: true });
+    });
+  }
+
+  /** Hand the turn to the next waiting call, or mark the client idle. */
+  #release(): void {
+    const next = this.#waiters.shift();
+    if (next) next.grant();
+    else this.#busy = false;
+  }
+
+  /** Keep the minimum interval since the previous request started. With an interval of 0 no timer is used. */
+  // implements: REQ-NET-008
+  async #pace(request: TransportRequest): Promise<void> {
+    if (this.#minIntervalMs > 0 && this.#lastStart !== undefined) {
+      const wait = this.#lastStart + this.#minIntervalMs - Date.now();
+      if (wait > 0) await this.#sleep(wait, request);
+    }
+    this.#lastStart = Date.now();
+  }
+
+  #sleep(ms: number, { signal, operation }: TransportRequest): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      const onAbort = (): void => {
+        clearTimeout(timer);
+        reject(abortError(operation, signal as AbortSignal));
+      };
+      const timer = setTimeout(() => {
+        signal?.removeEventListener('abort', onAbort);
+        resolve();
+      }, ms);
+      signal?.addEventListener('abort', onAbort, { once: true });
+    });
   }
 }
