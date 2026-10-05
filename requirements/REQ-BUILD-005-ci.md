@@ -1,9 +1,9 @@
 ---
 id: REQ-BUILD-005
 title: Continuous integration for build and unit tests
-status: approved
+status: verified
 priority: must
-revision: 2
+revision: 3
 source: ARCHITECTURE.md §8; ARCHITECTURE.md §1
 depends_on: ["REQ-TEST-002"]
 supersedes: null
