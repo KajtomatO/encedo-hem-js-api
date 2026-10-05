@@ -190,8 +190,11 @@ export class HemAbortError extends HemError {
 /** An input violates a documented limit; nothing was sent. @since M1 */
 export class HemValidationError extends HemError {
   override name = 'HemValidationError';
-  constructor(message: string, options?: HemErrorOptions) {
+  /** Name of the offending parameter. */
+  readonly parameter: string | undefined;
+  constructor(message: string, options: HemErrorOptions & { parameter?: string } = {}) {
     super('VALIDATION', message, options);
+    this.parameter = options.parameter;
   }
 }
 
