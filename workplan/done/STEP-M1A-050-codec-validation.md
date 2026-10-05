@@ -7,9 +7,9 @@ traces:
   architecture: ["ARCHITECTURE.md#3-component-overview", "ARCHITECTURE.md#6-protocol-bindings", "ARCHITECTURE.md#2-context--constraints"]
 depends_on: ["STEP-M1A-040"]
 evidence:
-  commits: []
-  tests: []
-  notes: null
+  commits: ["1bb426a"]
+  tests: ["verifies: REQ-API-004 (tests/unit/codec.test.ts)", "verifies: REQ-API-005 (tests/unit/validate.test.ts)"]
+  notes: "npm run check: 19 files, 248 tests passed in Node v24.21.0 and headless Chromium. REQ-API-005 criteria left open: 'zero fetch calls' closes with the binding core (STEP-M1A-100); 'upper-case key id sent in lower case' is ticked when a binding sends a key id (STEP-M1A-160) — the validator's normalisation is tested here."
 reopened: []
 cancelled: null
 ---
@@ -38,21 +38,21 @@ validator that raises `HemValidationError` naming the parameter.
   REQ-API-004 listed there).
 
 **Definition of done**
-- [ ] Round-trip tests cover standard base64 with padding, base64url without
+- [x] Round-trip tests cover standard base64 with padding, base64url without
       padding and lowercase hex, including the empty input and all 256 byte
       values.
-- [ ] Decoding accepts the standard and the URL-safe alphabet, with and
+- [x] Decoding accepts the standard and the URL-safe alphabet, with and
       without padding.
-- [ ] UTF-8 helpers exist for the conversions later steps need.
-- [ ] Each validator raises `HemValidationError` naming the offending
+- [x] UTF-8 helpers exist for the conversions later steps need.
+- [x] Each validator raises `HemValidationError` naming the offending
       parameter: key id, label, description, message, body size.
-- [ ] Boundary values are accepted — a 32-character label, a 64-byte
+- [x] Boundary values are accepted — a 32-character label, a 64-byte
       description, a 2048-byte message, a 7300-byte body — and one past each
       is rejected.
-- [ ] A key id in upper-case hex is accepted and normalised to lower case.
-- [ ] An empty message is rejected by the validator used for operations that
+- [x] A key id in upper-case hex is accepted and normalised to lower case.
+- [x] An empty message is rejected by the validator used for operations that
       require one.
-- [ ] The suite passes in Node 24 and in the browser run.
-- [ ] `implements:` and `verifies:` tags exist for the REQs above.
-- [ ] The non-`(M1B)` acceptance boxes this step closes are ticked in the REQ
+- [x] The suite passes in Node 24 and in the browser run.
+- [x] `implements:` and `verifies:` tags exist for the REQs above.
+- [x] The non-`(M1B)` acceptance boxes this step closes are ticked in the REQ
       files (revision bumped).

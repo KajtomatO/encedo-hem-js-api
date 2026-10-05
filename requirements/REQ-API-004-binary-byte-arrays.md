@@ -3,7 +3,7 @@ id: REQ-API-004
 title: Binary values exchanged as byte arrays
 status: approved
 priority: must
-revision: 1
+revision: 2
 source: start_point G18; ref/api/hem-api-1.2.2.yaml
 depends_on: []
 supersedes: null
@@ -23,14 +23,14 @@ mistakes, and `Uint8Array` is the one binary type both Node and browsers
 share. Introduced in M1.
 
 **Acceptance criteria:**
-- [ ] Codec round-trip unit tests cover standard base64 with padding,
+- [x] Codec round-trip unit tests cover standard base64 with padding,
       base64url without padding and lowercase hex, including the empty input
       and all 256 byte values.
-- [ ] Binary values are sent to the device as standard base64 with padding.
-- [ ] Binary values received from the device are decoded whether they use
+- [x] Binary values are sent to the device as standard base64 with padding.
+- [x] Binary values received from the device are decoded whether they use
       the standard or the URL-safe alphabet, with or without padding.
 - [ ] No public operation takes or returns base64 text for a binary value.
       Key ids (hex strings) and opaque tokens (JWT strings) are text by
       nature and are the stated exceptions.
-- [ ] The codec uses no `Buffer` or other Node-only API (it passes in the
+- [x] The codec uses no `Buffer` or other Node-only API (it passes in the
       browser run of REQ-TEST-002).
