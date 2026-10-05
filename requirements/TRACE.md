@@ -2,11 +2,11 @@
 
 # Traceability matrix
 
-Generated: 2026-10-05 (M1A decomposed into 23 steps, with one placeholder step for each later part; no code yet.)
+Generated: 2026-10-05 (STEP-M1A-010 done; REQ-BUILD-001 and REQ-BUILD-002 verified)
 
-Scan inputs: 117 REQ files (`requirements/`), 28 step files (`workplan/{todo,doing,done}/`: 28 in `todo/`, 0 in `doing/`, 0 in `done/`). Code tags (`implements: REQ-`) scanned across `src/` (absent); test tags (`verifies:`/`supports: REQ-`) scanned across `tests/` (absent). Build/CI, test-infrastructure and README requirements are realised outside `src/` (`package.json`, `tsconfig.json`, `vitest.config.ts`, `.github/workflows/`, the test setup under `tests/`, `README.md`) per REQUIREMENTS-MANAGEMENT.md §4.2; of those locations only `README.md` exists yet, and it carries no tags.
+Scan inputs: 117 REQ files (`requirements/`), 28 step files (`workplan/{todo,doing,done}/`: 27 in `todo/`, 0 in `doing/`, 1 in `done/`). Code tags (`implements: REQ-`) scanned across `src/`; test tags (`verifies:`/`supports: REQ-`) scanned across `tests/`. Build/CI, test-infrastructure and README requirements are realised outside `src/` per REQUIREMENTS-MANAGEMENT.md §4.2, so `implements:` tags are also scanned in `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `.github/workflows`, `README.md`. Locations present: `src/`, `tests/`, `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `README.md`. Unit suite: passed (`npm test`) at generation.
 
-Steps column: step ID and its folder. A REQ listed in several steps becomes `implemented` only when all of them are in `done/` (§3.2).
+Steps column: step ID and its folder. A REQ listed in several steps becomes `implemented` only when all of them are in `done/` (§3.2). Tests column: `verifies:` locations; `supports …` entries are test support and never count as verification.
 
 | REQ | Title | Status | Priority | Architecture | Steps | Code | Tests |
 |---|---|---|---|---|---|---|---|
@@ -19,7 +19,7 @@ Steps column: step ID and its folder. A REQ listed in several steps becomes `imp
 | REQ-API-007 | Every public operation documents its scope and milestone | approved | must | §4 | STEP-M1A-220 (todo) | — | — |
 | REQ-API-008 | Public API only grows between releases | approved | must | §4, §1 | STEP-M1A-230 (todo) | — | — |
 | REQ-API-009 | Secrets never logged, stored or put into error messages | approved | must | §1, §5.2 | STEP-M1A-030 (todo), STEP-M1A-120 (todo), STEP-M1A-130 (todo) | — | — |
-| REQ-API-010 | Targeted API version exported | approved | must | §1, §4 | STEP-M1A-010 (todo), STEP-M1A-220 (todo) | — | — |
+| REQ-API-010 | Targeted API version exported | approved | must | §1, §4 | STEP-M1A-010 (done), STEP-M1A-220 (todo) | src/index.ts:15 | tests/unit/index.test.ts:5, tests/unit/package.node.test.ts:114 |
 | REQ-API-011 | Clear error for operations the hardware does not provide | approved | must | §6, §2 | STEP-M2A-000 (todo) | — | — |
 | REQ-API-012 | Destructive actions reachable only through dedicated calls | approved | must | §4 | STEP-M3A-000 (todo) | — | — |
 | REQ-API-013 | Dropped connection after a restart request is not an error | approved | must | §6 | STEP-M3A-000 (todo) | — | — |
@@ -50,10 +50,10 @@ Steps column: step ID and its folder. A REQ listed in several steps becomes `imp
 | REQ-AUTH-024 | Mobile-app pairing step 2 | approved | must | §5.3, §6 | STEP-M3A-000 (todo) | — | — |
 | REQ-AUTH-025 | Proof that the device holds its identity key | approved | must | §5.3, §6 | STEP-M3A-000 (todo) | — | — |
 | REQ-AUTH-026 | Pairing through a replaceable relay | approved | must | §5.3, §6 | STEP-M3A-000 (todo) | — | — |
-| REQ-BUILD-001 | TypeScript source published as ESM with type declarations | approved | must | §1, §9 | STEP-M1A-010 (todo) | — | — |
-| REQ-BUILD-002 | No runtime dependencies | approved | must | §1 | STEP-M1A-010 (todo) | — | — |
+| REQ-BUILD-001 | TypeScript source published as ESM with type declarations | verified | must | §1, §9 | STEP-M1A-010 (done) | package.json:32, tsconfig.json:3, tsconfig.base.json:2, tsconfig.build.json:3 | tests/unit/package.node.test.ts:57, tests/unit/package.node.test.ts:72, tests/unit/package.node.test.ts:114, tests/unit/package.node.test.ts:125 |
+| REQ-BUILD-002 | No runtime dependencies | verified | must | §1 | STEP-M1A-010 (done) | package.json:32 | tests/unit/package.node.test.ts:38, tests/unit/package.node.test.ts:47, tests/unit/package.node.test.ts:87 |
 | REQ-BUILD-003 | Only APIs present in both Node.js and browsers | approved | must | §1, §3 | STEP-M1A-030 (todo) | — | — |
-| REQ-BUILD-004 | Node.js 24 as the minimum version | approved | must | §1 | STEP-M1A-010 (todo), STEP-M1A-030 (todo), STEP-M1A-220 (todo) | — | — |
+| REQ-BUILD-004 | Node.js 24 as the minimum version | approved | must | §1 | STEP-M1A-010 (done), STEP-M1A-030 (todo), STEP-M1A-220 (todo) | package.json:32 | tests/unit/package.node.test.ts:65 |
 | REQ-BUILD-005 | Continuous integration for build and unit tests | approved | must | §8, §9 | STEP-M1A-030 (todo) | — | — |
 | REQ-BUILD-006 | A versioned release at the end of each milestone | approved | must | §4, §10 | STEP-M1B-000 (todo) | — | — |
 | REQ-KEY-001 | Generate a key on the device | approved | must | §6 | STEP-M1A-160 (todo) | — | — |
@@ -130,15 +130,16 @@ Steps column: step ID and its folder. A REQ listed in several steps becomes `imp
 
 ## Coverage report
 
-- Totals: 117 REQs (117 approved), 28 steps (28 todo, 0 doing, 0 done; 0 cancelled).
+- Totals: 117 REQs (115 approved, 2 verified), 28 steps (27 todo, 0 doing, 1 done; 0 cancelled).
 - By area: API 14, AUTH 26, BUILD 6, KEY 9, NET 12, OPS 15, SYS 31, TEST 4.
-- Steps by milestone: M1A 23, M1B 1, M2A 1, M2B 1, M3A 1, M3B 1. M1A is decomposed in detail; the single step of every other part is its coarse placeholder (§5.3 step 5).
+- Steps by milestone: M1A 23, M1B 1, M2A 1, M2B 1, M3A 1, M3B 1.
 - REQs with no step: none.
 - REQs listed in more than one step: 21 (criteria that close in a later step; see the Notes of the steps).
-- Approved REQs with no code tag: all 117 (no code exists yet; `src/` is absent).
-- Implemented REQs with no passing tagged test: none.
+- Approved REQs with no code tag (unimplemented): 113.
+- Approved REQs with code tags whose steps are not all in `done/` (in progress): REQ-API-010, REQ-BUILD-004.
+- Implemented REQs with no passing tagged test (unverified): none.
 - Orphan tags: none.
 - Steps in `done/` with empty evidence: none.
-- Broken architecture anchors: none (REQs and steps checked).
+- Broken architecture anchors: none.
 - REQs in `needs-reverify`: none.
 - Status transitions applied in this run: none.

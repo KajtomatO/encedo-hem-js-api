@@ -1,9 +1,9 @@
 ---
 id: REQ-BUILD-001
 title: TypeScript source published as ESM with type declarations
-status: approved
+status: verified
 priority: must
-revision: 2
+revision: 3
 source: start_point G1
 depends_on: []
 supersedes: null

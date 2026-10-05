@@ -1,9 +1,9 @@
 ---
 id: REQ-BUILD-002
 title: No runtime dependencies
-status: approved
+status: verified
 priority: must
-revision: 2
+revision: 3
 source: start_point G2
 depends_on: []
 supersedes: null
