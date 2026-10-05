@@ -7,9 +7,9 @@ traces:
   architecture: ["ARCHITECTURE.md#8-testing-policy", "ARCHITECTURE.md#9-directory-layout"]
 depends_on: ["STEP-M1A-010"]
 evidence:
-  commits: []
-  tests: []
-  notes: null
+  commits: ["34531a7"]
+  tests: ["verifies: REQ-TEST-001 (tests/unit/network-guard.test.ts, tests/unit/network-guard.node.test.ts, tests/unit/fake-fetch.test.ts)", "supports: REQ-TEST-001 (tests/support/fake-fetch.ts)"]
+  notes: "npm test (Node v24.21.0, headless Chromium via Playwright 1.63 / Chrome for Testing 153): node project 5 files, browser project 3 files, 31 tests passed; typecheck passes. The guard is proven by a separate Vitest run over fixtures (tests/fixtures/network-guard/), where both tests fail."
 reopened: []
 cancelled: null
 ---
@@ -38,14 +38,14 @@ fake `fetch` for scripting device responses.
   STEP-M1A-060. Both REQs are listed in those steps too.
 
 **Definition of done**
-- [ ] `vitest.config.ts` defines a Node project and a headless-browser project
+- [x] `vitest.config.ts` defines a Node project and a headless-browser project
       over the same `tests/unit/` files, and one npm script runs both.
-- [ ] The test setup replaces the global `fetch` with one that fails the test;
+- [x] The test setup replaces the global `fetch` with one that fails the test;
       a test proves that an unsubstituted request fails.
-- [ ] `tests/support/` holds the shared fake `fetch` (scripted responses,
+- [x] `tests/support/` holds the shared fake `fetch` (scripted responses,
       recorded requests), tagged `supports:`, with tests of its own.
-- [ ] `*.node.test.ts` files run only in the Node project.
-- [ ] Both runs pass locally, including the tests of STEP-M1A-010.
-- [ ] `implements:` and `verifies:` tags exist for the REQs above.
-- [ ] The non-`(M1B)` acceptance boxes this step closes are ticked in the REQ
+- [x] `*.node.test.ts` files run only in the Node project.
+- [x] Both runs pass locally, including the tests of STEP-M1A-010.
+- [x] `implements:` and `verifies:` tags exist for the REQs above.
+- [x] The non-`(M1B)` acceptance boxes this step closes are ticked in the REQ
       files (revision bumped).
