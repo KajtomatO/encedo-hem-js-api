@@ -1,9 +1,9 @@
 ---
 id: REQ-SYS-007
 title: One-call check-in
-status: approved
+status: verified
 priority: must
-revision: 3
+revision: 4
 source: start_point M1.3; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: ["REQ-SYS-004", "REQ-SYS-005", "REQ-SYS-006"]
 supersedes: null
