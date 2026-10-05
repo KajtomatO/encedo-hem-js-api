@@ -5,6 +5,7 @@
  */
 import { type BindingContext, noTokens } from './api/core.js';
 import { SystemApi } from './api/system.js';
+import { type CheckinRelay, EncedoCheckinRelay } from './relay/checkin.js';
 import { type FetchFunction, Transport } from './transport/transport.js';
 
 /** Options of {@link HemClient}. */
@@ -26,6 +27,13 @@ export interface HemClientOptions {
   timeoutMs?: number | undefined;
   /** Minimum time between the starts of consecutive device requests, in milliseconds; default 0. */
   minIntervalMs?: number | undefined;
+  /**
+   * Relay for check-in (`system.checkin` and clock recovery). Default: an
+   * {@link EncedoCheckinRelay} posting to `https://api.encedo.com/checkin`
+   * with the global `fetch`. Pass your own implementation to route it
+   * elsewhere, or `null` to disable check-in.
+   */
+  checkinRelay?: CheckinRelay | null | undefined;
 }
 
 /**
@@ -36,7 +44,7 @@ export interface HemClientOptions {
  */
 // implements: REQ-API-001
 export class HemClient {
-  /** Device-wide calls: status, version. */
+  /** Device-wide calls: status, version, health, check-in. */
   readonly system: SystemApi;
 
   constructor(options: HemClientOptions) {
@@ -47,6 +55,7 @@ export class HemClient {
       minIntervalMs: options?.minIntervalMs,
     });
     const context: BindingContext = { transport, tokens: noTokens };
-    this.system = new SystemApi(context);
+    const checkinRelay = options.checkinRelay === undefined ? new EncedoCheckinRelay() : options.checkinRelay;
+    this.system = new SystemApi(context, checkinRelay);
   }
 }
