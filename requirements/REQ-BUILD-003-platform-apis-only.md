@@ -3,7 +3,7 @@ id: REQ-BUILD-003
 title: Only APIs present in both Node.js and browsers
 status: approved
 priority: must
-revision: 1
+revision: 2
 source: start_point G3; ARCHITECTURE.md §1
 depends_on: ["REQ-TEST-002"]
 supersedes: null
@@ -22,9 +22,9 @@ through `fetch` and cryptography through Web Crypto; a single `node:` import
 would break the browser build. Introduced in M1.
 
 **Acceptance criteria:**
-- [ ] A static check finds no `node:` import, no bare module specifier, and
+- [x] A static check finds no `node:` import, no bare module specifier, and
       no use of `Buffer`, `process` or `require` in `src/`.
-- [ ] Cryptography is done only through `globalThis.crypto`, networking only
+- [x] Cryptography is done only through `globalThis.crypto`, networking only
       through `fetch`.
-- [ ] The browser run of the unit suite (REQ-TEST-002) is the behavioural
+- [x] The browser run of the unit suite (REQ-TEST-002) is the behavioural
       check.

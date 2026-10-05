@@ -3,7 +3,7 @@ id: REQ-API-009
 title: Secrets never logged, stored or put into error messages
 status: approved
 priority: must
-revision: 1
+revision: 2
 source: start_point G13; ARCHITECTURE.md §1
 depends_on: []
 supersedes: null
@@ -22,7 +22,7 @@ Anything it leaks into logs or error reports ends up in places with weaker
 protection than the process memory. Introduced in M1.
 
 **Acceptance criteria:**
-- [ ] A static check shows `src/` contains no console output and no use of
+- [x] A static check shows `src/` contains no console output and no use of
       persistent storage (web storage, IndexedDB, files, environment
       variables).
 - [ ] A unit test inspects the error of a failed login — message, properties

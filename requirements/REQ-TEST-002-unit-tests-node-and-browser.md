@@ -3,7 +3,7 @@ id: REQ-TEST-002
 title: Unit tests pass in Node.js and in a browser
 status: approved
 priority: must
-revision: 2
+revision: 3
 source: start_point G3; ARCHITECTURE.md §1
 depends_on: ["REQ-TEST-001"]
 supersedes: null
@@ -25,4 +25,4 @@ import), so the promise has to be tested, not assumed. Introduced in M1.
       browser.
 - [ ] The browser run includes the cryptographic tests: PBKDF2, X25519,
       HMAC-SHA256 and the eJWT vector.
-- [ ] The CI workflow runs both (REQ-BUILD-005).
+- [x] The CI workflow runs both (REQ-BUILD-005).

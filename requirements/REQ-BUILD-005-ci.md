@@ -3,7 +3,7 @@ id: REQ-BUILD-005
 title: Continuous integration for build and unit tests
 status: approved
 priority: must
-revision: 1
+revision: 2
 source: ARCHITECTURE.md §8; ARCHITECTURE.md §1
 depends_on: ["REQ-TEST-002"]
 supersedes: null
@@ -23,9 +23,9 @@ scripted definition that runs the same way locally and in CI. Introduced in
 M1.
 
 **Acceptance criteria:**
-- [ ] A workflow file under `.github/workflows/` runs install, build,
+- [x] A workflow file under `.github/workflows/` runs install, build,
       type-check and both unit runs.
-- [ ] The workflow runs no integration or attended test and holds no device
+- [x] The workflow runs no integration or attended test and holds no device
       credentials.
-- [ ] One npm script runs the same checks locally; the A gate uses that
+- [x] One npm script runs the same checks locally; the A gate uses that
       local run.

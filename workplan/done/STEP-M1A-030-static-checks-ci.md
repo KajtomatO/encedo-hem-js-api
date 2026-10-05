@@ -7,9 +7,9 @@ traces:
   architecture: ["ARCHITECTURE.md#1-decisions-fixed", "ARCHITECTURE.md#8-testing-policy"]
 depends_on: ["STEP-M1A-020"]
 evidence:
-  commits: []
-  tests: []
-  notes: null
+  commits: ["c9166bd"]
+  tests: ["verifies: REQ-BUILD-003 (tests/unit/source-check.test.ts, tests/unit/source-tree.node.test.ts)", "verifies: REQ-API-009 (tests/unit/source-check.test.ts, tests/unit/source-tree.node.test.ts)", "verifies: REQ-BUILD-005 (tests/unit/ci.node.test.ts)", "verifies: REQ-BUILD-004 (tests/unit/ci.node.test.ts)", "verifies: REQ-TEST-002 (tests/unit/ci.node.test.ts)", "supports: REQ-BUILD-003, REQ-API-009 (tests/support/source-check.ts)"]
+  notes: "npm run check (build, typecheck, Vitest in Node v24.21.0 and headless Chromium): 13 files, 106 tests passed. The workflow has not been observed running on GitHub because nothing is pushed (CLAUDE.md); the A gate relies on the local script."
 reopened: []
 cancelled: null
 ---
@@ -34,17 +34,17 @@ check locally, and a CI workflow runs that same script.
   criteria close in STEP-M1A-120 and STEP-M1A-130).
 
 **Definition of done**
-- [ ] A static-check test fails on a `node:` import, a bare module specifier,
+- [x] A static-check test fails on a `node:` import, a bare module specifier,
       or a use of `Buffer`, `process` or `require` in `src/`; the test proves
       this on bad samples.
-- [ ] The same check fails on console output and on use of persistent storage
+- [x] The same check fails on console output and on use of persistent storage
       or environment variables in `src/`.
-- [ ] `.github/workflows/ci.yml` runs install, build, type-check and both unit
+- [x] `.github/workflows/ci.yml` runs install, build, type-check and both unit
       runs on Node 24 on every push and pull request; it runs no integration
       or attended test and holds no device credentials.
-- [ ] One npm script runs build, type-check and both unit runs; the workflow
+- [x] One npm script runs build, type-check and both unit runs; the workflow
       calls that script.
-- [ ] The script passes locally.
-- [ ] `implements:` and `verifies:` tags exist for the REQs above.
-- [ ] The non-`(M1B)` acceptance boxes this step closes are ticked in the REQ
+- [x] The script passes locally.
+- [x] `implements:` and `verifies:` tags exist for the REQs above.
+- [x] The non-`(M1B)` acceptance boxes this step closes are ticked in the REQ
       files (revision bumped).
