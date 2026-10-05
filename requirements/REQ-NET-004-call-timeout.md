@@ -1,9 +1,9 @@
 ---
 id: REQ-NET-004
 title: Time limit on every call
-status: approved
+status: verified
 priority: must
-revision: 3
+revision: 4
 source: start_point G7; https://github.com/KajtomatO/encedo-hem-c-api; ref/api/hem-api-1.2.2.yaml
 depends_on: ["REQ-API-002"]
 supersedes: null

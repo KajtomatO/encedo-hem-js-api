@@ -1,9 +1,9 @@
 ---
 id: REQ-AUTH-011
 title: Credentials held in memory and discarded on logout
-status: approved
+status: verified
 priority: must
-revision: 3
+revision: 4
 source: start_point G13
 depends_on: ["REQ-API-009"]
 supersedes: null

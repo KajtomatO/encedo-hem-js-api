@@ -1,9 +1,9 @@
 ---
 id: REQ-API-001
 title: Client object created from options, with no global state
-status: approved
+status: verified
 priority: must
-revision: 3
+revision: 4
 source: ARCHITECTURE.md §4; start_point G5
 depends_on: []
 supersedes: null

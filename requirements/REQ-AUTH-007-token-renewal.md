@@ -1,9 +1,9 @@
 ---
 id: REQ-AUTH-007
 title: Renewal before expiry
-status: approved
+status: verified
 priority: must
-revision: 2
+revision: 3
 source: start_point G11; ARCHITECTURE.md §5; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: ["REQ-AUTH-004", "REQ-AUTH-006"]
 supersedes: null

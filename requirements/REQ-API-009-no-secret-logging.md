@@ -1,9 +1,9 @@
 ---
 id: REQ-API-009
 title: Secrets never logged, stored or put into error messages
-status: approved
+status: verified
 priority: must
-revision: 4
+revision: 5
 source: start_point G13; ARCHITECTURE.md §1
 depends_on: []
 supersedes: null

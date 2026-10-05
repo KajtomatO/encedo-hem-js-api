@@ -1,9 +1,9 @@
 ---
 id: REQ-AUTH-004
 title: One cached token per scope
-status: approved
+status: verified
 priority: must
-revision: 2
+revision: 3
 source: start_point G10; ARCHITECTURE.md §5; ref/api/hem-api-1.2.2.yaml
 depends_on: ["REQ-AUTH-001"]
 supersedes: null
