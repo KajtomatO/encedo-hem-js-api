@@ -7,9 +7,9 @@ traces:
   architecture: ["ARCHITECTURE.md#53-mobile-approval", "ARCHITECTURE.md#52-session-behaviour"]
 depends_on: ["STEP-M1A-140", "STEP-M1A-200"]
 evidence:
-  commits: []
-  tests: []
-  notes: null
+  commits: ["99c80aa"]
+  tests: ["verifies: REQ-AUTH-019 (tests/unit/mobile-login.test.ts)", "verifies: REQ-AUTH-016 (tests/unit/mobile-login.test.ts)"]
+  notes: "npm run check: 48 files, 974 tests passed in Node v24.21.0 and headless Chromium. Client option mobileApproval (true or { timeoutMs, intervalMs, note, ctx }); the session's token source becomes the approval engine, so cache, renewal, the 401 retry and shared acquisition apply unchanged. Giving both passphrase and mobileApproval raises HemValidationError (parameter mobileApproval). The option's TSDoc passes on the C-SDK observations (15-minute tokens, one push per key scope) as unconfirmed until M1B."
 reopened: []
 cancelled: null
 ---
@@ -34,17 +34,17 @@ API works unchanged.
   mode).
 
 **Definition of done**
-- [ ] On a mobile-mode client with an empty cache, an authenticated call
+- [x] On a mobile-mode client with an empty cache, an authenticated call
       triggers one approval for that operation's scope and then proceeds.
-- [ ] While the token is valid, further calls for that scope cause no new
+- [x] While the token is valid, further calls for that scope cause no new
       approval.
-- [ ] A client has either a passphrase or mobile mode, not both; configuring
+- [x] A client has either a passphrase or mobile mode, not both; configuring
       both is rejected.
-- [ ] A 401 on a token obtained this way leads to one new approval and one
+- [x] A 401 on a token obtained this way leads to one new approval and one
       repeated call.
-- [ ] With the relay set to none, a mobile-mode client raises
+- [x] With the relay set to none, a mobile-mode client raises
       `HemUnsupportedError`.
-- [ ] The suite passes in Node 24 and in the browser run.
-- [ ] `implements:` and `verifies:` tags exist for the REQs above.
-- [ ] The non-`(M1B)` acceptance boxes this step closes are ticked in the REQ
+- [x] The suite passes in Node 24 and in the browser run.
+- [x] `implements:` and `verifies:` tags exist for the REQs above.
+- [x] The non-`(M1B)` acceptance boxes this step closes are ticked in the REQ
       files (revision bumped).
