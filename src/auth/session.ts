@@ -7,7 +7,7 @@
 import { redact, type TokenProvider } from '../api/core.js';
 import { base64ToBytes } from '../codec/base64.js';
 import { utf8Decode } from '../codec/utf8.js';
-import { HemError, HemUnauthenticatedError, HemUnsupportedError } from '../errors.js';
+import { HemAbortError, HemError, HemUnauthenticatedError, HemUnsupportedError } from '../errors.js';
 import type { CallOptions } from '../transport/transport.js';
 import type { Clock, IssuedToken } from './login.js';
 
@@ -54,6 +54,21 @@ export function roleOf(sub: string): Role {
   return { kind: 'app', id: sub };
 }
 
+/**
+ * Wait for a shared promise on behalf of one caller: the caller's abort
+ * rejects only this caller's wait, never the shared work.
+ */
+function waitFor<T>(shared: Promise<T>, signal: AbortSignal | undefined): Promise<T> {
+  if (!signal) return shared;
+  const abort = (): HemAbortError => new HemAbortError('auth.login: cancelled by the caller', { operation: 'auth.login', cause: signal.reason });
+  if (signal.aborted) return Promise.reject(abort());
+  return new Promise<T>((resolve, reject) => {
+    const onAbort = (): void => reject(abort());
+    signal.addEventListener('abort', onAbort, { once: true });
+    shared.then(resolve, reject).finally(() => signal.removeEventListener('abort', onAbort));
+  });
+}
+
 /** Whether a secret string appears anywhere in an error's visible form. */
 function mentions(error: HemError, secret: string): boolean {
   return [error.message, error.bodyText ?? '', JSON.stringify(error), String(error.cause ?? '')].some((text) => text.includes(secret));
@@ -68,6 +83,8 @@ export class Session implements TokenProvider {
   readonly #source: TokenSource | null;
   readonly #now: Clock;
   readonly #cache = new Map<string, CachedToken>();
+  /** Acquisitions in flight, one per scope, shared by every caller that needs it. */
+  readonly #inflight = new Map<string, Promise<CachedToken>>();
   #loggedOut = false;
   #role: Role | undefined;
 
@@ -90,12 +107,30 @@ export class Session implements TokenProvider {
   logout(): void {
     this.#loggedOut = true;
     this.#cache.clear();
+    this.#inflight.clear();
     this.#role = undefined;
     this.#source?.discard();
   }
 
+  /**
+   * Run `send` with a token for `scope`. After a 401, the token of that scope
+   * is discarded, a new one obtained, and `send` repeated exactly once.
+   */
+  // implements: REQ-AUTH-008
   async withToken<T>(scope: string, options: CallOptions, send: (bearer: string) => Promise<T>): Promise<T> {
-    const entry = await this.#token(scope, options);
+    let entry = await this.#token(scope, options);
+    try {
+      return await this.#send(entry, send);
+    } catch (error) {
+      if (!(error instanceof HemUnauthenticatedError) || error.status !== 401) throw error;
+      // Tokens die when the device reboots; the 401 is how the client finds out.
+      if (this.#cache.get(scope) === entry) this.#cache.delete(scope);
+      entry = await this.#token(scope, options);
+      return await this.#send(entry, send);
+    }
+  }
+
+  async #send<T>(entry: CachedToken, send: (bearer: string) => Promise<T>): Promise<T> {
     try {
       return await send(entry.token);
     } catch (error) {
@@ -113,7 +148,25 @@ export class Session implements TokenProvider {
     const cached = this.#cache.get(scope);
     if (cached && cached.exp - this.#now() / 1000 > RENEWAL_MARGIN_SECONDS) return cached;
     this.#cache.delete(scope);
-    return this.#acquire(scope, options);
+    return waitFor(this.#shared(scope, options), options.signal);
+  }
+
+  /**
+   * The one acquisition in flight for `scope`, started if there is none. It
+   * is not tied to any caller's signal, and a failure is not remembered.
+   */
+  // implements: REQ-AUTH-013, REQ-NET-005
+  #shared(scope: string, options: CallOptions): Promise<CachedToken> {
+    let pending = this.#inflight.get(scope);
+    if (!pending) {
+      pending = this.#acquire(scope, { timeoutMs: options.timeoutMs });
+      this.#inflight.set(scope, pending);
+      const clear = (): void => {
+        if (this.#inflight.get(scope) === pending) this.#inflight.delete(scope);
+      };
+      pending.then(clear, clear);
+    }
+    return pending;
   }
 
   async #acquire(scope: string, options: CallOptions): Promise<CachedToken> {
