@@ -7,9 +7,9 @@ traces:
   architecture: ["ARCHITECTURE.md#7-transport", "ARCHITECTURE.md#3-component-overview"]
 depends_on: ["STEP-M1A-040"]
 evidence:
-  commits: []
-  tests: []
-  notes: null
+  commits: ["1155513"]
+  tests: ["verifies: REQ-NET-001 (tests/unit/transport.test.ts)", "verifies: REQ-NET-002 (tests/unit/transport.test.ts)", "verifies: REQ-NET-003 (tests/unit/transport.test.ts)", "verifies: REQ-NET-009 (tests/unit/transport.test.ts)", "verifies: REQ-NET-010 (tests/unit/transport.test.ts)"]
+  notes: "npm run check: 25 files, 348 tests passed in Node v24.21.0 and headless Chromium. Redirects: fetch is called with redirect 'manual'; both a 3xx status (Node) and an opaque-redirect response (browsers) raise HemDeviceError. errorFromStatus was split out of errorFromResponse so the transport can map a status after reading the body itself."
 reopened: []
 cancelled: null
 ---
@@ -40,26 +40,26 @@ redirects.
   listed there too. The 418 mapping itself comes from STEP-M1A-040.
 
 **Definition of done**
-- [ ] With a supplied `fetch` the global one is never called (the test
+- [x] With a supplied `fetch` the global one is never called (the test
       replaces the global with one that throws); without one, the global is
       used; with neither, construction throws `HemUnsupportedError`.
-- [ ] The supplied function receives the standard `(url, init)` arguments
+- [x] The supplied function receives the standard `(url, init)` arguments
       only.
-- [ ] Requests for `https://my.ence.do`, `https://192.168.7.1`,
+- [x] Requests for `https://my.ence.do`, `https://192.168.7.1`,
       `http://192.168.7.1`, a URL with a port and an IPv6 literal all go to
       `<origin>/api/…`; a trailing slash makes no difference; a path prefix
       is kept in front of `/api/…`.
-- [ ] A URL carrying a username or password is rejected with
+- [x] A URL carrying a username or password is rejected with
       `HemValidationError`.
-- [ ] A request flagged TLS-only on an `http:` base raises
+- [x] A request flagged TLS-only on an `http:` base raises
       `HemTlsRequiredError` with zero `fetch` calls; an unflagged request on
       `http:` is sent; a 418 response raises `HemTlsRequiredError`.
-- [ ] Recorded request headers contain only `Content-Type` (only with a
+- [x] Recorded request headers contain only `Content-Type` (only with a
       body), `Authorization` (only when a bearer is supplied) and
       `Content-Disposition` (only for uploads).
-- [ ] Requests are made with redirect following disabled; a redirect response
+- [x] Requests are made with redirect following disabled; a redirect response
       raises an error and no second request is made.
-- [ ] The suite passes in Node 24 and in the browser run.
-- [ ] `implements:` and `verifies:` tags exist for the REQs above.
-- [ ] The non-`(M1B)` acceptance boxes this step closes are ticked in the REQ
+- [x] The suite passes in Node 24 and in the browser run.
+- [x] `implements:` and `verifies:` tags exist for the REQs above.
+- [x] The non-`(M1B)` acceptance boxes this step closes are ticked in the REQ
       files (revision bumped).
