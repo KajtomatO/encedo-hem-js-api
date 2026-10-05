@@ -3,7 +3,7 @@ id: REQ-NET-005
 title: Cancellation of every call
 status: approved
 priority: must
-revision: 2
+revision: 3
 source: start_point G7
 depends_on: ["REQ-API-002"]
 supersedes: null
@@ -26,7 +26,7 @@ Introduced in M1.
       the signal given to `fetch`.
 - [x] A signal that is already aborted rejects the call without calling
       `fetch`.
-- [ ] Aborting a call that is still waiting in the request queue removes it;
+- [x] Aborting a call that is still waiting in the request queue removes it;
       it is never sent.
 - [ ] Aborting one call does not fail another call that shares the same
       login.

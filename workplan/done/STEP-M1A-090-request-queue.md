@@ -7,9 +7,9 @@ traces:
   architecture: ["ARCHITECTURE.md#7-transport", "ARCHITECTURE.md#2-context--constraints"]
 depends_on: ["STEP-M1A-080"]
 evidence:
-  commits: []
-  tests: []
-  notes: null
+  commits: ["3d4324a"]
+  tests: ["verifies: REQ-NET-007 (tests/unit/transport-queue.test.ts)", "verifies: REQ-NET-005 (tests/unit/transport-queue.test.ts)", "verifies: REQ-NET-008 (tests/unit/transport-queue.test.ts)"]
+  notes: "npm run check: 27 files, 404 tests passed in Node v24.21.0 and headless Chromium, run twice. The time limit runs per request from the moment it is sent (TSDoc of CallOptions.timeoutMs). In the browser, fetch and body streams settle on real tasks, so the pacing tests advance fake time in small steps with real ticks between them."
 reopened: []
 cancelled: null
 ---
@@ -38,16 +38,16 @@ between the starts of consecutive requests.
   STEP-M1A-140. Both REQs are listed there too.
 
 **Definition of done**
-- [ ] With N concurrent calls, `fetch` is invoked for the next request only
+- [x] With N concurrent calls, `fetch` is invoked for the next request only
       after the previous one has settled and its body was read.
-- [ ] Requests leave in the order the calls were made.
-- [ ] A failed request does not block the ones behind it.
-- [ ] Aborting a call that is still waiting in the queue removes it; it is
+- [x] Requests leave in the order the calls were made.
+- [x] A failed request does not block the ones behind it.
+- [x] Aborting a call that is still waiting in the queue removes it; it is
       never sent.
-- [ ] The default interval is zero and adds no delay.
-- [ ] With an interval of 150 ms and fake timers, consecutive requests start
+- [x] The default interval is zero and adds no delay.
+- [x] With an interval of 150 ms and fake timers, consecutive requests start
       at least 150 ms apart.
-- [ ] The suite passes in Node 24 and in the browser run.
-- [ ] `implements:` and `verifies:` tags exist for the REQs above.
-- [ ] The non-`(M1B)` acceptance boxes this step closes are ticked in the REQ
+- [x] The suite passes in Node 24 and in the browser run.
+- [x] `implements:` and `verifies:` tags exist for the REQs above.
+- [x] The non-`(M1B)` acceptance boxes this step closes are ticked in the REQ
       files (revision bumped).
