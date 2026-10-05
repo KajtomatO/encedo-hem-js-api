@@ -3,7 +3,7 @@ id: REQ-API-002
 title: Typed errors that identify the cause of a failure
 status: approved
 priority: must
-revision: 1
+revision: 2
 source: start_point G14; ARCHITECTURE.md §4; ref/api/hem-api-1.2.2.yaml
 depends_on: []
 supersedes: null
@@ -27,14 +27,14 @@ the library tells them apart. The status meanings are those of [YAML].
 Introduced in M1.
 
 **Acceptance criteria:**
-- [ ] A table-driven unit test with a substituted `fetch` shows each status
+- [x] A table-driven unit test with a substituted `fetch` shows each status
       in the list mapping to its own class.
-- [ ] All classes extend one exported base class that carries a stable
+- [x] All classes extend one exported base class that carries a stable
       `code`, the HTTP `status` when a response exists, and the name of the
       operation.
-- [ ] A status outside the list (for example 404, 410, 411) maps to the
+- [x] A status outside the list (for example 404, 410, 411) maps to the
       device-error class with the raw status preserved.
-- [ ] The classes are exported from the package root and work with
+- [x] The classes are exported from the package root and work with
       `instanceof`.
 - [ ] (M1B) 401, 403 and 406 are each provoked on the real device and map as
       specified.

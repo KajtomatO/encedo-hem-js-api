@@ -7,9 +7,9 @@ traces:
   architecture: ["ARCHITECTURE.md#4-public-api--conventions"]
 depends_on: ["STEP-M1A-020"]
 evidence:
-  commits: []
-  tests: []
-  notes: null
+  commits: ["4b4b60a"]
+  tests: ["verifies: REQ-API-002 (tests/unit/errors.test.ts)", "verifies: REQ-API-003 (tests/unit/errors.test.ts)"]
+  notes: "npm run check: 15 files, 170 tests passed in Node v24.21.0 and headless Chromium. Timeout, unreachable and abort classes are defined here and raised by the transport (STEP-M1A-070/080)."
 reopened: []
 cancelled: null
 ---
@@ -34,19 +34,19 @@ response of any status maps to the right class without relying on its body.
   mapping takes only the status, the body and the operation name.
 
 **Definition of done**
-- [ ] A `HemError` base class carries a stable `code`, the HTTP `status` when
+- [x] A `HemError` base class carries a stable `code`, the HTTP `status` when
       a response exists, and the operation name; every subclass of the
       ARCHITECTURE.md §4 table extends it.
-- [ ] All classes are exported from the package root and work with
+- [x] All classes are exported from the package root and work with
       `instanceof`.
-- [ ] A table-driven test with the fake `fetch` shows 400, 401, 403, 406,
+- [x] A table-driven test with the fake `fetch` shows 400, 401, 403, 406,
       409, 412, 413, 418 and 500 each mapping to its own class.
-- [ ] 404, 410 and 411 map to `HemDeviceError` with the raw status preserved.
-- [ ] Each error status with an empty body and `Content-Type:
+- [x] 404, 410 and 411 map to `HemDeviceError` with the raw status preserved.
+- [x] Each error status with an empty body and `Content-Type:
       application/json` maps to its class; no JSON parse exception escapes.
-- [ ] A non-JSON error body is available as raw text on the error; a JSON
+- [x] A non-JSON error body is available as raw text on the error; a JSON
       error body is exposed parsed.
-- [ ] The suite passes in Node 24 and in the browser run.
-- [ ] `implements:` and `verifies:` tags exist for the REQs above.
-- [ ] The non-`(M1B)` acceptance boxes this step closes are ticked in the REQ
+- [x] The suite passes in Node 24 and in the browser run.
+- [x] `implements:` and `verifies:` tags exist for the REQs above.
+- [x] The non-`(M1B)` acceptance boxes this step closes are ticked in the REQ
       files (revision bumped).
