@@ -4,13 +4,15 @@
  *
  * @packageDocumentation
  */
+import { ApprovalEngine, type ApprovalDetails, type PendingApproval, type WaitOptions } from '../auth/approval.js';
+import type { Clock } from '../auth/login.js';
 import type { ClockRecovery } from '../auth/recovery.js';
 import type { ApprovalRelay } from '../relay/approval.js';
 import type { Role, Session } from '../auth/session.js';
 import { base64ToBytes } from '../codec/base64.js';
-import { HemForbiddenError, HemProtocolError, HemValidationError } from '../errors.js';
+import { HemForbiddenError, HemValidationError } from '../errors.js';
 import type { CallOptions } from '../transport/transport.js';
-import { AUTH_EXT_REQUEST, AUTH_EXT_TOKEN } from './auth.js';
+import { AUTH_EXT_REQUEST, redeemReply } from './auth.js';
 import { type BindingContext, invoke, readString } from './core.js';
 
 /** Parameters of {@link AuthApi.requestApproval}. */
@@ -54,13 +56,24 @@ export class AuthApi {
   readonly #context: BindingContext;
   readonly #recovery: ClockRecovery;
   readonly #relay: ApprovalRelay | null;
+  /** @internal The approval engine, also used by mobile login mode. */
+  readonly engine: ApprovalEngine;
 
   /** @internal */
-  constructor(session: Session, publicContext: BindingContext, recovery: ClockRecovery, relay: ApprovalRelay | null) {
+  constructor(session: Session, publicContext: BindingContext, recovery: ClockRecovery, relay: ApprovalRelay | null, now: Clock) {
     this.#session = session;
     this.#context = publicContext;
     this.#recovery = recovery;
     this.#relay = relay;
+    this.engine = new ApprovalEngine(
+      relay,
+      {
+        request: (params, options) => this.requestApproval(params, options),
+        redeem: (authreply, options) => redeemReply(this.#context, authreply, options),
+      },
+      recovery,
+      now,
+    );
   }
 
   /** The approval relay this client was configured with; `null` when approval is disabled. */
@@ -143,13 +156,66 @@ export class AuthApi {
   async redeemApproval(params: RedeemApprovalParams, options?: CallOptions): Promise<string> {
     const authreply = checkLength(params?.authreply, 'authreply', 1, Number.MAX_SAFE_INTEGER);
     const scope = checkLength(params.scope, 'scope', 1, 1023);
-    const r = await invoke(this.#context, AUTH_EXT_TOKEN, { body: { authreply } }, options);
-    const token = r['token'];
-    if (typeof token !== 'string' || token === '') {
-      throw new HemProtocolError(`${AUTH_EXT_TOKEN.name}: response field "token" is not a string`, { operation: AUTH_EXT_TOKEN.name });
-    }
+    const token = await redeemReply(this.#context, authreply, options);
     // Without an exp claim the token is kept until the device rejects it (the 401 retry handles that).
     this.#session.store(scope, { token, requestedExp: Number.POSITIVE_INFINITY });
     return token;
+  }
+
+  /**
+   * Start a mobile approval of `scope`: obtain the relay's key, ask the
+   * device for an authorization request (`ext/request`) and submit it to
+   * the approval relay. If the broker refuses the request because the
+   * device clock has drifted, one check-in runs and the sequence is
+   * repeated once. Continue with {@link AuthApi.pollApproval} or
+   * {@link AuthApi.waitForApproval}.
+   *
+   * @throws HemUnsupportedError when the client has no approval relay.
+   * @remarks Token scope: none. Introduced in M1.
+   */
+  // implements: REQ-AUTH-018
+  beginApproval(scope: string, details?: ApprovalDetails, options?: CallOptions): Promise<PendingApproval> {
+    return this.engine.begin(scope, details, options);
+  }
+
+  /**
+   * Check once for the outcome of an approval. Approved: the reply is
+   * redeemed (`ext/token`), the token cached under the requested scope and
+   * returned. Rejected raises `HemApprovalRejectedError` (nothing is
+   * redeemed); expired raises `HemApprovalTimeoutError`.
+   *
+   * @remarks Token scope: none. Introduced in M1.
+   */
+  async pollApproval(pending: PendingApproval, options?: CallOptions): Promise<{ status: 'pending' } | { status: 'approved'; token: string }> {
+    const result = await this.engine.poll(pending, options);
+    if (result.status === 'approved') this.#session.store(pending.scope, { token: result.token, requestedExp: Number.POSITIVE_INFINITY });
+    return result;
+  }
+
+  /**
+   * Wait for the outcome of an approval: poll every 5 seconds (`intervalMs`)
+   * for up to 60 seconds (`timeoutMs`), at least once. Approved: the token
+   * is cached under the requested scope and returned. Rejected raises
+   * `HemApprovalRejectedError`; no answer in time, or an expired request,
+   * raises `HemApprovalTimeoutError`. A network failure of one poll does not
+   * end the wait; the signal does.
+   *
+   * @remarks Token scope: none. Introduced in M1.
+   */
+  // implements: REQ-AUTH-018
+  async waitForApproval(pending: PendingApproval, options?: WaitOptions): Promise<string> {
+    const token = await this.engine.wait(pending, options);
+    this.#session.store(pending.scope, { token, requestedExp: Number.POSITIVE_INFINITY });
+    return token;
+  }
+
+  /**
+   * {@link AuthApi.beginApproval} followed by {@link AuthApi.waitForApproval}.
+   *
+   * @remarks Token scope: none. Introduced in M1.
+   */
+  async approve(scope: string, details?: ApprovalDetails, options?: WaitOptions): Promise<string> {
+    const pending = await this.beginApproval(scope, details, { signal: options?.signal });
+    return this.waitForApproval(pending, options);
   }
 }

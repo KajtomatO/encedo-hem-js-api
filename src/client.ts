@@ -125,7 +125,7 @@ export class HemClient {
     const session = new Session(source, now);
     const context: BindingContext = { transport, tokens: session };
     const approvalRelay = options.approvalRelay === undefined ? new EncedoApprovalRelay() : options.approvalRelay;
-    this.auth = new AuthApi(session, publicContext, recovery, approvalRelay);
+    this.auth = new AuthApi(session, publicContext, recovery, approvalRelay, now);
     this.system = new SystemApi(context, checkinRelay);
     this.keys = new KeysApi(context);
     this.crypto = new CryptoApi(context);

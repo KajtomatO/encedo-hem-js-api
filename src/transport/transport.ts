@@ -327,8 +327,10 @@ export class Transport {
   // implements: REQ-NET-008
   async #pace(request: TransportRequest): Promise<void> {
     if (this.#minIntervalMs > 0 && this.#lastStart !== undefined) {
-      const wait = this.#lastStart + this.#minIntervalMs - Date.now();
-      if (wait > 0) await this.#sleep(wait, request);
+      // Loop: a timer may fire a millisecond early by the wall clock.
+      for (let wait = this.#lastStart + this.#minIntervalMs - Date.now(); wait > 0; wait = this.#lastStart + this.#minIntervalMs - Date.now()) {
+        await this.#sleep(wait, request);
+      }
     }
   }
 

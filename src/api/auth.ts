@@ -97,5 +97,16 @@ export const AUTH_EXT_TOKEN: OperationSpec = {
   sensitive: true,
 };
 
+/** Redeem a paired app's reply for a bearer token (no caching). */
+// implements: REQ-AUTH-015
+export async function redeemReply(context: BindingContext, authreply: string, options?: CallOptions): Promise<string> {
+  const r = await invoke(context, AUTH_EXT_TOKEN, { body: { authreply } }, options);
+  const token = r['token'];
+  if (typeof token !== 'string' || token === '') {
+    throw new HemProtocolError(`${AUTH_EXT_TOKEN.name}: response field "token" is not a string`, { operation: AUTH_EXT_TOKEN.name });
+  }
+  return token;
+}
+
 /** Operations of this module. */
 export const AUTH_OPERATIONS: readonly OperationSpec[] = [AUTH_CHALLENGE, AUTH_LOGIN, AUTH_EXT_REQUEST, AUTH_EXT_TOKEN];

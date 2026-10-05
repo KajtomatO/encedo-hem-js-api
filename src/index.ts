@@ -43,6 +43,7 @@ export type { ApprovalRequest, ApprovalRequestParams, AuthApi, RedeemApprovalPar
 export { EncedoApprovalRelay, ENCEDO_NOTIFY_URL } from './relay/approval.js';
 export type { ApprovalCheck, ApprovalRelay, ApprovalSubmission, EncedoApprovalRelayOptions } from './relay/approval.js';
 export type { Role } from './auth/session.js';
+export type { ApprovalDetails, ApprovalPoll, PendingApproval, WaitOptions } from './auth/approval.js';
 export type { HemClientOptions } from './client.js';
 export type { CheckinResult, HealthReport, SystemApi, SystemStatus, SystemVersion } from './api/system.js';
 export { EncedoCheckinRelay, ENCEDO_CHECKIN_URL } from './relay/checkin.js';
