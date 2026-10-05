@@ -1,9 +1,9 @@
 ---
 id: REQ-NET-006
 title: Transport failures classified
-status: approved
+status: verified
 priority: must
-revision: 2
+revision: 3
 source: start_point G14
 depends_on: ["REQ-API-002", "REQ-NET-004", "REQ-NET-005"]
 supersedes: null
