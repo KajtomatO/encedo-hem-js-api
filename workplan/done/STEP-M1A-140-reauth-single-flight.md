@@ -7,9 +7,9 @@ traces:
   architecture: ["ARCHITECTURE.md#52-session-behaviour"]
 depends_on: ["STEP-M1A-130"]
 evidence:
-  commits: []
-  tests: []
-  notes: null
+  commits: ["634c390"]
+  tests: ["verifies: REQ-AUTH-008 (tests/unit/reauth.test.ts)", "verifies: REQ-AUTH-013 (tests/unit/reauth.test.ts)", "verifies: REQ-NET-005 (tests/unit/reauth.test.ts)", "verifies: REQ-NET-008 (tests/unit/reauth.test.ts)"]
+  notes: "npm run check: 37 files, 652 tests passed in Node v24.21.0 and headless Chromium. The shared acquisition runs with the first caller's time limit but no caller's signal; each waiting call races it against its own signal. A failed acquisition is removed from the in-flight map, so the next call starts a new one."
 reopened: []
 cancelled: null
 ---
@@ -35,21 +35,21 @@ a single login.
 - Partly closed here: REQ-NET-005 and REQ-NET-008, one criterion each.
 
 **Definition of done**
-- [ ] A 401 followed by a 200 resolves the call; the request sequence is
+- [x] A 401 followed by a 200 resolves the call; the request sequence is
       call, challenge, proof, call.
-- [ ] A second 401 raises `HemUnauthenticatedError`; there is no third
+- [x] A second 401 raises `HemUnauthenticatedError`; there is no third
       attempt.
-- [ ] Only the token of the affected scope is discarded.
-- [ ] Five concurrent calls for one scope on an empty cache cause one
+- [x] Only the token of the affected scope is discarded.
+- [x] Five concurrent calls for one scope on an empty cache cause one
       challenge and one proof.
-- [ ] If that login fails, every waiting call is rejected with an error of
+- [x] If that login fails, every waiting call is rejected with an error of
       the same class.
-- [ ] The next call after a failed login starts a new one.
-- [ ] Aborting one call does not fail another call that shares the same
+- [x] The next call after a failed login starts a new one.
+- [x] Aborting one call does not fail another call that shares the same
       login.
-- [ ] With a pacing interval set, the repeated request keeps the interval
+- [x] With a pacing interval set, the repeated request keeps the interval
       too.
-- [ ] The suite passes in Node 24 and in the browser run.
-- [ ] `implements:` and `verifies:` tags exist for the REQs above.
-- [ ] The non-`(M1B)` acceptance boxes this step closes are ticked in the REQ
+- [x] The suite passes in Node 24 and in the browser run.
+- [x] `implements:` and `verifies:` tags exist for the REQs above.
+- [x] The non-`(M1B)` acceptance boxes this step closes are ticked in the REQ
       files (revision bumped).

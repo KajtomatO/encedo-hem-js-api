@@ -3,7 +3,7 @@ id: REQ-AUTH-013
 title: Concurrent calls share one login
 status: approved
 priority: should
-revision: 1
+revision: 2
 source: ARCHITECTURE.md §5; ref/api/hem-api-1.2.2.yaml
 depends_on: ["REQ-AUTH-004"]
 supersedes: null
@@ -22,8 +22,8 @@ their own slow login, and the device answers logins with a deliberate delay
 [YAML]. Introduced in M1.
 
 **Acceptance criteria:**
-- [ ] Five concurrent calls for one scope on an empty cache cause one
+- [x] Five concurrent calls for one scope on an empty cache cause one
       challenge and one proof.
-- [ ] If that login fails, every waiting call is rejected with an error of
+- [x] If that login fails, every waiting call is rejected with an error of
       the same class.
-- [ ] The next call after a failed login starts a new one.
+- [x] The next call after a failed login starts a new one.
