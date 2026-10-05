@@ -1,9 +1,9 @@
 ---
 id: REQ-API-010
 title: Targeted API version exported
-status: approved
+status: verified
 priority: must
-revision: 3
+revision: 4
 source: start_point G19
 depends_on: []
 supersedes: null
