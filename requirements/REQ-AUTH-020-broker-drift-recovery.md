@@ -3,7 +3,7 @@ id: REQ-AUTH-020
 title: Recovery when the broker rejects a request for clock drift
 status: approved
 priority: should
-revision: 1
+revision: 2
 source: https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: ["REQ-AUTH-017", "REQ-SYS-007"]
 supersedes: null
@@ -27,10 +27,10 @@ tolerance for the future, and the device clock runs fast; [C-SDK] saw mobile
 approval break minutes after a clock sync. Introduced in M1.
 
 **Acceptance criteria:**
-- [ ] A 401 with drift evidence leads to one check-in, a new `ext/request`
+- [x] A 401 with drift evidence leads to one check-in, a new `ext/request`
       and a new submit.
-- [ ] A 401 without drift evidence is reported as an error with zero
+- [x] A 401 without drift evidence is reported as an error with zero
       check-in requests.
-- [ ] This happens at most once per approval attempt.
+- [x] This happens at most once per approval attempt.
 - [ ] (M1B) attended: whether the drift rejection occurs on the test device,
       and whether the recovery clears it, is recorded.

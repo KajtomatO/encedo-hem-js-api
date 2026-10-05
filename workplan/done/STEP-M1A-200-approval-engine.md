@@ -7,9 +7,9 @@ traces:
   architecture: ["ARCHITECTURE.md#53-mobile-approval"]
 depends_on: ["STEP-M1A-190"]
 evidence:
-  commits: []
-  tests: []
-  notes: null
+  commits: ["68b94b7"]
+  tests: ["verifies: REQ-AUTH-018 (tests/unit/approval-engine.test.ts)", "verifies: REQ-AUTH-020 (tests/unit/approval-engine.test.ts)", "verifies: REQ-AUTH-016 (tests/unit/approval-engine.test.ts)", "supports: REQ-TEST-002 (tests/support/timers.ts)"]
+  notes: "npm run check (twice): 47 files, 962 tests passed in Node v24.21.0 and headless Chromium. Engine in src/auth/approval.ts; public as client.auth.beginApproval / pollApproval / waitForApproval / approve. The authreq encoding was checked in https://github.com/KajtomatO/encedo-hem-c-api (2026-10-05): a compact JWT whose base64url payload carries iat; gates +2 s ahead / 15 s behind local time; on drift its recovery repeats the whole push (session key, ext/request, submit), and so does this engine. Transient poll failures (unreachable, timeout, relay unreachable or 5xx) do not end a wait; other errors do. Also fixed here: pacing loops until the full interval has passed by the wall clock, because a Node timer fired 1 ms early under load (39 ms gap for a 40 ms interval). REQ-AUTH-016 'relay set to none' closes in STEP-M1A-210, with mobile mode."
 reopened: []
 cancelled: null
 ---
@@ -41,27 +41,27 @@ repaired once by a check-in.
   the engine).
 
 **Definition of done**
-- [ ] Begin obtains the relay key, calls `ext/request` and submits the result
+- [x] Begin obtains the relay key, calls `ext/request` and submits the result
       to the relay, in that order.
-- [ ] Approved: the token is cached under the requested scope and the wait
+- [x] Approved: the token is cached under the requested scope and the wait
       resolves.
-- [ ] Rejected: `HemApprovalRejectedError` is raised and `ext/token` is never
+- [x] Rejected: `HemApprovalRejectedError` is raised and `ext/token` is never
       called.
-- [ ] No answer within the limit, or the relay reporting the request as
+- [x] No answer within the limit, or the relay reporting the request as
       expired: `HemApprovalTimeoutError`.
-- [ ] Wait polls every 5 seconds for up to 60 seconds by default, and at
+- [x] Wait polls every 5 seconds for up to 60 seconds by default, and at
       least once.
-- [ ] A transport error during one poll does not end the wait; an
+- [x] A transport error during one poll does not end the wait; an
       `AbortSignal` cancels the wait.
-- [ ] A unit test completes an approval with an in-memory relay and makes no
+- [x] A unit test completes an approval with an in-memory relay and makes no
       request to `api.encedo.com`.
-- [ ] With the relay set to none the engine raises `HemUnsupportedError`,
+- [x] With the relay set to none the engine raises `HemUnsupportedError`,
       while `ext/request` and `ext/token` still work.
-- [ ] A submit rejected with 401 and drift evidence leads to one check-in, a
+- [x] A submit rejected with 401 and drift evidence leads to one check-in, a
       new `ext/request` and a new submit; at most once per approval attempt.
-- [ ] A submit rejected with 401 without drift evidence is reported as an
+- [x] A submit rejected with 401 without drift evidence is reported as an
       error with zero check-in requests.
-- [ ] The suite passes in Node 24 and in the browser run.
-- [ ] `implements:` and `verifies:` tags exist for the REQs above.
-- [ ] The non-`(M1B)` acceptance boxes this step closes are ticked in the REQ
+- [x] The suite passes in Node 24 and in the browser run.
+- [x] `implements:` and `verifies:` tags exist for the REQs above.
+- [x] The non-`(M1B)` acceptance boxes this step closes are ticked in the REQ
       files (revision bumped).

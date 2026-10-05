@@ -3,7 +3,7 @@ id: REQ-AUTH-016
 title: Replaceable approval relay
 status: approved
 priority: must
-revision: 2
+revision: 3
 source: start_point M1.2; user decision 2026-10-02
 depends_on: []
 supersedes: null
@@ -28,7 +28,7 @@ M1.
       as `epk`; submit an authorization request; check for the outcome
       (pending, approved with the reply, rejected, or expired).
 - [x] The client accepts any implementation of it as an option.
-- [ ] A unit test completes an approval with an in-memory relay and makes no
+- [x] A unit test completes an approval with an in-memory relay and makes no
       request to `api.encedo.com`.
 - [ ] With the relay set to none, the approval engine and mobile login mode
       raise `HemUnsupportedError`, while the two device calls (REQ-AUTH-014,
