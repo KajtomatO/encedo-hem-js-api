@@ -1,9 +1,9 @@
 ---
 id: REQ-AUTH-018
 title: Approval attempts end as approved, rejected or timed out
-status: approved
+status: verified
 priority: must
-revision: 2
+revision: 3
 source: start_point §3; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: ["REQ-AUTH-014", "REQ-AUTH-015", "REQ-AUTH-016"]
 supersedes: null

@@ -1,9 +1,9 @@
 ---
 id: REQ-AUTH-020
 title: Recovery when the broker rejects a request for clock drift
-status: approved
+status: verified
 priority: should
-revision: 2
+revision: 3
 source: https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: ["REQ-AUTH-017", "REQ-SYS-007"]
 supersedes: null
