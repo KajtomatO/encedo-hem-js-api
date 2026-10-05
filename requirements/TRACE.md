@@ -2,9 +2,9 @@
 
 # Traceability matrix
 
-Generated: 2026-10-05 (STEP-M1A-010 done; REQ-BUILD-001 and REQ-BUILD-002 verified)
+Generated: 2026-10-05 (STEP-M1A-020 done)
 
-Scan inputs: 117 REQ files (`requirements/`), 28 step files (`workplan/{todo,doing,done}/`: 27 in `todo/`, 0 in `doing/`, 1 in `done/`). Code tags (`implements: REQ-`) scanned across `src/`; test tags (`verifies:`/`supports: REQ-`) scanned across `tests/`. Build/CI, test-infrastructure and README requirements are realised outside `src/` per REQUIREMENTS-MANAGEMENT.md §4.2, so `implements:` tags are also scanned in `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `.github/workflows`, `README.md`. Locations present: `src/`, `tests/`, `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `README.md`. Unit suite: passed (`npm test`) at generation.
+Scan inputs: 117 REQ files (`requirements/`), 28 step files (`workplan/{todo,doing,done}/`: 26 in `todo/`, 0 in `doing/`, 2 in `done/`). Code tags (`implements: REQ-`) scanned across `src/`; test tags (`verifies:`/`supports: REQ-`) scanned across `tests/`. Build/CI, test-infrastructure and README requirements are realised outside `src/` per REQUIREMENTS-MANAGEMENT.md §4.2, so `implements:` tags are also scanned in `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `.github/workflows`, `README.md`. Locations present: `src/`, `tests/`, `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `README.md`. Unit suite: passed (`npm test`) at generation.
 
 Steps column: step ID and its folder. A REQ listed in several steps becomes `implemented` only when all of them are in `done/` (§3.2). Tests column: `verifies:` locations; `supports …` entries are test support and never count as verification.
 
@@ -50,10 +50,10 @@ Steps column: step ID and its folder. A REQ listed in several steps becomes `imp
 | REQ-AUTH-024 | Mobile-app pairing step 2 | approved | must | §5.3, §6 | STEP-M3A-000 (todo) | — | — |
 | REQ-AUTH-025 | Proof that the device holds its identity key | approved | must | §5.3, §6 | STEP-M3A-000 (todo) | — | — |
 | REQ-AUTH-026 | Pairing through a replaceable relay | approved | must | §5.3, §6 | STEP-M3A-000 (todo) | — | — |
-| REQ-BUILD-001 | TypeScript source published as ESM with type declarations | verified | must | §1, §9 | STEP-M1A-010 (done) | package.json:32, tsconfig.json:3, tsconfig.base.json:2, tsconfig.build.json:3 | tests/unit/package.node.test.ts:57, tests/unit/package.node.test.ts:72, tests/unit/package.node.test.ts:114, tests/unit/package.node.test.ts:125 |
-| REQ-BUILD-002 | No runtime dependencies | verified | must | §1 | STEP-M1A-010 (done) | package.json:32 | tests/unit/package.node.test.ts:38, tests/unit/package.node.test.ts:47, tests/unit/package.node.test.ts:87 |
+| REQ-BUILD-001 | TypeScript source published as ESM with type declarations | verified | must | §1, §9 | STEP-M1A-010 (done) | package.json:37, tsconfig.json:3, tsconfig.base.json:2, tsconfig.build.json:3 | tests/unit/package.node.test.ts:57, tests/unit/package.node.test.ts:72, tests/unit/package.node.test.ts:114, tests/unit/package.node.test.ts:125 |
+| REQ-BUILD-002 | No runtime dependencies | verified | must | §1 | STEP-M1A-010 (done) | package.json:37 | tests/unit/package.node.test.ts:38, tests/unit/package.node.test.ts:47, tests/unit/package.node.test.ts:87 |
 | REQ-BUILD-003 | Only APIs present in both Node.js and browsers | approved | must | §1, §3 | STEP-M1A-030 (todo) | — | — |
-| REQ-BUILD-004 | Node.js 24 as the minimum version | approved | must | §1 | STEP-M1A-010 (done), STEP-M1A-030 (todo), STEP-M1A-220 (todo) | package.json:32 | tests/unit/package.node.test.ts:65 |
+| REQ-BUILD-004 | Node.js 24 as the minimum version | approved | must | §1 | STEP-M1A-010 (done), STEP-M1A-030 (todo), STEP-M1A-220 (todo) | package.json:37 | tests/unit/package.node.test.ts:65 |
 | REQ-BUILD-005 | Continuous integration for build and unit tests | approved | must | §8, §9 | STEP-M1A-030 (todo) | — | — |
 | REQ-BUILD-006 | A versioned release at the end of each milestone | approved | must | §4, §10 | STEP-M1B-000 (todo) | — | — |
 | REQ-KEY-001 | Generate a key on the device | approved | must | §6 | STEP-M1A-160 (todo) | — | — |
@@ -123,20 +123,20 @@ Steps column: step ID and its folder. A REQ listed in several steps becomes `imp
 | REQ-SYS-029 | Device reboot | approved | must | §6 | STEP-M3A-000 (todo) | — | — |
 | REQ-SYS-030 | Hide a storage slot | approved | must | §6 | STEP-M3A-000 (todo) | — | — |
 | REQ-SYS-031 | Expose a storage slot | approved | must | §6 | STEP-M3A-000 (todo) | — | — |
-| REQ-TEST-001 | Unit tests run without a device | approved | must | §8, §9 | STEP-M1A-020 (todo), STEP-M1A-230 (todo) | — | — |
-| REQ-TEST-002 | Unit tests pass in Node.js and in a browser | approved | must | §8 | STEP-M1A-020 (todo), STEP-M1A-030 (todo), STEP-M1A-060 (todo) | — | — |
+| REQ-TEST-001 | Unit tests run without a device | approved | must | §8, §9 | STEP-M1A-020 (done), STEP-M1A-230 (todo) | vitest.config.ts:3 | tests/unit/fake-fetch.test.ts:5, tests/unit/fake-fetch.test.ts:28, tests/unit/fake-fetch.test.ts:38, tests/unit/fake-fetch.test.ts:52, tests/unit/fake-fetch.test.ts:62, tests/unit/fake-fetch.test.ts:81, tests/unit/fake-fetch.test.ts:93, tests/unit/fake-fetch.test.ts:106, tests/unit/fake-fetch.test.ts:116, tests/unit/network-guard.node.test.ts:13, tests/unit/network-guard.test.ts:5, supports tests/support/fake-fetch.ts:3 |
+| REQ-TEST-002 | Unit tests pass in Node.js and in a browser | approved | must | §8 | STEP-M1A-020 (done), STEP-M1A-030 (todo), STEP-M1A-060 (todo) | vitest.config.ts:2 | — |
 | REQ-TEST-003 | Device tests run only when explicitly configured | approved | must | §8, §1 | STEP-M1B-000 (todo) | — | — |
 | REQ-TEST-004 | Disruptive tests never run automatically | approved | must | §8, §1 | STEP-M1B-000 (todo) | — | — |
 
 ## Coverage report
 
-- Totals: 117 REQs (115 approved, 2 verified), 28 steps (27 todo, 0 doing, 1 done; 0 cancelled).
+- Totals: 117 REQs (115 approved, 2 verified), 28 steps (26 todo, 0 doing, 2 done; 0 cancelled).
 - By area: API 14, AUTH 26, BUILD 6, KEY 9, NET 12, OPS 15, SYS 31, TEST 4.
 - Steps by milestone: M1A 23, M1B 1, M2A 1, M2B 1, M3A 1, M3B 1.
 - REQs with no step: none.
 - REQs listed in more than one step: 21 (criteria that close in a later step; see the Notes of the steps).
-- Approved REQs with no code tag (unimplemented): 113.
-- Approved REQs with code tags whose steps are not all in `done/` (in progress): REQ-API-010, REQ-BUILD-004.
+- Approved REQs with no code tag (unimplemented): 111.
+- Approved REQs with code tags whose steps are not all in `done/` (in progress): REQ-API-010, REQ-BUILD-004, REQ-TEST-001, REQ-TEST-002.
 - Implemented REQs with no passing tagged test (unverified): none.
 - Orphan tags: none.
 - Steps in `done/` with empty evidence: none.
