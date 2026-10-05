@@ -3,7 +3,7 @@ id: REQ-AUTH-005
 title: Scope chosen and token attached by the library
 status: approved
 priority: must
-revision: 3
+revision: 4
 source: start_point G9; start_point G10; ref/api/hem-api-1.2.2.yaml; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: ["REQ-AUTH-004"]
 supersedes: null
@@ -24,7 +24,7 @@ with 403 [C-SDK]. Getting this right is mechanical and belongs in the
 library. Introduced in M1.
 
 **Acceptance criteria:**
-- [ ] A table-driven unit test over every authenticated operation shows the
+- [x] A table-driven unit test over every authenticated operation shows the
       scope requested at login equals the one listed for it in
       ARCHITECTURE.md §6.
 - [x] Crypto operations and key get request `keymgmt:use:<kid>` with the key

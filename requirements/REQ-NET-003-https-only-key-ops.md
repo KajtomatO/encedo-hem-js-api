@@ -3,7 +3,7 @@ id: REQ-NET-003
 title: Key-management and crypto calls refused over plain HTTP
 status: approved
 priority: must
-revision: 2
+revision: 3
 source: start_point G8; start_point G16; ref/api/hem-api-1.2.2.yaml
 depends_on: ["REQ-API-002"]
 supersedes: null
@@ -24,7 +24,7 @@ client side keeps the data off the wire and gives one consistent error.
 Introduced in M1.
 
 **Acceptance criteria:**
-- [ ] Every key-management and crypto operation called on an `http:` client
+- [x] Every key-management and crypto operation called on an `http:` client
       raises `HemTlsRequiredError` with zero `fetch` calls.
 - [x] System and auth operations on an `http:` client are sent.
 - [x] A 418 from the device also raises `HemTlsRequiredError`.

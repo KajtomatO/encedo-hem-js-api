@@ -3,7 +3,7 @@ id: REQ-API-004
 title: Binary values exchanged as byte arrays
 status: approved
 priority: must
-revision: 2
+revision: 3
 source: start_point G18; ref/api/hem-api-1.2.2.yaml
 depends_on: []
 supersedes: null
@@ -29,7 +29,7 @@ share. Introduced in M1.
 - [x] Binary values are sent to the device as standard base64 with padding.
 - [x] Binary values received from the device are decoded whether they use
       the standard or the URL-safe alphabet, with or without padding.
-- [ ] No public operation takes or returns base64 text for a binary value.
+- [x] No public operation takes or returns base64 text for a binary value.
       Key ids (hex strings) and opaque tokens (JWT strings) are text by
       nature and are the stated exceptions.
 - [x] The codec uses no `Buffer` or other Node-only API (it passes in the

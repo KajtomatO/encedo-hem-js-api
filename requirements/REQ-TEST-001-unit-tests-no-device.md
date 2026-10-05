@@ -3,7 +3,7 @@ id: REQ-TEST-001
 title: Unit tests run without a device
 status: approved
 priority: must
-revision: 2
+revision: 3
 source: start_point G21
 depends_on: []
 supersedes: null
@@ -25,6 +25,6 @@ to run anywhere, including CI, where no device exists. Introduced in M1.
       test, so an unsubstituted request cannot go unnoticed.
 - [x] A shared fake-`fetch` module lives in `tests/support/` and is tagged
       `supports:`.
-- [ ] Every binding has at least one unit test asserting the request's
+- [x] Every binding has at least one unit test asserting the request's
       method, path, headers and body, and the mapping of its response.
 - [ ] The suite passes on a machine with networking disabled.

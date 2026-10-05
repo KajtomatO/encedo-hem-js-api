@@ -3,7 +3,7 @@ id: REQ-AUTH-012
 title: No token on operations that need none
 status: approved
 priority: must
-revision: 1
+revision: 2
 source: ref/api/hem-api-1.2.2.yaml; ARCHITECTURE.md §5
 depends_on: []
 supersedes: null
@@ -23,6 +23,6 @@ therefore make a healthy device look broken — right after a reboot, which is
 when health checks matter most. Introduced in M1.
 
 **Acceptance criteria:**
-- [ ] With tokens cached, the calls for status, version, check-in (both
+- [x] With tokens cached, the calls for status, version, check-in (both
       steps), login (both steps), `ext/request` and `ext/token` carry no
       `Authorization` header.

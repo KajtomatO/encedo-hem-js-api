@@ -3,7 +3,7 @@ id: REQ-NET-009
 title: Only headers the device's CORS policy allows
 status: approved
 priority: must
-revision: 2
+revision: 3
 source: start_point §6 Q6; ref/api/hem-api-1.2.2.yaml
 depends_on: []
 supersedes: null
@@ -23,7 +23,7 @@ The library SHALL NOT set any request header on a device request other than
 browser request fail before it is sent. Introduced in M1.
 
 **Acceptance criteria:**
-- [ ] A unit test records the headers of every binding's request and finds
+- [x] A unit test records the headers of every binding's request and finds
       only names from the list.
 - [x] `Content-Type` is set only when there is a body, `Authorization` only
       on authenticated operations, `Content-Disposition` only on uploads.
