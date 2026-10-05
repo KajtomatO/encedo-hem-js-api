@@ -124,7 +124,7 @@ Steps column: step ID and its folder. A REQ listed in several steps becomes `imp
 | REQ-SYS-030 | Hide a storage slot | approved | must | §6 | STEP-M3A-000 (todo) | — | — |
 | REQ-SYS-031 | Expose a storage slot | approved | must | §6 | STEP-M3A-000 (todo) | — | — |
 | REQ-TEST-001 | Unit tests run without a device | approved | must | §8, §9 | STEP-M1A-020 (done), STEP-M1A-230 (todo) | vitest.config.ts:3 | tests/unit/fake-fetch.test.ts:5, tests/unit/fake-fetch.test.ts:28, tests/unit/fake-fetch.test.ts:38, tests/unit/fake-fetch.test.ts:52, tests/unit/fake-fetch.test.ts:62, tests/unit/fake-fetch.test.ts:81, tests/unit/fake-fetch.test.ts:93, tests/unit/fake-fetch.test.ts:106, tests/unit/fake-fetch.test.ts:116, tests/unit/network-guard.node.test.ts:13, tests/unit/network-guard.test.ts:5, supports tests/support/fake-fetch.ts:3 |
-| REQ-TEST-002 | Unit tests pass in Node.js and in a browser | approved | must | §8 | STEP-M1A-020 (done), STEP-M1A-030 (todo), STEP-M1A-060 (todo) | vitest.config.ts:2 | — |
+| REQ-TEST-002 | Unit tests pass in Node.js and in a browser | approved | must | §8 | STEP-M1A-020 (done), STEP-M1A-030 (todo), STEP-M1A-060 (todo) | vitest.config.ts:2 | tests/unit/test-projects.node.test.ts:11, tests/unit/test-projects.node.test.ts:25 |
 | REQ-TEST-003 | Device tests run only when explicitly configured | approved | must | §8, §1 | STEP-M1B-000 (todo) | — | — |
 | REQ-TEST-004 | Disruptive tests never run automatically | approved | must | §8, §1 | STEP-M1B-000 (todo) | — | — |
 
