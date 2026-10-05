@@ -144,10 +144,10 @@ export class Session implements TokenProvider {
     if (this.#loggedOut) {
       throw new HemUnauthenticatedError('Logged out: the credential and all tokens were discarded', { operation: 'auth.login' });
     }
-    if (!this.#source) throw new HemUnsupportedError('This client has no credentials for authenticated operations');
     const cached = this.#cache.get(scope);
     if (cached && cached.exp - this.#now() / 1000 > RENEWAL_MARGIN_SECONDS) return cached;
     this.#cache.delete(scope);
+    if (!this.#source) throw new HemUnsupportedError('This client has no credentials for authenticated operations');
     return waitFor(this.#shared(scope, options), options.signal);
   }
 
@@ -171,6 +171,18 @@ export class Session implements TokenProvider {
 
   async #acquire(scope: string, options: CallOptions): Promise<CachedToken> {
     const issued = await (this.#source as TokenSource).acquire(scope, options);
+    return this.#remember(scope, issued);
+  }
+
+  /**
+   * Cache a token obtained outside the session's own acquisition (a redeemed
+   * mobile approval) under the scope it was requested for.
+   */
+  store(scope: string, issued: IssuedToken): void {
+    this.#remember(scope, issued);
+  }
+
+  #remember(scope: string, issued: IssuedToken): CachedToken {
     const claims = decodeClaims(issued.token);
     const exp = typeof claims?.['exp'] === 'number' && Number.isFinite(claims['exp']) ? claims['exp'] : issued.requestedExp;
     const sub = typeof claims?.['sub'] === 'string' ? claims['sub'] : undefined;

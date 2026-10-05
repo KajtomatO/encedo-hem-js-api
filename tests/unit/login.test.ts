@@ -174,6 +174,7 @@ describe('credential handling', () => {
       timeoutMs: 1,
       minIntervalMs: 0,
       checkinRelay: null,
+      approvalRelay: null,
       passphrase: 'p',
       tokenLifetimeSeconds: 1,
       clockRecovery: true,

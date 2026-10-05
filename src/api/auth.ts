@@ -76,5 +76,26 @@ export async function postProof(context: BindingContext, proof: string, options?
   return r['token'];
 }
 
+export const AUTH_EXT_REQUEST: OperationSpec = {
+  name: 'auth.requestApproval',
+  group: 'auth',
+  method: 'POST',
+  path: '/api/auth/ext/request',
+  scope: null,
+  tlsOnly: false,
+  required: ['authreq', 'epk'],
+};
+
+export const AUTH_EXT_TOKEN: OperationSpec = {
+  name: 'auth.redeemApproval',
+  group: 'auth',
+  method: 'POST',
+  path: '/api/auth/ext/token',
+  scope: null,
+  tlsOnly: false,
+  required: ['token'],
+  sensitive: true,
+};
+
 /** Operations of this module. */
-export const AUTH_OPERATIONS: readonly OperationSpec[] = [AUTH_CHALLENGE, AUTH_LOGIN];
+export const AUTH_OPERATIONS: readonly OperationSpec[] = [AUTH_CHALLENGE, AUTH_LOGIN, AUTH_EXT_REQUEST, AUTH_EXT_TOKEN];

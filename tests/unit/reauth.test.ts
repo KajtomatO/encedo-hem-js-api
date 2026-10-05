@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { type OperationSpec, invoke } from '../../src/api/core.js';
 import { contextOf } from '../../src/client.js';
 import { HemAbortError, HemClient, type HemClientOptions, HemDeviceStateError, HemUnauthenticatedError } from '../../src/index.js';
-import { FakeFetch, type Reply } from '../support/fake-fetch.js';
+import { FakeFetch } from '../support/fake-fetch.js';
 import { claimsOf, issueToken, vectorChallenge } from '../support/login.js';
 import { loginVector as v } from '../support/vectors.js';
 
@@ -75,23 +75,22 @@ describe('re-authentication after a 401', () => {
 
   // verifies: REQ-NET-008
   it('keeps the pacing interval for the repeated request', async () => {
+    const fake = loginDevice().always('GET', '/api/test/a', { body: {} });
+    // Stamp each request when fetch is called, the moment the transport starts it.
     const starts: number[] = [];
-    const stamp = (reply: Reply): Reply => (request) => {
-      starts.push(performance.now());
-      return typeof reply === 'function' ? reply(request) : reply;
+    const stamped: typeof fake.fetch = (input, init) => {
+      starts.push(Date.now());
+      return fake.fetch(input, init);
     };
-    const fake = new FakeFetch()
-      .always('GET', '/api/auth/token', stamp({ body: vectorChallenge }))
-      .always('POST', '/api/auth/token', stamp(issueToken()))
-      .always('GET', '/api/test/a', stamp({ body: {} }));
-    const client = newClient(fake, { minIntervalMs: 40 });
+    const client = new HemClient({ url: 'https://my.ence.do', fetch: stamped, passphrase: v.passphrase, now: () => v.iat * 1000, checkinRelay: null, minIntervalMs: 40 });
     await call(client);
-    fake.on('GET', '/api/test/a', stamp({ status: 401 }));
+    fake.on('GET', '/api/test/a', { status: 401 });
     starts.length = 0;
     await call(client);
-    expect(starts).toHaveLength(4); // call, challenge, proof, repeated call
+    expect(sequence(fake).slice(-4)).toEqual(['GET /api/test/a', 'GET /api/auth/token', 'POST /api/auth/token', 'GET /api/test/a']);
+    expect(starts).toHaveLength(4);
     for (let i = 1; i < starts.length; i += 1) {
-      expect((starts[i] as number) - (starts[i - 1] as number)).toBeGreaterThanOrEqual(39);
+      expect((starts[i] as number) - (starts[i - 1] as number)).toBeGreaterThanOrEqual(40);
     }
   }, 60_000);
 });

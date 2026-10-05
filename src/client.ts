@@ -12,6 +12,7 @@ import { HemValidationError } from './errors.js';
 import { CryptoApi } from './api/crypto.js';
 import { KeysApi } from './api/keymgmt.js';
 import { SystemApi } from './api/system.js';
+import { type ApprovalRelay, EncedoApprovalRelay } from './relay/approval.js';
 import { type CheckinRelay, EncedoCheckinRelay } from './relay/checkin.js';
 import { type FetchFunction, Transport } from './transport/transport.js';
 
@@ -41,6 +42,13 @@ export interface HemClientOptions {
    * elsewhere, or `null` to disable check-in.
    */
   checkinRelay?: CheckinRelay | null | undefined;
+  /**
+   * Relay for mobile approval. Default: an {@link EncedoApprovalRelay} for
+   * the Encedo notification broker (`https://api.encedo.com/notify`) with the
+   * global `fetch`. Pass your own implementation, or `null` to disable
+   * mobile approval (the two device calls still work).
+   */
+  approvalRelay?: ApprovalRelay | null | undefined;
   /**
    * Passphrase for unattended login. It is used once, with the first login
    * challenge, to derive the login key (PBKDF2-HMAC-SHA256, 600 000
@@ -116,7 +124,8 @@ export class HemClient {
     const source = options.passphrase === undefined ? null : new PassphraseLogin(publicContext, options.passphrase, lifetime, now, recovery);
     const session = new Session(source, now);
     const context: BindingContext = { transport, tokens: session };
-    this.auth = new AuthApi(session);
+    const approvalRelay = options.approvalRelay === undefined ? new EncedoApprovalRelay() : options.approvalRelay;
+    this.auth = new AuthApi(session, publicContext, recovery, approvalRelay);
     this.system = new SystemApi(context, checkinRelay);
     this.keys = new KeysApi(context);
     this.crypto = new CryptoApi(context);

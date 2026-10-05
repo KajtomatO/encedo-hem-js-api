@@ -39,7 +39,9 @@ export {
 export type { HemErrorCode, HemErrorOptions } from './errors.js';
 
 export { HemClient } from './client.js';
-export type { AuthApi } from './api/auth-api.js';
+export type { ApprovalRequest, ApprovalRequestParams, AuthApi, RedeemApprovalParams } from './api/auth-api.js';
+export { EncedoApprovalRelay, ENCEDO_NOTIFY_URL } from './relay/approval.js';
+export type { ApprovalCheck, ApprovalRelay, ApprovalSubmission, EncedoApprovalRelayOptions } from './relay/approval.js';
 export type { Role } from './auth/session.js';
 export type { HemClientOptions } from './client.js';
 export type { CheckinResult, HealthReport, SystemApi, SystemStatus, SystemVersion } from './api/system.js';

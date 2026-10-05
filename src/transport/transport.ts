@@ -270,6 +270,8 @@ export class Transport {
 
     try {
       const fetchFunction = this.#fetch;
+      // The request starts now: pacing counts from here.
+      this.#lastStart = Date.now();
       const response = await untilAborted(fetchFunction(this.urlFor(request.path), { ...init, signal: controller.signal }), controller.signal);
       if (isRedirect(response)) {
         return { response, body: new Uint8Array() };
@@ -328,7 +330,6 @@ export class Transport {
       const wait = this.#lastStart + this.#minIntervalMs - Date.now();
       if (wait > 0) await this.#sleep(wait, request);
     }
-    this.#lastStart = Date.now();
   }
 
   #sleep(ms: number, { signal, operation }: TransportRequest): Promise<void> {
