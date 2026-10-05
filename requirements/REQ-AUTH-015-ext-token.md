@@ -1,9 +1,9 @@
 ---
 id: REQ-AUTH-015
 title: Mobile approval step 2 — redeem the reply
-status: approved
+status: verified
 priority: must
-revision: 2
+revision: 3
 source: start_point M1.2; ref/api/hem-api-1.2.2.yaml; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: ["REQ-AUTH-004", "REQ-API-002"]
 supersedes: null
