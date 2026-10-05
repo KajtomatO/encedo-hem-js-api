@@ -28,6 +28,7 @@ export {
   HemOriginRejectedError,
   HemPayloadTooLargeError,
   HemProtocolError,
+  HemRelayError,
   HemTimeoutError,
   HemTlsRequiredError,
   HemUnauthenticatedError,

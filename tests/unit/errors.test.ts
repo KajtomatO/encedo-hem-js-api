@@ -16,6 +16,7 @@ const {
   HemOriginRejectedError,
   HemPayloadTooLargeError,
   HemProtocolError,
+  HemRelayError,
   HemTimeoutError,
   HemTlsRequiredError,
   HemUnauthenticatedError,
@@ -64,6 +65,7 @@ describe('error classes', () => {
       [HemUnsupportedError, 'UNSUPPORTED'],
       [HemApprovalRejectedError, 'APPROVAL_REJECTED'],
       [HemApprovalTimeoutError, 'APPROVAL_TIMEOUT'],
+      [HemRelayError, 'RELAY'],
     ] as const;
     const codes = new Set<string>();
     for (const [ErrorClass, code] of classes) {

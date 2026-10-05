@@ -220,6 +220,7 @@ during M1A and then frozen by the additive-API rule (D13).
   | `HemProtocolError` | a success response is missing a required field or is not parseable |
   | `HemUnsupportedError` | the operation does not exist on this hardware, or the runtime lacks a required capability |
   | `HemApprovalRejectedError`, `HemApprovalTimeoutError` | mobile approval was denied, or not answered in time |
+  | `HemRelayError` | a cloud relay call failed: `api.encedo.com` (or the configured relay URL) answered with an unexpected status or reply, or could not be reached (user decision 2026-10-05) |
 
 - **Verify operations** return `true` or `false`; an invalid signature or
   MAC is a result, not an error [BRIEF M2.2].

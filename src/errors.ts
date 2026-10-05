@@ -26,7 +26,8 @@ export type HemErrorCode =
   | 'PROTOCOL'
   | 'UNSUPPORTED'
   | 'APPROVAL_REJECTED'
-  | 'APPROVAL_TIMEOUT';
+  | 'APPROVAL_TIMEOUT'
+  | 'RELAY';
 
 /** Optional details attached to an error. */
 export interface HemErrorOptions {
@@ -227,6 +228,21 @@ export class HemApprovalTimeoutError extends HemError {
   override name = 'HemApprovalTimeoutError';
   constructor(message: string, options?: HemErrorOptions) {
     super('APPROVAL_TIMEOUT', message, options);
+  }
+}
+
+/**
+ * A cloud relay call failed: the relay endpoint (by default on
+ * `api.encedo.com`) answered with an unexpected status or reply, or could
+ * not be reached (`cause` holds the `fetch` error). `status` and `body`
+ * describe the relay's response, not the device's.
+ *
+ * @since M1
+ */
+export class HemRelayError extends HemError {
+  override name = 'HemRelayError';
+  constructor(message: string, options?: HemErrorOptions) {
+    super('RELAY', message, options);
   }
 }
 
