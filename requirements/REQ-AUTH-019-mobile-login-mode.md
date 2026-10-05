@@ -1,9 +1,9 @@
 ---
 id: REQ-AUTH-019
 title: Mobile approval as the client's login mode
-status: approved
+status: verified
 priority: must
-revision: 2
+revision: 3
 source: start_point §3; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: ["REQ-AUTH-018", "REQ-AUTH-008"]
 supersedes: null

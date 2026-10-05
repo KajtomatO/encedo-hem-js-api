@@ -2,15 +2,15 @@
 
 # Traceability matrix
 
-Generated: 2026-10-05 (STEP-M1A-200 done)
+Generated: 2026-10-05 (STEP-M1A-210 done)
 
-Scan inputs: 117 REQ files (`requirements/`), 28 step files (`workplan/{todo,doing,done}/`: 8 in `todo/`, 0 in `doing/`, 20 in `done/`). Code tags (`implements: REQ-`) scanned across `src/`; test tags (`verifies:`/`supports: REQ-`) scanned across `tests/`. Build/CI, test-infrastructure and README requirements are realised outside `src/` per REQUIREMENTS-MANAGEMENT.md §4.2, so `implements:` tags are also scanned in `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `.github/workflows`, `README.md`. Locations present: `src/`, `tests/`, `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `.github/workflows`, `README.md`. Unit suite: passed (`npm test`) at generation.
+Scan inputs: 117 REQ files (`requirements/`), 28 step files (`workplan/{todo,doing,done}/`: 7 in `todo/`, 0 in `doing/`, 21 in `done/`). Code tags (`implements: REQ-`) scanned across `src/`; test tags (`verifies:`/`supports: REQ-`) scanned across `tests/`. Build/CI, test-infrastructure and README requirements are realised outside `src/` per REQUIREMENTS-MANAGEMENT.md §4.2, so `implements:` tags are also scanned in `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `.github/workflows`, `README.md`. Locations present: `src/`, `tests/`, `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `.github/workflows`, `README.md`. Unit suite: passed (`npm test`) at generation.
 
 Steps column: step ID and its folder. A REQ listed in several steps becomes `implemented` only when all of them are in `done/` (§3.2). Tests column: `verifies:` locations; `supports …` entries are test support and never count as verification.
 
 | REQ | Title | Status | Priority | Architecture | Steps | Code | Tests |
 |---|---|---|---|---|---|---|---|
-| REQ-API-001 | Client object created from options, with no global state | verified | must | §4, §3 | STEP-M1A-100 (done), STEP-M1A-130 (done) | src/client.ts:95 | tests/unit/client.test.ts:9, tests/unit/client.test.ts:17, tests/unit/client.test.ts:22, tests/unit/client.test.ts:27, tests/unit/client.test.ts:46, tests/unit/session.test.ts:217 |
+| REQ-API-001 | Client object created from options, with no global state | verified | must | §4, §3 | STEP-M1A-100 (done), STEP-M1A-130 (done) | src/client.ts:121 | tests/unit/client.test.ts:9, tests/unit/client.test.ts:17, tests/unit/client.test.ts:22, tests/unit/client.test.ts:27, tests/unit/client.test.ts:46, tests/unit/session.test.ts:217 |
 | REQ-API-002 | Typed errors that identify the cause of a failure | verified | must | §4 | STEP-M1A-040 (done) | src/errors.ts:51, src/errors.ts:282 | tests/unit/errors.test.ts:48, tests/unit/errors.test.ts:86, tests/unit/errors.test.ts:101, tests/unit/errors.test.ts:111, tests/unit/errors.test.ts:116 |
 | REQ-API-003 | Error mapping independent of the response body | verified | must | §4, §2 | STEP-M1A-040 (done) | src/errors.ts:282 | tests/unit/errors.test.ts:125, tests/unit/errors.test.ts:133, tests/unit/errors.test.ts:140, tests/unit/errors.test.ts:148, tests/unit/errors.test.ts:156 |
 | REQ-API-004 | Binary values exchanged as byte arrays | approved | must | §4 | STEP-M1A-050 (done), STEP-M1A-230 (todo) | src/codec/base64.ts:38, src/codec/base64.ts:54 | tests/unit/codec.test.ts:23, tests/unit/codec.test.ts:29, tests/unit/codec.test.ts:41, tests/unit/codec.test.ts:50, tests/unit/codec.test.ts:59, tests/unit/codec.test.ts:75, tests/unit/keys-create-get.test.ts:34, tests/unit/system.test.ts:112 |
@@ -18,7 +18,7 @@ Steps column: step ID and its folder. A REQ listed in several steps becomes `imp
 | REQ-API-006 | Tolerant parsing of success responses | verified | must | §6 | STEP-M1A-100 (done) | src/api/core.ts:74 | tests/unit/binding-core.test.ts:24, tests/unit/binding-core.test.ts:30, tests/unit/binding-core.test.ts:43, tests/unit/binding-core.test.ts:49, tests/unit/binding-core.test.ts:55 |
 | REQ-API-007 | Every public operation documents its scope and milestone | approved | must | §4 | STEP-M1A-220 (todo) | — | — |
 | REQ-API-008 | Public API only grows between releases | approved | must | §4, §1 | STEP-M1A-230 (todo) | — | — |
-| REQ-API-009 | Secrets never logged, stored or put into error messages | verified | must | §1, §5.2 | STEP-M1A-030 (done), STEP-M1A-120 (done), STEP-M1A-130 (done) | src/api/core.ts:158, src/auth/session.ts:137 | tests/unit/login.test.ts:200, tests/unit/session.test.ts:254, tests/unit/source-check.test.ts:33, tests/unit/source-check.test.ts:50, tests/unit/source-check.test.ts:70, tests/unit/source-check.test.ts:76, tests/unit/source-tree.node.test.ts:27, supports tests/support/source-check.ts:3 |
+| REQ-API-009 | Secrets never logged, stored or put into error messages | verified | must | §1, §5.2 | STEP-M1A-030 (done), STEP-M1A-120 (done), STEP-M1A-130 (done) | src/api/core.ts:158, src/auth/session.ts:137 | tests/unit/login.test.ts:201, tests/unit/session.test.ts:254, tests/unit/source-check.test.ts:33, tests/unit/source-check.test.ts:50, tests/unit/source-check.test.ts:70, tests/unit/source-check.test.ts:76, tests/unit/source-tree.node.test.ts:27, supports tests/support/source-check.ts:3 |
 | REQ-API-010 | Targeted API version exported | approved | must | §1, §4 | STEP-M1A-010 (done), STEP-M1A-220 (todo) | src/index.ts:15 | tests/unit/index.test.ts:5, tests/unit/package.node.test.ts:114 |
 | REQ-API-011 | Clear error for operations the hardware does not provide | approved | must | §6, §2 | STEP-M2A-000 (todo) | — | — |
 | REQ-API-012 | Destructive actions reachable only through dedicated calls | approved | must | §4 | STEP-M3A-000 (todo) | — | — |
@@ -39,10 +39,10 @@ Steps column: step ID and its folder. A REQ listed in several steps becomes `imp
 | REQ-AUTH-013 | Concurrent calls share one login | verified | should | §5.2 | STEP-M1A-140 (done) | src/auth/session.ts:158 | tests/unit/reauth.test.ts:99, tests/unit/reauth.test.ts:109, tests/unit/reauth.test.ts:126 |
 | REQ-AUTH-014 | Mobile approval step 1 — authorization request | verified | must | §5.3 | STEP-M1A-190 (done) | src/api/auth-api.ts:119 | tests/unit/approval-calls.test.ts:27, tests/unit/approval-calls.test.ts:37, tests/unit/approval-calls.test.ts:44, tests/unit/approval-calls.test.ts:63, tests/unit/approval-calls.test.ts:70 |
 | REQ-AUTH-015 | Mobile approval step 2 — redeem the reply | verified | must | §5.3 | STEP-M1A-190 (done) | src/api/auth-api.ts:155, src/api/auth.ts:101 | tests/unit/approval-calls.test.ts:97, tests/unit/approval-calls.test.ts:106, tests/unit/approval-calls.test.ts:127 |
-| REQ-AUTH-016 | Replaceable approval relay | approved | must | §5.3, §3 | STEP-M1A-190 (done), STEP-M1A-200 (done), STEP-M1A-210 (todo) | src/auth/approval.ts:128, src/relay/approval.ts:33 | tests/unit/approval-calls.test.ts:144, tests/unit/approval-engine.test.ts:88, tests/unit/approval-engine.test.ts:192 |
+| REQ-AUTH-016 | Replaceable approval relay | verified | must | §5.3, §3 | STEP-M1A-190 (done), STEP-M1A-200 (done), STEP-M1A-210 (done) | src/auth/approval.ts:128, src/relay/approval.ts:33 | tests/unit/approval-calls.test.ts:144, tests/unit/approval-engine.test.ts:88, tests/unit/approval-engine.test.ts:192, tests/unit/mobile-login.test.ts:122 |
 | REQ-AUTH-017 | Default approval relay for the Encedo broker | verified | must | §5.3, §11 | STEP-M1A-190 (done) | src/relay/approval.ts:74 | tests/unit/approval-relay.test.ts:9, tests/unit/approval-relay.test.ts:17, tests/unit/approval-relay.test.ts:26, tests/unit/approval-relay.test.ts:44, tests/unit/approval-relay.test.ts:63, tests/unit/approval-relay.test.ts:70 |
 | REQ-AUTH-018 | Approval attempts end as approved, rejected or timed out | verified | must | §5.3 | STEP-M1A-200 (done) | src/api/auth-api.ts:176, src/api/auth-api.ts:205, src/auth/approval.ts:128 | tests/unit/approval-engine.test.ts:74, tests/unit/approval-engine.test.ts:88, tests/unit/approval-engine.test.ts:101, tests/unit/approval-engine.test.ts:109, tests/unit/approval-engine.test.ts:128, tests/unit/approval-engine.test.ts:147, tests/unit/approval-engine.test.ts:156, tests/unit/approval-engine.test.ts:176 |
-| REQ-AUTH-019 | Mobile approval as the client's login mode | approved | must | §5.3 | STEP-M1A-210 (todo) | — | — |
+| REQ-AUTH-019 | Mobile approval as the client's login mode | verified | must | §5.3 | STEP-M1A-210 (done) | src/client.ts:157 | tests/unit/mobile-login.test.ts:59, tests/unit/mobile-login.test.ts:73, tests/unit/mobile-login.test.ts:88, tests/unit/mobile-login.test.ts:103, tests/unit/mobile-login.test.ts:122 |
 | REQ-AUTH-020 | Recovery when the broker rejects a request for clock drift | verified | should | §5.3 | STEP-M1A-200 (done) | src/auth/approval.ts:153 | tests/unit/approval-engine.test.ts:220, tests/unit/approval-engine.test.ts:235, tests/unit/approval-engine.test.ts:246 |
 | REQ-AUTH-021 | Provisioning challenge | approved | must | §6, §5 | STEP-M3A-000 (todo) | — | — |
 | REQ-AUTH-022 | Device provisioning | approved | must | §6, §5, §11 | STEP-M3A-000 (todo) | — | — |
@@ -130,16 +130,16 @@ Steps column: step ID and its folder. A REQ listed in several steps becomes `imp
 
 ## Coverage report
 
-- Totals: 117 REQs (67 approved, 50 verified), 28 steps (8 todo, 0 doing, 20 done; 0 cancelled).
+- Totals: 117 REQs (65 approved, 52 verified), 28 steps (7 todo, 0 doing, 21 done; 0 cancelled).
 - By area: API 14, AUTH 26, BUILD 6, KEY 9, NET 12, OPS 15, SYS 31, TEST 4.
 - Steps by milestone: M1A 23, M1B 1, M2A 1, M2B 1, M3A 1, M3B 1.
 - REQs with no step: none.
 - REQs listed in more than one step: 21 (criteria that close in a later step; see the Notes of the steps).
-- Approved REQs with no code tag (unimplemented): 59.
-- Approved REQs with code tags whose steps are not all in `done/` (in progress): REQ-API-004, REQ-API-010, REQ-AUTH-005, REQ-AUTH-016, REQ-BUILD-004, REQ-NET-003, REQ-NET-009, REQ-TEST-001.
+- Approved REQs with no code tag (unimplemented): 58.
+- Approved REQs with code tags whose steps are not all in `done/` (in progress): REQ-API-004, REQ-API-010, REQ-AUTH-005, REQ-BUILD-004, REQ-NET-003, REQ-NET-009, REQ-TEST-001.
 - Implemented REQs with no passing tagged test (unverified): none.
 - Orphan tags: none.
 - Steps in `done/` with empty evidence: none.
 - Broken architecture anchors: none.
 - REQs in `needs-reverify`: none.
-- Status transitions applied in this run: REQ-AUTH-018: approved → verified, REQ-AUTH-020: approved → verified.
+- Status transitions applied in this run: REQ-AUTH-016: approved → verified, REQ-AUTH-019: approved → verified.

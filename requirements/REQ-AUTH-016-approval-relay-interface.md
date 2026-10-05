@@ -1,9 +1,9 @@
 ---
 id: REQ-AUTH-016
 title: Replaceable approval relay
-status: approved
+status: verified
 priority: must
-revision: 4
+revision: 5
 source: start_point M1.2; user decision 2026-10-02
 depends_on: []
 supersedes: null
