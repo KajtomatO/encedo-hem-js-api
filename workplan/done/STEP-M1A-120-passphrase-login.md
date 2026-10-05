@@ -7,9 +7,9 @@ traces:
   architecture: ["ARCHITECTURE.md#51-passphrase-login", "ARCHITECTURE.md#52-session-behaviour"]
 depends_on: ["STEP-M1A-060", "STEP-M1A-100"]
 evidence:
-  commits: []
-  tests: []
-  notes: null
+  commits: ["6cbf58e"]
+  tests: ["verifies: REQ-AUTH-001 (tests/unit/login.test.ts)", "verifies: REQ-AUTH-006 (tests/unit/login.test.ts)", "verifies: REQ-AUTH-011 (tests/unit/login.test.ts)", "verifies: REQ-API-009 (tests/unit/login.test.ts)", "verifies: REQ-AUTH-003 (tests/unit/login.test.ts)", "supports: REQ-AUTH-001 (tests/support/login.ts)"]
+  notes: "npm run check: 35 files, 598 tests passed in Node v24.21.0 and headless Chromium. The login is replayed against the REQ-AUTH-002 vector through the real flow (pinned clock, lifetime 3600) and posts the vector proof byte for byte. Operations flagged sensitive (auth.login) raise errors without response body or cause (a JSON parse error quotes its input). The passphrase reference is dropped once the key is derived; a later challenge with another eid fails as a changed device identity. Client options added: passphrase, tokenLifetimeSeconds, now (clock, for tests). Token caching is not part of this step: the client logs in for every authenticated call until STEP-M1A-130."
 reopened: []
 cancelled: null
 ---
@@ -46,30 +46,30 @@ proof, submission — and treats the credential as REQ-AUTH-011 requires.
   REQ-API-009 static check in STEP-M1A-030.
 
 **Definition of done**
-- [ ] With a substituted `fetch` replaying the REQ-AUTH-002 challenge and a
+- [x] With a substituted `fetch` replaying the REQ-AUTH-002 challenge and a
       pinned clock, the requests are one GET then one POST, neither carries
       an `Authorization` header, and the POST body is exactly the expected
       proof.
-- [ ] A challenge missing `eid`, `spk` or `jti`, an `spk` that does not
+- [x] A challenge missing `eid`, `spk` or `jti`, an `spk` that does not
       decode to 32 bytes, or a reply without `token`, raises
       `HemProtocolError`.
-- [ ] A 401 on the proof raises `HemUnauthenticatedError`; a 409 raises
+- [x] A 401 on the proof raises `HemUnauthenticatedError`; a 409 raises
       `HemDeviceStateError`.
-- [ ] By default `exp − iat` in the proof is 28 800; a configured lifetime is
+- [x] By default `exp − iat` in the proof is 28 800; a configured lifetime is
       used instead; a challenge whose `exp` is 60 seconds ahead does not
       shorten it.
-- [ ] A lifetime that is zero, negative or not an integer raises
+- [x] A lifetime that is zero, negative or not an integer raises
       `HemValidationError`.
-- [ ] The passphrase is not retained after the private key has been derived;
+- [x] The passphrase is not retained after the private key has been derived;
       the derived key is kept bound to the `eid` it was derived for.
-- [ ] A challenge carrying a different `eid` raises `HemUnauthenticatedError`
+- [x] A challenge carrying a different `eid` raises `HemUnauthenticatedError`
       stating that the device identity changed.
-- [ ] The private key is held as a non-extractable `CryptoKey` where the
+- [x] The private key is held as a non-extractable `CryptoKey` where the
       runtime allows it.
-- [ ] The public options offer no way to select another key derivation.
-- [ ] The error of a failed login — message, properties and JSON form —
+- [x] The public options offer no way to select another key derivation.
+- [x] The error of a failed login — message, properties and JSON form —
       contains neither the passphrase, the eJWT nor a token.
-- [ ] The suite passes in Node 24 and in the browser run.
-- [ ] `implements:` and `verifies:` tags exist for the REQs above.
-- [ ] The non-`(M1B)` acceptance boxes this step closes are ticked in the REQ
+- [x] The suite passes in Node 24 and in the browser run.
+- [x] `implements:` and `verifies:` tags exist for the REQs above.
+- [x] The non-`(M1B)` acceptance boxes this step closes are ticked in the REQ
       files (revision bumped).

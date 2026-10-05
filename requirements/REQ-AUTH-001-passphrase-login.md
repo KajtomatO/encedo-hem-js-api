@@ -3,7 +3,7 @@ id: REQ-AUTH-001
 title: Unattended passphrase login
 status: approved
 priority: must
-revision: 1
+revision: 2
 source: start_point M1.1; start_point G9; start_point §6 Q1; https://github.com/KajtomatO/encedo-hem-c-api; ref/api/hem-api-1.2.2.yaml
 depends_on: ["REQ-AUTH-002", "REQ-AUTH-003", "REQ-API-002"]
 supersedes: null
@@ -34,14 +34,14 @@ complete a login. The reference does not describe how the proof is built
 [YAML]; the flow above is the answer to open question Q1. Introduced in M1.
 
 **Acceptance criteria:**
-- [ ] With a substituted `fetch` replaying a challenge, the requests are one
+- [x] With a substituted `fetch` replaying a challenge, the requests are one
       GET then one POST, neither carries an `Authorization` header, and the
       POST body is exactly the expected proof for the vector of
       REQ-AUTH-002.
-- [ ] A challenge missing `eid`, `spk` or `jti`, an `spk` that does not
+- [x] A challenge missing `eid`, `spk` or `jti`, an `spk` that does not
       decode to 32 bytes, or a reply without `token`, raises
       `HemProtocolError`.
-- [ ] A 401 on the proof raises `HemUnauthenticatedError` (after the
+- [x] A 401 on the proof raises `HemUnauthenticatedError` (after the
       recovery of REQ-AUTH-009 where it applies); a 409 raises
       `HemDeviceStateError`.
 - [ ] (M1B) an unattended login against the device succeeds; the token's

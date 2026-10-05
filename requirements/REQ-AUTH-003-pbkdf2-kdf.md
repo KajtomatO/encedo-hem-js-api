@@ -3,7 +3,7 @@ id: REQ-AUTH-003
 title: PBKDF2 as the only login key derivation
 status: approved
 priority: must
-revision: 2
+revision: 3
 source: user decision 2026-10-02; start_point §6 Q1; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: []
 supersedes: null
@@ -35,4 +35,4 @@ other derivation is offered. Introduced in M1.
       of REQ-AUTH-002 the derived public key equals the stated `iss`.
 - [x] The X25519 wrapper reproduces the RFC 7748 test vectors in Node 24 and
       in the browser run (ARCHITECTURE.md §11, risk 1).
-- [ ] The public API offers no way to select another derivation.
+- [x] The public API offers no way to select another derivation.
