@@ -3,7 +3,7 @@ id: REQ-API-001
 title: Client object created from options, with no global state
 status: approved
 priority: must
-revision: 1
+revision: 2
 source: ARCHITECTURE.md §4; start_point G5
 depends_on: []
 supersedes: null
@@ -24,11 +24,11 @@ several devices at once, and unit tests can build clients freely without
 side effects. Introduced in M1.
 
 **Acceptance criteria:**
-- [ ] Constructing a client with a valid URL and a substituted `fetch` makes
+- [x] Constructing a client with a valid URL and a substituted `fetch` makes
       zero `fetch` calls.
 - [ ] Two clients for different URLs used in the same test do not share
       tokens, credentials or request queues.
-- [ ] Constructing without a URL, or with a URL whose scheme is neither
+- [x] Constructing without a URL, or with a URL whose scheme is neither
       `http:` nor `https:`, throws `HemValidationError`.
-- [ ] The package has no mutable module-level state: no exported function
+- [x] The package has no mutable module-level state: no exported function
       changes the behaviour of an already constructed client.

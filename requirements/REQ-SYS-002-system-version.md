@@ -3,7 +3,7 @@ id: REQ-SYS-002
 title: Hardware and firmware version
 status: approved
 priority: must
-revision: 1
+revision: 2
 source: start_point §3; start_point G19; ref/api/hem-api-1.2.2.yaml
 depends_on: ["REQ-API-006", "REQ-API-004"]
 supersedes: null
@@ -22,8 +22,8 @@ version with the API version the library targets (REQ-API-010). The hardware
 version also tells which hardware build it is talking to. Introduced in M1.
 
 **Acceptance criteria:**
-- [ ] No `Authorization` header is sent.
-- [ ] The result contains `hwv` and `fwv` as strings and `fwk` and `fws` as
+- [x] No `Authorization` header is sent.
+- [x] The result contains `hwv` and `fwv` as strings and `fwk` and `fws` as
       bytes; `blv`, `blk`, `bls`, `sd_csd`, `sd_cid` and `uis` are included
       when the device sends them.
 - [ ] (M1B) the live values of the test device are recorded.

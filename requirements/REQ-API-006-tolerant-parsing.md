@@ -3,7 +3,7 @@ id: REQ-API-006
 title: Tolerant parsing of success responses
 status: approved
 priority: must
-revision: 1
+revision: 2
 source: ARCHITECTURE.md §6
 depends_on: ["REQ-API-002"]
 supersedes: null
@@ -24,10 +24,10 @@ the reply is not what the binding expects and has to be reported rather than
 turned into `undefined` values. Introduced in M1.
 
 **Acceptance criteria:**
-- [ ] A response with unknown extra fields is accepted.
-- [ ] A response missing a required field raises `HemProtocolError` naming
+- [x] A response with unknown extra fields is accepted.
+- [x] A response missing a required field raises `HemProtocolError` naming
       the field.
-- [ ] A 2xx body that is not valid JSON, for an operation that returns JSON,
+- [x] A 2xx body that is not valid JSON, for an operation that returns JSON,
       raises `HemProtocolError`.
-- [ ] A 200 response with an empty body is accepted by operations whose
+- [x] A 200 response with an empty body is accepted by operations whose
       success response is documented as empty.

@@ -3,7 +3,7 @@ id: REQ-SYS-001
 title: Device status
 status: approved
 priority: must
-revision: 1
+revision: 2
 source: start_point §3; ref/api/hem-api-1.2.2.yaml
 depends_on: ["REQ-API-006"]
 supersedes: null
@@ -29,11 +29,11 @@ device in any state, which makes it the basis for health checks. Introduced
 in M1.
 
 **Acceptance criteria:**
-- [ ] No `Authorization` header is sent.
-- [ ] The always-present fields `ctx`, `uptime`, `temp` and `fls_state` are
+- [x] No `Authorization` header is sent.
+- [x] The always-present fields `ctx`, `uptime`, `temp` and `fls_state` are
       required; their absence raises `HemProtocolError`.
-- [ ] The result reports initialised as true unless `inited` is false, and
+- [x] The result reports initialised as true unless `inited` is false, and
       clock-set as true exactly when `ts` or `time` is present.
-- [ ] `storage` and `format`, present only on mass-storage hardware, are
+- [x] `storage` and `format`, present only on mass-storage hardware, are
       passed through when present.
 - [ ] (M1B) the live response of the test device is recorded and parses.
