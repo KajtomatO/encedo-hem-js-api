@@ -25,7 +25,8 @@
     "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
     "test:node": "vitest run --project node",
     "test:browser": "vitest run --project browser",
-    "test:unit": "vitest run"
+    "test:unit": "vitest run",
+    "check": "npm run build && npm run typecheck && vitest run"
   },
   "devDependencies": {
     "@types/node": "^24.19.1",
