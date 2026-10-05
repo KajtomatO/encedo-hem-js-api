@@ -1,9 +1,9 @@
 ---
 id: REQ-OPS-003
 title: AES key unwrap
-status: approved
+status: verified
 priority: must
-revision: 2
+revision: 3
 source: start_point §3; ref/api/hem-api-1.2.2.yaml
 depends_on: ["REQ-AUTH-005", "REQ-API-005", "REQ-NET-003"]
 supersedes: null
