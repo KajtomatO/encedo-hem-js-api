@@ -5,9 +5,10 @@
  */
 import { getChallenge, postProof } from '../api/auth.js';
 import type { BindingContext } from '../api/core.js';
-import { HemUnauthenticatedError, HemValidationError } from '../errors.js';
+import { HemForbiddenError, HemUnauthenticatedError, HemValidationError } from '../errors.js';
 import type { CallOptions } from '../transport/transport.js';
 import { type LoginKey, buildLoginProof, deriveLoginKey } from './ejwt.js';
+import { ClockRecovery, showsDrift } from './recovery.js';
 
 /** Default requested token lifetime: 8 hours. */
 export const DEFAULT_TOKEN_LIFETIME_SECONDS = 28_800;
@@ -41,21 +42,42 @@ export class PassphraseLogin {
   readonly #context: BindingContext;
   readonly #lifetimeSeconds: number;
   readonly #now: Clock;
+  readonly #recovery: ClockRecovery;
   #passphrase: string | undefined;
   #derivation: Promise<LoginKey> | undefined;
   #discarded = false;
+  /** Errors of this login that point at the device clock. */
+  readonly #clockErrors = new WeakSet<object>();
 
-  constructor(context: BindingContext, passphrase: string, lifetimeSeconds: number, now: Clock) {
+  constructor(context: BindingContext, passphrase: string, lifetimeSeconds: number, now: Clock, recovery: ClockRecovery = new ClockRecovery(null)) {
     this.#context = context;
     this.#passphrase = passphrase;
     this.#lifetimeSeconds = lifetimeSeconds;
     this.#now = now;
+    this.#recovery = recovery;
   }
 
-  /** Log in for `scope`. Each request has its own time limit. */
-  async acquire(scope: string, options: CallOptions = {}): Promise<IssuedToken> {
+  /**
+   * Log in for `scope`. Each request has its own time limit. When the
+   * device clock blocks the login — the challenge is refused with 403, or
+   * the proof with 401 while the challenge shows drift — one check-in runs
+   * and the login is repeated once with a fresh challenge.
+   */
+  // implements: REQ-AUTH-009
+  acquire(scope: string, options: CallOptions = {}): Promise<IssuedToken> {
+    return this.#recovery.once(() => this.#attempt(scope, options), (error) => typeof error === 'object' && error !== null && this.#clockErrors.has(error), options);
+  }
+
+  async #attempt(scope: string, options: CallOptions): Promise<IssuedToken> {
     this.#ensureUsable();
-    const challenge = await getChallenge(this.#context, options);
+    let challenge;
+    try {
+      challenge = await getChallenge(this.#context, options);
+    } catch (error) {
+      // 403 on the challenge: trusted time is on and the clock is not set.
+      if (error instanceof HemForbiddenError && error.status === 403) this.#clockErrors.add(error);
+      throw error;
+    }
     const key = await this.#key(challenge.eid);
     if (key.eid !== challenge.eid) {
       throw new HemUnauthenticatedError(
@@ -67,8 +89,16 @@ export class PassphraseLogin {
     const iat = Math.floor(this.#now() / 1000);
     const exp = iat + this.#lifetimeSeconds;
     const proof = await buildLoginProof(key, { jti: challenge.jti, spk: challenge.spk, exp, iat, scope });
-    const token = await postProof(this.#context, proof, options);
-    return { token, requestedExp: exp };
+    try {
+      const token = await postProof(this.#context, proof, options);
+      return { token, requestedExp: exp };
+    } catch (error) {
+      // 401 with drift evidence: the device clock, not the passphrase. Without drift it is a wrong passphrase.
+      if (error instanceof HemUnauthenticatedError && error.status === 401 && showsDrift(challenge.exp, this.#now())) {
+        this.#clockErrors.add(error);
+      }
+      throw error;
+    }
   }
 
   /** Forget the passphrase and the derived key. */

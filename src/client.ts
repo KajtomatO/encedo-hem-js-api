@@ -5,6 +5,7 @@
  */
 import { AuthApi } from './api/auth-api.js';
 import { type BindingContext, noTokens } from './api/core.js';
+import { ClockRecovery } from './auth/recovery.js';
 import { Session } from './auth/session.js';
 import { type Clock, DEFAULT_TOKEN_LIFETIME_SECONDS, PassphraseLogin, validateLifetime } from './auth/login.js';
 import { HemValidationError } from './errors.js';
@@ -51,6 +52,15 @@ export interface HemClientOptions {
    * The largest value the device accepts is not documented.
    */
   tokenLifetimeSeconds?: number | undefined;
+  /**
+   * Repair the device clock automatically: when a login fails because the
+   * device clock is unset (403 on the challenge) or has drifted by more than
+   * 60 s (401 on the proof), run one check-in through the check-in relay and
+   * log in once more. Default `true`; unavailable when `checkinRelay` is
+   * `null`. A 401 without drift evidence is a wrong passphrase and never
+   * triggers a check-in.
+   */
+  clockRecovery?: boolean | undefined;
   /** Clock in milliseconds since the Unix epoch; default `Date.now`. Meant for tests. */
   now?: Clock | undefined;
 }
@@ -93,11 +103,14 @@ export class HemClient {
     }
     // The login requests themselves are public operations and never go through the session.
     const publicContext: BindingContext = { transport, tokens: noTokens };
-    const source = options.passphrase === undefined ? null : new PassphraseLogin(publicContext, options.passphrase, lifetime, now);
+    const checkinRelay = options.checkinRelay === undefined ? new EncedoCheckinRelay() : options.checkinRelay;
+    const recovery = new ClockRecovery(
+      checkinRelay !== null && options.clockRecovery !== false ? (callOptions) => this.system.checkin(callOptions) : null,
+    );
+    const source = options.passphrase === undefined ? null : new PassphraseLogin(publicContext, options.passphrase, lifetime, now, recovery);
     const session = new Session(source, now);
     const context: BindingContext = { transport, tokens: session };
     this.auth = new AuthApi(session);
-    const checkinRelay = options.checkinRelay === undefined ? new EncedoCheckinRelay() : options.checkinRelay;
     this.system = new SystemApi(context, checkinRelay);
     contexts.set(this, context);
   }

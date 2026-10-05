@@ -176,6 +176,7 @@ describe('credential handling', () => {
       checkinRelay: null,
       passphrase: 'p',
       tokenLifetimeSeconds: 1,
+      clockRecovery: true,
       now: Date.now,
     };
     expect(Object.keys(options).filter((name) => /kdf|deriv|argon|pbkdf|iteration|secret|key/i.test(name))).toEqual([]);
