@@ -250,10 +250,10 @@ export class SystemApi {
   }
 
   /**
-   * Complete check-in in one call: {@link getCheckin}, the client's check-in
-   * relay, then {@link postCheckin}, each value passed on unchanged. A
+   * Complete check-in in one call: {@link SystemApi.getCheckin}, the client's check-in
+   * relay, then {@link SystemApi.postCheckin}, each value passed on unchanged. A
    * failure's `operation` names its leg (`system.getCheckin`,
-   * `relay.checkin`, `system.postCheckin`). See {@link postCheckin} for the
+   * `relay.checkin`, `system.postCheckin`). See {@link SystemApi.postCheckin} for the
    * management actions a backend reply can trigger.
    *
    * @throws HemUnsupportedError when the client has no check-in relay.

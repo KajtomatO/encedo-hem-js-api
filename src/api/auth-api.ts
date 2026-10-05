@@ -100,7 +100,7 @@ export class AuthApi {
    * the device; public calls keep working. Create a new client to log in
    * again.
    *
-   * @remarks Makes no request. Introduced in M1.
+   * @remarks Token scope: none (makes no request). Introduced in M1.
    */
   logout(): void {
     this.#session.logout();
