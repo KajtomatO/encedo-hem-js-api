@@ -1,0 +1,15 @@
+{
+  // Build: src/ only, emits ESM .js and .d.ts into dist/.
+  // implements: REQ-BUILD-001
+  // No Node typings here, so src/ cannot compile against Node-only APIs.
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "lib": ["ES2024", "DOM"],
+    "types": [],
+    "declaration": true,
+    "sourceMap": false
+  },
+  "include": ["src"]
+}
