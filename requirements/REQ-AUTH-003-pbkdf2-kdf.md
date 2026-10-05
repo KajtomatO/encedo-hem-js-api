@@ -1,9 +1,9 @@
 ---
 id: REQ-AUTH-003
 title: PBKDF2 as the only login key derivation
-status: approved
+status: verified
 priority: must
-revision: 3
+revision: 4
 source: user decision 2026-10-02; start_point §6 Q1; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: []
 supersedes: null

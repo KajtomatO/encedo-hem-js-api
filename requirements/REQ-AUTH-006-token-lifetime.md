@@ -1,9 +1,9 @@
 ---
 id: REQ-AUTH-006
 title: Requested token lifetime
-status: approved
+status: verified
 priority: must
-revision: 2
+revision: 3
 source: start_point G11; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: ["REQ-AUTH-002"]
 supersedes: null

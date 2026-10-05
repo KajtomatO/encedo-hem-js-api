@@ -1,9 +1,9 @@
 ---
 id: REQ-AUTH-001
 title: Unattended passphrase login
-status: approved
+status: verified
 priority: must
-revision: 2
+revision: 3
 source: start_point M1.1; start_point G9; start_point §6 Q1; https://github.com/KajtomatO/encedo-hem-c-api; ref/api/hem-api-1.2.2.yaml
 depends_on: ["REQ-AUTH-002", "REQ-AUTH-003", "REQ-API-002"]
 supersedes: null
