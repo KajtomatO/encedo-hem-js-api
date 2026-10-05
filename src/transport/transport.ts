@@ -6,12 +6,33 @@
  */
 import { utf8Decode } from '../codec/utf8.js';
 import {
+  HemAbortError,
   HemDeviceError,
+  HemError,
+  HemTimeoutError,
   HemTlsRequiredError,
+  HemUnreachableError,
   HemUnsupportedError,
   HemValidationError,
   errorFromStatus,
 } from '../errors.js';
+
+/** Default time limit of one device request, in milliseconds. */
+export const DEFAULT_TIMEOUT_MS = 30_000;
+
+/** Options every public call accepts. */
+export interface CallOptions {
+  /** Cancels the call when it fires. */
+  signal?: AbortSignal | undefined;
+  /**
+   * Time limit in milliseconds for each device request the call makes,
+   * including reading the response body. It runs from the moment a request
+   * is sent, not from when the call was made: time spent waiting behind
+   * other requests, and a login the call needs first, are not counted
+   * against it. Defaults to the client's `timeoutMs` (30 000).
+   */
+  timeoutMs?: number | undefined;
+}
 
 /** The `fetch` signature the library calls: `(url, init)`. */
 export type FetchFunction = (input: string, init: RequestInit) => Promise<Response>;
@@ -21,10 +42,12 @@ export interface TransportOptions {
   url: string;
   /** `fetch` to use; defaults to `globalThis.fetch`. */
   fetch?: FetchFunction | undefined;
+  /** Default time limit of each request in milliseconds (30 000). */
+  timeoutMs?: number | undefined;
 }
 
 /** One device request. */
-export interface TransportRequest {
+export interface TransportRequest extends CallOptions {
   /** Public operation name, used in error messages. */
   operation: string;
   method: 'GET' | 'POST' | 'DELETE';
@@ -76,6 +99,28 @@ export function parseDeviceUrl(url: unknown): { url: URL; prefix: string } {
   return { url: parsed, prefix: parsed.pathname.replace(/\/+$/, '') };
 }
 
+/** Check a time limit given in the options. */
+export function validateTimeout(value: unknown, parameter = 'timeoutMs'): number {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) {
+    throw new HemValidationError(`Invalid ${parameter}: must be a positive number of milliseconds`, { parameter });
+  }
+  return value;
+}
+
+/** Settle with `promise`, or reject with the signal's reason as soon as it aborts. */
+function untilAborted<T>(promise: Promise<T>, signal: AbortSignal): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const onAbort = (): void => reject(signal.reason as unknown);
+    if (signal.aborted) onAbort();
+    signal.addEventListener('abort', onAbort, { once: true });
+    promise.then(resolve, reject).finally(() => signal.removeEventListener('abort', onAbort));
+  });
+}
+
+function abortError(operation: string, signal: AbortSignal): HemAbortError {
+  return new HemAbortError(`${operation}: cancelled by the caller`, { operation, cause: signal.reason });
+}
+
 function isRedirect(response: Response): boolean {
   return response.type === 'opaqueredirect' || (response.status >= 300 && response.status < 400);
 }
@@ -87,8 +132,10 @@ export class Transport {
   /** Path prefix in front of `/api/…`, without a trailing slash. */
   readonly #prefix: string;
   readonly #fetch: FetchFunction;
+  readonly #timeoutMs: number;
 
   constructor(options: TransportOptions) {
+    this.#timeoutMs = options.timeoutMs === undefined ? DEFAULT_TIMEOUT_MS : validateTimeout(options.timeoutMs);
     const { url, prefix } = parseDeviceUrl(options.url);
     this.baseUrl = url;
     this.#prefix = prefix;
@@ -140,16 +187,13 @@ export class Transport {
       init.body = typeof request.body === 'string' ? request.body : (new Uint8Array(request.body) as Uint8Array<ArrayBuffer>);
     }
 
-    const fetchFunction = this.#fetch;
-    const response = await fetchFunction(this.urlFor(request.path), init);
-
+    const { response, body } = await this.#exchange(request, init);
     if (isRedirect(response)) {
       throw new HemDeviceError(`${request.operation}: the device answered with a redirect, which is not followed`, {
         operation: request.operation,
         ...(response.status === 0 ? {} : { status: response.status }),
       });
     }
-    const body = new Uint8Array(await response.arrayBuffer());
     if (response.status < 200 || response.status > 299) {
       let text = '';
       try {
@@ -165,5 +209,45 @@ export class Transport {
       body,
       text: () => utf8Decode(body),
     };
+  }
+
+  /**
+   * Call fetch and read the body under the time limit and the caller's signal.
+   * One internal controller is handed to fetch; whichever of the timer and
+   * the caller's signal fires first aborts it and decides the error.
+   */
+  // implements: REQ-NET-004, REQ-NET-005, REQ-NET-006
+  async #exchange(request: TransportRequest, init: RequestInit): Promise<{ response: Response; body: Uint8Array }> {
+    const { operation, signal } = request;
+    const limit = request.timeoutMs === undefined ? this.#timeoutMs : validateTimeout(request.timeoutMs);
+    if (signal?.aborted) throw abortError(operation, signal);
+
+    const controller = new AbortController();
+    let stopped: HemError | undefined;
+    const stop = (error: HemError): void => {
+      if (stopped) return;
+      stopped = error;
+      controller.abort(error);
+    };
+    const timer = setTimeout(() => stop(new HemTimeoutError(`${operation}: no complete response within ${limit} ms`, { operation })), limit);
+    const onAbort = (): void => stop(abortError(operation, signal as AbortSignal));
+    signal?.addEventListener('abort', onAbort, { once: true });
+
+    try {
+      const fetchFunction = this.#fetch;
+      const response = await untilAborted(fetchFunction(this.urlFor(request.path), { ...init, signal: controller.signal }), controller.signal);
+      if (isRedirect(response)) {
+        return { response, body: new Uint8Array() };
+      }
+      // The limit also covers the body.
+      const body = new Uint8Array(await untilAborted(response.arrayBuffer(), controller.signal));
+      return { response, body };
+    } catch (error) {
+      if (stopped) throw stopped;
+      throw new HemUnreachableError(`${operation}: the device could not be reached`, { operation, cause: error });
+    } finally {
+      clearTimeout(timer);
+      signal?.removeEventListener('abort', onAbort);
+    }
   }
 }
