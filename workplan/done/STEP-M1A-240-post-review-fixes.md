@@ -7,9 +7,9 @@ traces:
   architecture: ["ARCHITECTURE.md#4-public-api--conventions", "ARCHITECTURE.md#5-auth--session", "ARCHITECTURE.md#7-transport", "ARCHITECTURE.md#8-testing-policy"]
 depends_on: ["STEP-M1A-230"]
 evidence:
-  commits: []
-  tests: []
-  notes: null
+  commits: ["e317cdb", "c95538f", "99292bd", "0cf2198"]
+  tests: ["verifies: REQ-SYS-007 (tests/unit/checkin.test.ts)", "verifies: REQ-AUTH-016 (tests/unit/approval-engine.test.ts)", "verifies: REQ-API-002, REQ-API-003, REQ-NET-006 (tests/unit/errors.test.ts)", "verifies: REQ-AUTH-008 (tests/unit/reauth.test.ts)", "verifies: REQ-NET-004 (tests/unit/transport-timeout.test.ts, tests/unit/checkin.test.ts, tests/unit/approval-relay.test.ts)", "verifies: REQ-NET-008 (tests/unit/transport-queue.test.ts)", "verifies: REQ-AUTH-018 (tests/unit/approval-engine.test.ts)", "verifies: REQ-AUTH-011 (tests/unit/login.test.ts)", "supports: REQ-TEST-001 (tests/support/setup.ts)"]
+  notes: "npm run check on 2026-10-06: build, type-check and 73 files / 1161 tests pass in Node v24.21.0 and headless Chromium (1109 before this step). Behaviour change: an error status whose body cannot be read is now mapped by its status with an empty body (previously HemUnreachableError); a success response whose body cannot be read is still HemUnreachableError — its cause is the stream error in Node and the browser's own 'Failed to fetch' TypeError in Chromium, so the test asserts only that a cause is present. A custom relay's plain Error becomes HemRelayError without a status, which the approval wait treats like an unreachable relay (it keeps polling until the limit); the timeout error now carries the last such failure as its cause. git ls-files .vitest is empty after e317cdb. devDependencies pinned to the versions in package-lock.json; npm ls shows the lock in sync."
 reopened: []
 cancelled: null
 ---
@@ -64,25 +64,25 @@ tracks test artifacts.
   that additions are recorded in the snapshot.
 
 **Definition of done**
-- [ ] `git ls-files .vitest` prints nothing and `.vitest/` stays ignored.
-- [ ] `system.checkin` with a relay that throws a plain `Error`, throws a
+- [x] `git ls-files .vitest` prints nothing and `.vitest/` stays ignored.
+- [x] `system.checkin` with a relay that throws a plain `Error`, throws a
       `HemError` without `operation`, or resolves a non-string raises a
       `HemError` whose `operation` is `relay.checkin`; the approval engine
       does the same for `getKey`, `submit` and `check` with the default
       relay's operation names.
-- [ ] An error response whose body cannot be read is mapped by its status
+- [x] An error response whose body cannot be read is mapped by its status
       with an empty body; a success response whose body cannot be read
       raises `HemUnreachableError`; `errorFromResponse` no longer exists and
       the status-mapping tests go through the transport with a substituted
       `fetch`.
-- [ ] After a second 401 the rejected token is not cached: the next call for
+- [x] After a second 401 the rejected token is not cached: the next call for
       that scope starts with a login challenge.
-- [ ] `timeoutMs`, `minIntervalMs`, the approval wait's `timeoutMs` and
+- [x] `timeoutMs`, `minIntervalMs`, the approval wait's `timeoutMs` and
       `intervalMs`, and both relays' `timeoutMs` reject values above
       2 147 483 647 with `HemValidationError` and accept that value.
-- [ ] A `deriveBits` spy shows one PBKDF2 derivation across two logins, in
+- [x] A `deriveBits` spy shows one PBKDF2 derivation across two logins, in
       Node and in Chromium; the reflection test over private state is gone.
-- [ ] `tests/support/setup.ts` carries `supports:` instead of `implements:`.
-- [ ] devDependencies are pinned to the installed versions and `npm ci` is
+- [x] `tests/support/setup.ts` carries `supports:` instead of `implements:`.
+- [x] devDependencies are pinned to the installed versions and `npm ci` is
       in sync with the lock file.
-- [ ] `npm run check` passes in Node 24 and in headless Chromium.
+- [x] `npm run check` passes in Node 24 and in headless Chromium.
