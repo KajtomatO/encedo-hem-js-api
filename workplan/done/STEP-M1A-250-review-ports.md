@@ -7,9 +7,9 @@ traces:
   architecture: ["ARCHITECTURE.md#4-public-api--conventions", "ARCHITECTURE.md#7-transport", "ARCHITECTURE.md#8-testing-policy"]
 depends_on: ["STEP-M1A-240"]
 evidence:
-  commits: []
-  tests: []
-  notes: null
+  commits: ["bef1f00", "1448941", "b258841"]
+  tests: ["verifies: REQ-NET-002 (tests/unit/transport.test.ts, tests/unit/client.test.ts)", "verifies: REQ-API-001 (tests/unit/client.test.ts, tests/unit/source-check.test.ts)", "verifies: REQ-API-005 (tests/unit/conformance.test.ts)", "verifies: REQ-API-008 (tests/unit/surface.node.test.ts, tests/unit/surface.test.ts — unchanged tests, run against the updated snapshot)"]
+  notes: "npm run check on 2026-10-06: build, type-check and 73 files / 1253 tests pass in Node v24.21.0 and headless Chromium (1161 after STEP-M1A-240). Snapshot: the entry `HemClientOptions.url` changed from `url:string` to `url:string|URL` by hand in tests/surface/public-api.txt; the surface test compares signatures textually and would report this as breaking, but widening an input type accepts every call that compiled before, so it is additive under REQ-API-008; no entry was removed. The limits table has 32 rows over 13 parameters (kid, label, descr, limit, count, offset, msg, iv, scope, ctx, note, epk, authreply); the 7300-byte body limit cannot be reached through any M1 operation's fields and stays covered by tests/unit/binding-core.test.ts. Module-level let/var: src/ had none; the rule is at column 0 with an optional export. The 74 per-test 60 s arguments were removed; vitest.config.ts sets testTimeout 60 000 for both projects."
 reopened: []
 cancelled: null
 ---
@@ -45,16 +45,16 @@ module-level state.
   frozen values stay allowed.
 
 **Definition of done**
-- [ ] `HemClientOptions.url` accepts a `URL` instance; the device-URL table
+- [x] `HemClientOptions.url` accepts a `URL` instance; the device-URL table
       test has a `URL` row; the snapshot entry is updated and the evidence
       says why the change is additive.
-- [ ] A non-null relay option lacking the interface's methods raises
+- [x] A non-null relay option lacking the interface's methods raises
       `HemValidationError` naming the option, with no request made.
-- [ ] A table test sends every documented limit's boundary value and
+- [x] A table test sends every documented limit's boundary value and
       refuses the first value past it with `HemValidationError` and zero
       `fetch` calls.
-- [ ] One global `testTimeout` replaces the per-test timeouts.
-- [ ] The source check refuses module-level `let` and `var` in `src/`, with
+- [x] One global `testTimeout` replaces the per-test timeouts.
+- [x] The source check refuses module-level `let` and `var` in `src/`, with
       bad samples in its test.
-- [ ] The README documents `url` as a string or `URL`.
-- [ ] `npm run check` passes in Node 24 and in headless Chromium.
+- [x] The README documents `url` as a string or `URL`.
+- [x] `npm run check` passes in Node 24 and in headless Chromium.
