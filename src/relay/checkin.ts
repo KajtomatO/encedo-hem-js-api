@@ -4,7 +4,7 @@
  *
  * @packageDocumentation
  */
-import type { FetchFunction } from '../transport/transport.js';
+import { type FetchFunction, validateTimeout } from '../transport/transport.js';
 import { type RelayCallOptions, relayFetch, relayRequest, relayStatusError, relayString } from './http.js';
 
 /**
@@ -52,7 +52,7 @@ export class EncedoCheckinRelay implements CheckinRelay {
   constructor(options: EncedoCheckinRelayOptions = {}) {
     this.url = options.url ?? ENCEDO_CHECKIN_URL;
     this.#fetch = options.fetch;
-    this.#timeoutMs = options.timeoutMs;
+    this.#timeoutMs = options.timeoutMs === undefined ? undefined : validateTimeout(options.timeoutMs);
   }
 
   async exchange(check: string, options?: RelayCallOptions): Promise<string> {

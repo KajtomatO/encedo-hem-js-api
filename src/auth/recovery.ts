@@ -5,7 +5,7 @@
  *
  * @packageDocumentation
  */
-import { HemError, type HemErrorOptions } from '../errors.js';
+import { copyError, HemError } from '../errors.js';
 import type { CallOptions } from '../transport/transport.js';
 
 /** Runs one complete check-in. */
@@ -23,16 +23,9 @@ export function showsDrift(challengeExp: number, localNowMs: number): boolean {
   return Math.abs(deviceNow - localNowMs / 1000) > DRIFT_TOLERANCE_SECONDS;
 }
 
-/** A copy of `error` with `cause` attached (error properties are read-only). */
+/** A copy of `error` with `cause` attached. */
 function withCause(error: unknown, cause: unknown): unknown {
-  if (!(error instanceof HemError)) return error;
-  const options: HemErrorOptions = { cause };
-  if (error.status !== undefined) options.status = error.status;
-  if (error.operation !== undefined) options.operation = error.operation;
-  if (error.bodyText !== undefined) options.bodyText = error.bodyText;
-  if (error.body !== undefined) options.body = error.body;
-  const ErrorClass = error.constructor as new (message: string, options?: HemErrorOptions) => HemError;
-  return new ErrorClass(error.message, options);
+  return error instanceof HemError ? copyError(error, { cause }) : error;
 }
 
 /** Runs an operation with at most one recovery check-in. */

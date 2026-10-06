@@ -3,10 +3,12 @@ import {
   type CheckinRelay,
   EncedoCheckinRelay,
   HemClient,
+  HemError,
   HemProtocolError,
   HemRelayError,
   HemUnauthenticatedError,
   HemUnsupportedError,
+  HemValidationError,
 } from '../../src/index.js';
 import { FakeFetch } from '../support/fake-fetch.js';
 
@@ -101,6 +103,26 @@ describe('one-call check-in (system.checkin)', () => {
     const error = await deviceClient(fake, relay).system.checkin().catch((e: unknown) => e);
     expect((error as { operation?: string }).operation).toBe(leg);
     expect((error as Error).message).toContain(leg);
+  });
+
+  // verifies: REQ-SYS-007
+  it.each([
+    ['throws a plain Error', new TypeError('boom')],
+    ['throws a HemError without an operation', new HemRelayError('backend down', { status: 502 })],
+    ['resolves a non-string', 42],
+  ])('names the relay leg when a custom relay %s, and never reaches the second device step', async (_, reply) => {
+    const fake = new FakeFetch().on('GET', '/api/system/checkin', { body: { check: CHECK } }).on('POST', '/api/system/checkin', { body: { status: 'OK' } });
+    const relay: CheckinRelay = { exchange: () => (reply instanceof Error ? Promise.reject(reply) : Promise.resolve(reply as unknown as string)) };
+    const error = await deviceClient(fake, relay).system.checkin().catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(HemRelayError);
+    expect((error as HemError).operation).toBe('relay.checkin');
+    expect((error as HemError).message).toContain('relay.checkin');
+    if (reply instanceof HemError) {
+      expect((error as HemError).status).toBe(502); // the relay's own HemError keeps its class and details
+    } else if (reply instanceof Error) {
+      expect((error as HemError).cause).toBe(reply);
+    }
+    expect(fake.requestsTo('POST', '/api/system/checkin')).toHaveLength(0);
   });
 
   // verifies: REQ-SYS-007
@@ -219,5 +241,15 @@ describe('relay time limit and cancellation', () => {
     const pending = new EncedoCheckinRelay({ fetch: cloud.fetch }).exchange(CHECK, { signal: controller.signal });
     controller.abort();
     await expect(pending).rejects.toMatchObject({ name: 'HemAbortError' });
+  });
+
+  // verifies: REQ-NET-004
+  it.each([0, -1, Number.NaN, 2_147_483_648])('rejects a relay timeoutMs of %d with HemValidationError at construction', (timeoutMs) => {
+    expect(() => new EncedoCheckinRelay({ timeoutMs })).toThrow(HemValidationError);
+  });
+
+  // verifies: REQ-NET-004
+  it('accepts the largest delay setTimeout honours as the relay time limit', () => {
+    expect(() => new EncedoCheckinRelay({ timeoutMs: 2_147_483_647 })).not.toThrow();
   });
 });

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { errorFromResponse } from '../../src/errors.js';
 import * as hem from '../../src/index.js';
+import { Transport } from '../../src/transport/transport.js';
 import { FakeFetch } from '../support/fake-fetch.js';
 
 const {
@@ -25,12 +25,22 @@ const {
   HemValidationError,
 } = hem;
 
-/** Fetch one scripted response from the fake device and map it. */
+/** Send one request through the transport to a fake device scripted with `reply`; return the error the transport raised. */
 async function mapReply(reply: Parameters<FakeFetch['on']>[2]): Promise<hem.HemError> {
   const fake = new FakeFetch().on('POST', '/api/x', reply);
-  const response = await fake.fetch('https://hem.test/api/x', { method: 'POST' });
-  return errorFromResponse(response, 'test.op');
+  const transport = new Transport({ url: 'https://hem.test', fetch: fake.fetch });
+  const error: unknown = await transport.send({ operation: 'test.op', method: 'POST', path: '/api/x' }).then(() => undefined, (e: unknown) => e);
+  if (!(error instanceof hem.HemError)) throw new Error(`expected the transport to raise a HemError, got ${String(error)}`);
+  return error;
 }
+
+/** A response body whose stream fails before any byte arrives. */
+const brokenBody = (): ReadableStream<Uint8Array> =>
+  new ReadableStream<Uint8Array>({
+    start(controller) {
+      controller.error(new Error('connection reset'));
+    },
+  });
 
 const statusTable = [
   [400, HemBadRequestError, 'BAD_REQUEST'],
@@ -153,15 +163,20 @@ describe('status mapping and the response body', () => {
     expect(error.bodyText).toBe('{"reason":"bad kid"}');
   });
 
-  // verifies: REQ-API-003
-  it('maps by status when the body cannot be read at all', async () => {
-    const broken = new ReadableStream<Uint8Array>({
-      start(controller) {
-        controller.error(new Error('connection reset'));
-      },
-    });
-    const error = await mapReply(new Response(broken, { status: 413 }));
+  // verifies: REQ-API-003, REQ-NET-006
+  it('maps an error status by the status alone when its body cannot be read (the device closes the connection after a 413)', async () => {
+    const error = await mapReply(new Response(brokenBody(), { status: 413 }));
     expect(error).toBeInstanceOf(HemPayloadTooLargeError);
+    expect(error.status).toBe(413);
     expect(error.body).toBeUndefined();
+    expect(error.bodyText).toBeUndefined();
+  });
+
+  // verifies: REQ-NET-006
+  it('reports a success response whose body cannot be read as HemUnreachableError with the cause', async () => {
+    const error = await mapReply(new Response(brokenBody(), { status: 200 }));
+    expect(error).toBeInstanceOf(HemUnreachableError);
+    // Node surfaces the stream's error; browsers wrap it in their own "Failed to fetch" TypeError.
+    expect(error.cause).toBeInstanceOf(Error);
   });
 });

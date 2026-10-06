@@ -248,6 +248,24 @@ export class HemRelayError extends HemError {
 
 type StatusErrorClass = new (message: string, options?: HemErrorOptions) => HemError;
 
+/**
+ * A copy of `error` of the same class, with the given details replaced and
+ * optionally a new message. Error properties are read-only, so attaching a
+ * cause or naming the operation after the fact means copying.
+ */
+export function copyError(error: HemError, overrides: HemErrorOptions, message: string = error.message): HemError {
+  const options: HemErrorOptions = {};
+  if (error.status !== undefined) options.status = error.status;
+  if (error.operation !== undefined) options.operation = error.operation;
+  if (error.body !== undefined) options.body = error.body;
+  if (error.bodyText !== undefined) options.bodyText = error.bodyText;
+  if (error.cause !== undefined) options.cause = error.cause;
+  Object.assign(options, overrides);
+  if (error.constructor === HemError) return new HemError(error.code, message, options);
+  const ErrorClass = error.constructor as StatusErrorClass;
+  return new ErrorClass(message, options);
+}
+
 // Status meanings from ref/api/hem-api-1.2.2.yaml.
 const statusClasses: ReadonlyMap<number, readonly [StatusErrorClass, string]> = new Map([
   [400, [HemBadRequestError, 'bad request']],
@@ -283,15 +301,4 @@ function parseErrorBody(text: string): { body?: unknown; bodyText?: string } {
 export function errorFromStatus(status: number, bodyText: string, operation: string): HemError {
   const [ErrorClass, meaning] = statusClasses.get(status) ?? [HemDeviceError, 'unexpected status'];
   return new ErrorClass(`${operation}: HTTP ${status} (${meaning})`, { status, operation, ...parseErrorBody(bodyText) });
-}
-
-/** {@link errorFromStatus} for a `Response` whose body has not been read yet. */
-export async function errorFromResponse(response: Response, operation: string): Promise<HemError> {
-  let text = '';
-  try {
-    text = await response.text();
-  } catch {
-    // An unreadable body is treated as empty; the status still decides.
-  }
-  return errorFromStatus(response.status, text, operation);
 }

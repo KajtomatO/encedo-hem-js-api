@@ -5,7 +5,7 @@
  *
  * @packageDocumentation
  */
-import type { FetchFunction } from '../transport/transport.js';
+import { type FetchFunction, validateTimeout } from '../transport/transport.js';
 import { type RelayCallOptions, relayFetch, relayRequest, relayStatusError, relayString } from './http.js';
 
 /** Outcome of one check of a submitted authorization request. */
@@ -14,6 +14,14 @@ export type ApprovalCheck =
   | { readonly status: 'approved'; readonly authreply: string }
   | { readonly status: 'rejected' }
   | { readonly status: 'expired' };
+
+/** Whether a relay's `check` resolved with a well-formed {@link ApprovalCheck}. */
+export function isApprovalCheck(value: unknown): value is ApprovalCheck {
+  if (typeof value !== 'object' || value === null) return false;
+  const { status, authreply } = value as { status?: unknown; authreply?: unknown };
+  if (status === 'approved') return typeof authreply === 'string';
+  return status === 'pending' || status === 'rejected' || status === 'expired';
+}
 
 /** A device authorization request as handed to the relay. */
 export interface ApprovalSubmission {
@@ -80,7 +88,7 @@ export class EncedoApprovalRelay implements ApprovalRelay {
   constructor(options: EncedoApprovalRelayOptions = {}) {
     this.url = (options.url ?? ENCEDO_NOTIFY_URL).replace(/\/+$/, '');
     this.#fetch = options.fetch;
-    this.#timeoutMs = options.timeoutMs;
+    this.#timeoutMs = options.timeoutMs === undefined ? undefined : validateTimeout(options.timeoutMs);
   }
 
   async getKey(options?: RelayCallOptions): Promise<string> {

@@ -16,8 +16,9 @@ import {
   HemUnsupportedError,
   HemValidationError,
 } from '../errors.js';
-import type { ApprovalRelay } from '../relay/approval.js';
-import type { CallOptions } from '../transport/transport.js';
+import { type ApprovalRelay, isApprovalCheck } from '../relay/approval.js';
+import { guardRelay, isString } from '../relay/http.js';
+import { type CallOptions, MAX_TIMER_MS } from '../transport/transport.js';
 import type { ClockRecovery } from './recovery.js';
 
 /** Default interval between polls, in milliseconds. */
@@ -118,8 +119,8 @@ function sleep(ms: number, signal: AbortSignal | undefined): Promise<void> {
 
 function positive(value: number | undefined, fallback: number, parameter: string): number {
   if (value === undefined) return fallback;
-  if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) {
-    throw new HemValidationError(`Invalid ${parameter}: must be a positive number of milliseconds`, { parameter });
+  if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0 || value > MAX_TIMER_MS) {
+    throw new HemValidationError(`Invalid ${parameter}: must be a positive number of milliseconds up to ${MAX_TIMER_MS}`, { parameter });
   }
   return value;
 }
@@ -156,10 +157,10 @@ export class ApprovalEngine {
     const drifted = new WeakSet<object>();
     const attempt = async (): Promise<PendingApproval> => {
       const relayOptions = { signal: options.signal };
-      const epk = await relay.getKey(relayOptions);
+      const epk = await guardRelay('relay.approval.getKey', () => relay.getKey(relayOptions), isString);
       const request = await this.#device.request({ epk, scope, ctx: details.ctx, note: details.note }, options);
       try {
-        const handle = await relay.submit(request, relayOptions);
+        const handle = await guardRelay('relay.approval.submit', () => relay.submit(request, relayOptions), isString);
         return { scope, handle };
       } catch (error) {
         if (error instanceof HemRelayError && error.status === 401 && brokerDrift(request.authreq, this.#now())) drifted.add(error);
@@ -175,7 +176,8 @@ export class ApprovalEngine {
    * redeemed); expired raises `HemApprovalTimeoutError`.
    */
   async poll(pending: PendingApproval, options: CallOptions = {}): Promise<ApprovalPoll> {
-    const outcome = await this.#requireRelay().check(pending.handle, { signal: options.signal });
+    const relay = this.#requireRelay();
+    const outcome = await guardRelay('relay.approval.check', () => relay.check(pending.handle, { signal: options.signal }), isApprovalCheck);
     switch (outcome.status) {
       case 'pending':
         return { status: 'pending' };
@@ -190,13 +192,15 @@ export class ApprovalEngine {
 
   /**
    * Poll at the interval until an outcome or the time limit, at least once.
-   * A transport failure of one poll does not end the wait; the signal does.
+   * A transport or relay failure of one poll does not end the wait (the last
+   * one is the `cause` of the timeout error); the signal does.
    */
   async wait(pending: PendingApproval, options: WaitOptions = {}): Promise<string> {
     const limit = positive(options.timeoutMs, DEFAULT_APPROVAL_TIMEOUT_MS, 'timeoutMs');
     const interval = positive(options.intervalMs, DEFAULT_POLL_INTERVAL_MS, 'intervalMs');
     const deadline = Date.now() + limit;
     const { signal } = options;
+    let lastFailure: unknown;
     for (;;) {
       if (signal?.aborted) throw abortError(signal);
       try {
@@ -204,10 +208,14 @@ export class ApprovalEngine {
         if (result.status === 'approved') return result.token;
       } catch (error) {
         if (!isTransient(error)) throw error;
+        lastFailure = error;
       }
       const remaining = deadline - Date.now();
       if (remaining <= 0) {
-        throw new HemApprovalTimeoutError(`auth.approval: no answer for scope "${pending.scope}" within ${limit} ms`, { operation: 'auth.waitForApproval' });
+        throw new HemApprovalTimeoutError(`auth.approval: no answer for scope "${pending.scope}" within ${limit} ms`, {
+          operation: 'auth.waitForApproval',
+          ...(lastFailure === undefined ? {} : { cause: lastFailure }),
+        });
       }
       await sleep(Math.min(interval, remaining), signal);
     }

@@ -126,7 +126,13 @@ export class Session implements TokenProvider {
       // Tokens die when the device reboots; the 401 is how the client finds out.
       if (this.#cache.get(scope) === entry) this.#cache.delete(scope);
       entry = await this.#token(scope, options);
-      return await this.#send(entry, send);
+      try {
+        return await this.#send(entry, send);
+      } catch (retryError) {
+        // The repeated call failed too: a token the device has just rejected is never kept.
+        if (retryError instanceof HemUnauthenticatedError && retryError.status === 401 && this.#cache.get(scope) === entry) this.#cache.delete(scope);
+        throw retryError;
+      }
     }
   }
 

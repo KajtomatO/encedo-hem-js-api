@@ -5,12 +5,38 @@
  * @packageDocumentation
  */
 import { utf8Decode } from '../codec/utf8.js';
-import { HemAbortError, HemError, HemRelayError, HemTimeoutError } from '../errors.js';
+import { copyError, HemAbortError, HemError, HemRelayError, HemTimeoutError } from '../errors.js';
 import { DEFAULT_TIMEOUT_MS, type FetchFunction } from '../transport/transport.js';
 
 /** Options of a single relay call. */
 export interface RelayCallOptions {
   signal?: AbortSignal | undefined;
+}
+
+/** Whether a relay resolved with a string, as every string-valued relay call must. */
+export const isString = (value: unknown): value is string => typeof value === 'string';
+
+/**
+ * Run one call of a relay — the default one or the caller's own — so that
+ * its failure is a library error naming the leg: a `HemError` keeps its
+ * class and gets `operation` when it has none; anything else becomes
+ * {@link HemRelayError} with the original as `cause`. A resolved value that
+ * fails `check` is a {@link HemRelayError} too.
+ */
+// implements: REQ-SYS-007, REQ-AUTH-016
+export async function guardRelay<T>(operation: string, call: () => Promise<T>, check: (value: unknown) => value is T): Promise<T> {
+  let value: unknown;
+  try {
+    value = await call();
+  } catch (error) {
+    if (error instanceof HemError) {
+      throw error.operation === undefined ? copyError(error, { operation }, `${operation}: ${error.message}`) : error;
+    }
+    const reason = error instanceof Error ? error.message : String(error);
+    throw new HemRelayError(`${operation}: the relay failed: ${reason}`, { operation, cause: error });
+  }
+  if (!check(value)) throw new HemRelayError(`${operation}: the relay resolved with an unexpected value`, { operation });
+  return value;
 }
 
 /** A relay response: status and parsed JSON body (`undefined` when empty or not JSON). */

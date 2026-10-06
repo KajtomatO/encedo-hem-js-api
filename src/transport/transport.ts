@@ -101,10 +101,16 @@ export function parseDeviceUrl(url: unknown): { url: URL; prefix: string } {
   return { url: parsed, prefix: parsed.pathname.replace(/\/+$/, '') };
 }
 
+/**
+ * Largest delay `setTimeout` honours: 2^31 − 1 ms, about 24.8 days. Above
+ * it, timers fire at once, so every millisecond option is capped here.
+ */
+export const MAX_TIMER_MS = 2_147_483_647;
+
 /** Check a time limit given in the options. */
 export function validateTimeout(value: unknown, parameter = 'timeoutMs'): number {
-  if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) {
-    throw new HemValidationError(`Invalid ${parameter}: must be a positive number of milliseconds`, { parameter });
+  if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0 || value > MAX_TIMER_MS) {
+    throw new HemValidationError(`Invalid ${parameter}: must be a positive number of milliseconds up to ${MAX_TIMER_MS}`, { parameter });
   }
   return value;
 }
@@ -121,8 +127,8 @@ function untilAborted<T>(promise: Promise<T>, signal: AbortSignal): Promise<T> {
 
 /** Check a minimum request interval given in the options. */
 export function validateInterval(value: unknown, parameter = 'minIntervalMs'): number {
-  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
-    throw new HemValidationError(`Invalid ${parameter}: must be zero or a positive number of milliseconds`, { parameter });
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0 || value > MAX_TIMER_MS) {
+    throw new HemValidationError(`Invalid ${parameter}: must be zero or a positive number of milliseconds up to ${MAX_TIMER_MS}`, { parameter });
   }
   return value;
 }
@@ -277,7 +283,15 @@ export class Transport {
         return { response, body: new Uint8Array() };
       }
       // The limit also covers the body.
-      const body = new Uint8Array(await untilAborted(response.arrayBuffer(), controller.signal));
+      let body: Uint8Array;
+      try {
+        body = new Uint8Array(await untilAborted(response.arrayBuffer(), controller.signal));
+      } catch (error) {
+        // An error status whose body cannot be read (the device closes the
+        // connection after a 413) is still mapped by its status, with an empty body.
+        if (stopped || response.ok) throw error;
+        body = new Uint8Array();
+      }
       return { response, body };
     } catch (error) {
       if (stopped) throw stopped;

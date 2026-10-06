@@ -5,6 +5,7 @@
  */
 import { HemAbortError, HemError, HemTimeoutError, HemUnreachableError, HemUnsupportedError } from '../errors.js';
 import type { CheckinRelay } from '../relay/checkin.js';
+import { guardRelay, isString } from '../relay/http.js';
 import type { CallOptions } from '../transport/transport.js';
 import {
   type BindingContext,
@@ -264,7 +265,7 @@ export class SystemApi {
     const relay = this.#relay;
     if (!relay) throw new HemUnsupportedError('system.checkin: no check-in relay is configured', { operation: 'system.checkin' });
     const check = await this.getCheckin(options);
-    const checked = await relay.exchange(check, { signal: options?.signal });
+    const checked = await guardRelay('relay.checkin', () => relay.exchange(check, { signal: options?.signal }), isString);
     return this.postCheckin(checked, options);
   }
 

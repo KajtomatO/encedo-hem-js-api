@@ -209,7 +209,15 @@ describe('pacing', () => {
     expect(fake.requests).toHaveLength(2);
   });
 
-  it.each([-1, Number.NaN, Number.POSITIVE_INFINITY])('rejects an interval of %d', (minIntervalMs) => {
+  // verifies: REQ-NET-008
+  it.each([-1, Number.NaN, Number.POSITIVE_INFINITY, 2_147_483_648])('rejects an interval of %d', (minIntervalMs) => {
     expect(() => new Transport({ url: 'https://hem.test', fetch: new FakeFetch().fetch, minIntervalMs })).toThrow(HemValidationError);
+  });
+
+  // verifies: REQ-NET-008
+  it('accepts an interval of 0 and of the largest delay setTimeout honours', () => {
+    const fake = new FakeFetch();
+    expect(() => new Transport({ url: 'https://hem.test', fetch: fake.fetch, minIntervalMs: 0 })).not.toThrow();
+    expect(() => new Transport({ url: 'https://hem.test', fetch: fake.fetch, minIntervalMs: 2_147_483_647 })).not.toThrow();
   });
 });

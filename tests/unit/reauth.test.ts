@@ -47,6 +47,19 @@ describe('re-authentication after a 401', () => {
   }, 60_000);
 
   // verifies: REQ-AUTH-008
+  it('does not keep the token the repeated call was refused with: the next call starts with a login', async () => {
+    const fake = loginDevice().always('GET', '/api/test/a', { status: 401 });
+    const client = newClient(fake);
+    await expect(call(client)).rejects.toThrow(HemUnauthenticatedError);
+    expect((contextOf(client).tokens as unknown as { cachedScopes: string[] }).cachedScopes).toEqual([]);
+
+    fake.on('GET', '/api/test/a', { body: {} });
+    const from = fake.requests.length;
+    await expect(call(client)).resolves.toEqual({});
+    expect(sequence(fake, from)).toEqual(['GET /api/auth/token', 'POST /api/auth/token', 'GET /api/test/a']);
+  }, 60_000);
+
+  // verifies: REQ-AUTH-008
   it('discards only the token of the affected scope', async () => {
     const fake = loginDevice().always('GET', /^\/api\/test\//, { body: {} });
     const client = newClient(fake);

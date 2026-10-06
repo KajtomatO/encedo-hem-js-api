@@ -76,12 +76,21 @@ describe('time limit', () => {
     expect(vi.getTimerCount()).toBe(0);
   });
 
-  it.each([0, -1, Number.NaN, Number.POSITIVE_INFINITY])('rejects a limit of %d with HemValidationError', async (timeoutMs) => {
+  // verifies: REQ-NET-004
+  it.each([0, -1, Number.NaN, Number.POSITIVE_INFINITY, 2_147_483_648])('rejects a limit of %d with HemValidationError', async (timeoutMs) => {
     const fake = new FakeFetch();
     expect(() => new Transport({ url: 'https://hem.test', fetch: fake.fetch, timeoutMs })).toThrow(HemValidationError);
     const transport = new Transport({ url: 'https://hem.test', fetch: fake.fetch });
     await expect(transport.send(request({ timeoutMs }))).rejects.toThrow(HemValidationError);
     expect(fake.requests).toHaveLength(0);
+  });
+
+  // verifies: REQ-NET-004
+  it('accepts the largest delay setTimeout honours, 2 147 483 647 ms, per client and per call', async () => {
+    const fake = new FakeFetch().always('GET', '/api/system/status', { body: {} });
+    const transport = new Transport({ url: 'https://hem.test', fetch: fake.fetch, timeoutMs: 2_147_483_647 });
+    await expect(transport.send(request({ timeoutMs: 2_147_483_647 }))).resolves.toMatchObject({ status: 200 });
+    expect(vi.getTimerCount()).toBe(0);
   });
 });
 

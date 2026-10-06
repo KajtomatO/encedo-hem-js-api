@@ -15,6 +15,7 @@ import {
   HemRelayError,
   HemUnreachableError,
   HemUnsupportedError,
+  HemValidationError,
 } from '../../src/index.js';
 import { FakeFetch } from '../support/fake-fetch.js';
 import { fakeToken } from '../support/login.js';
@@ -199,6 +200,75 @@ describe('without a relay', () => {
     expect(fake.requests).toHaveLength(0);
     await expect(client.auth.requestApproval({ epk: EPK, scope: 'keymgmt:list' })).resolves.toMatchObject({ epk: EPK });
     await expect(client.auth.redeemApproval({ authreply: 'r', scope: 'keymgmt:list' })).resolves.toBe(TOKEN);
+  });
+});
+
+describe('custom relay failures', () => {
+  const boom = (): TypeError => new TypeError('boom');
+
+  // verifies: REQ-AUTH-016
+  it('names the leg and keeps the cause when getKey, submit or check throws a plain Error', async () => {
+    const keyError = boom();
+    const failingKey = new MemoryRelay([{ status: 'pending' }]);
+    failingKey.getKey = () => Promise.reject(keyError);
+    let error = await newClient(device(), failingKey).auth.beginApproval('keymgmt:list').catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(HemRelayError);
+    expect((error as HemRelayError).operation).toBe('relay.approval.getKey');
+    expect((error as HemRelayError).cause).toBe(keyError);
+
+    const submitError = boom();
+    error = await newClient(device(), new MemoryRelay([{ status: 'pending' }], [submitError])).auth.beginApproval('keymgmt:list').catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(HemRelayError);
+    expect((error as HemRelayError).operation).toBe('relay.approval.submit');
+    expect((error as HemRelayError).cause).toBe(submitError);
+
+    const checkError = boom();
+    const client = newClient(device(), new MemoryRelay([checkError]));
+    const pending = await client.auth.beginApproval('keymgmt:list');
+    error = await client.auth.pollApproval(pending).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(HemRelayError);
+    expect((error as HemRelayError).operation).toBe('relay.approval.check');
+    expect((error as HemRelayError).cause).toBe(checkError);
+  });
+
+  // verifies: REQ-AUTH-016
+  it('reports a malformed check outcome as HemRelayError naming the leg', async () => {
+    const malformed = [{ status: 'maybe' }, { status: 'approved' }, 'approved', null] as unknown as ApprovalCheck[];
+    const client = newClient(device(), new MemoryRelay(malformed));
+    const pending = await client.auth.beginApproval('keymgmt:list');
+    for (let i = 0; i < malformed.length; i++) {
+      const error = await client.auth.pollApproval(pending).catch((e: unknown) => e);
+      expect(error).toBeInstanceOf(HemRelayError);
+      expect((error as HemRelayError).operation).toBe('relay.approval.check');
+    }
+  });
+
+  // verifies: REQ-AUTH-018
+  it('lets a wait run through such failures and names the last one as the cause of the timeout', async () => {
+    const client = newClient(device(), new MemoryRelay([boom()]));
+    const pending = await client.auth.beginApproval('keymgmt:list');
+    const error = await client.auth.waitForApproval(pending, { timeoutMs: 1, intervalMs: 1 }).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(HemApprovalTimeoutError);
+    expect((error as HemApprovalTimeoutError).cause).toBeInstanceOf(HemRelayError);
+  });
+});
+
+describe('wait options', () => {
+  // verifies: REQ-AUTH-018
+  it.each([0, -1, Number.NaN, 2_147_483_648])('rejects a timeoutMs or intervalMs of %d with HemValidationError before polling', async (value) => {
+    const relay = new MemoryRelay([{ status: 'approved', authreply: 'r' }]);
+    const client = newClient(device(), relay);
+    const pending = await client.auth.beginApproval('keymgmt:list');
+    await expect(client.auth.waitForApproval(pending, { timeoutMs: value })).rejects.toThrow(HemValidationError);
+    await expect(client.auth.waitForApproval(pending, { intervalMs: value })).rejects.toThrow(HemValidationError);
+    expect(relay.log.filter((entry) => entry.startsWith('check'))).toHaveLength(0);
+  });
+
+  // verifies: REQ-AUTH-018
+  it('accepts the largest delay setTimeout honours for both', async () => {
+    const client = newClient(device(), new MemoryRelay([{ status: 'approved', authreply: 'r' }]));
+    const pending = await client.auth.beginApproval('keymgmt:list');
+    await expect(client.auth.waitForApproval(pending, { timeoutMs: 2_147_483_647, intervalMs: 2_147_483_647 })).resolves.toBe(TOKEN);
   });
 });
 

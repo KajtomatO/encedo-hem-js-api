@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { EncedoApprovalRelay, HemClient, HemRelayError } from '../../src/index.js';
+import { EncedoApprovalRelay, HemClient, HemRelayError, HemValidationError } from '../../src/index.js';
 import { FakeFetch } from '../support/fake-fetch.js';
 
 const EPK = 'AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE=';
@@ -87,5 +87,15 @@ describe('EncedoApprovalRelay', () => {
     } finally {
       globalThis.fetch = original;
     }
+  });
+
+  // verifies: REQ-NET-004
+  it.each([0, -1, Number.NaN, 2_147_483_648])('rejects a timeoutMs of %d with HemValidationError at construction', (timeoutMs) => {
+    expect(() => new EncedoApprovalRelay({ timeoutMs })).toThrow(HemValidationError);
+  });
+
+  // verifies: REQ-NET-004
+  it('accepts the largest delay setTimeout honours as its time limit', () => {
+    expect(() => new EncedoApprovalRelay({ timeoutMs: 2_147_483_647 })).not.toThrow();
   });
 });
