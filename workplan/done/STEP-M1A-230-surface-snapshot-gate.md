@@ -9,7 +9,7 @@ depends_on: ["STEP-M1A-030", "STEP-M1A-220"]
 evidence:
   commits: ["abefa20", "12f778b", "b2f05ac"]
   tests: ["verifies: REQ-API-008 (tests/unit/surface.node.test.ts, tests/unit/surface.test.ts)", "verifies: REQ-AUTH-005 (tests/unit/conformance.test.ts, tests/unit/no-token-parameter.node.test.ts)", "verifies: REQ-AUTH-012 (tests/unit/conformance.test.ts)", "verifies: REQ-NET-003 (tests/unit/conformance.test.ts)", "verifies: REQ-NET-009 (tests/unit/conformance.test.ts)", "verifies: REQ-TEST-001 (tests/unit/conformance.test.ts)", "supports: REQ-API-008 (tests/support/surface.ts)"]
-  notes: "npm run check on 2026-10-05: build, type-check and 73 files / 1109 tests pass in Node v24.21.0 and headless Chromium; the REQ-AUTH-002 vector test passes in both. Surface snapshot: tests/surface/public-api.txt (one entry per exported declaration and public member, from the emitted .d.ts), regenerated for additions with `npm run surface:update`. Conformance tests walk ALL_OPERATIONS (17 operation descriptions) and fail for any operation missing from their table. REQ-API-004 fourth criterion: user decision 2026-10-05 — relay-carried values (epk, authreq, authreply, check, checked) and newfws/newuis stay strings as opaque tokens, as in https://github.com/KajtomatO/encedo-hem-c-api and in Encedo Manager (https://github.com/encedo/encedo-manager), which both pass them through untouched. OPEN: networking-disabled run (REQ-TEST-001 fourth criterion) — unprivileged network namespaces are blocked on the dev machine (kernel.apparmor_restrict_unprivileged_userns=1, no passwordless sudo), so the run needs the user. OPEN until the 0.1.0 release: REQ-API-008 third criterion (snapshot frozen at release)."
+  notes: "npm run check on 2026-10-05: build, type-check and 73 files / 1109 tests pass in Node v24.21.0 and headless Chromium; the REQ-AUTH-002 vector test passes in both. Surface snapshot: tests/surface/public-api.txt (one entry per exported declaration and public member, from the emitted .d.ts), regenerated for additions with `npm run surface:update`. Conformance tests walk ALL_OPERATIONS (17 operation descriptions) and fail for any operation missing from their table. REQ-API-004 fourth criterion: user decision 2026-10-05 — relay-carried values (epk, authreq, authreply, check, checked) and newfws/newuis stay strings as opaque tokens, as in https://github.com/KajtomatO/encedo-hem-c-api and in Encedo Manager (https://github.com/encedo/encedo-manager), which both pass them through untouched. Networking-disabled run (REQ-TEST-001 fourth criterion): unprivileged network namespaces are blocked on the dev machine (kernel.apparmor_restrict_unprivileged_userns=1), so the user ran it on 2026-10-06 as `sudo unshare -n sh -c "ip link set lo up && sudo -u $USER -H env PATH='$PATH' npm run check"` — an empty network namespace with only loopback up (needed by the browser test server) — and reported all tests passing. Gate reported to the user on 2026-10-05. OPEN until the 0.1.0 release: REQ-API-008 third criterion (snapshot frozen at release)."
 reopened: []
 cancelled: null
 ---
@@ -73,7 +73,7 @@ the M1A gate of ARCHITECTURE.md §8 and §10 is run and reported.
 - [x] No public operation takes or returns base64 text for a binary value,
       apart from the stated exceptions; the open point on relay-carried
       strings is settled with the user.
-- [ ] The unit suite passes with networking disabled; the method is noted in
+- [x] The unit suite passes with networking disabled; the method is noted in
       the evidence.
 - [x] The local check script passes: build, type-check, unit suite in Node 24
       and in the headless browser; the login vector reproduces byte for byte
@@ -81,6 +81,6 @@ the M1A gate of ARCHITECTURE.md §8 and §10 is run and reported.
 - [x] The trace matrix is regenerated: all 64 M1A REQs have `implements:` and
       `verifies:` tags; any non-`(M1B)` acceptance box still open is listed
       with its reason.
-- [ ] The gate result is reported to the user.
-- [ ] The non-`(M1B)` acceptance boxes this step closes are ticked in the REQ
+- [x] The gate result is reported to the user.
+- [x] The non-`(M1B)` acceptance boxes this step closes are ticked in the REQ
       files (revision bumped).

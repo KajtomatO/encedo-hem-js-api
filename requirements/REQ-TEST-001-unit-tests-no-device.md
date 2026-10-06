@@ -3,7 +3,7 @@ id: REQ-TEST-001
 title: Unit tests run without a device
 status: approved
 priority: must
-revision: 3
+revision: 4
 source: start_point G21
 depends_on: []
 supersedes: null
@@ -27,4 +27,4 @@ to run anywhere, including CI, where no device exists. Introduced in M1.
       `supports:`.
 - [x] Every binding has at least one unit test asserting the request's
       method, path, headers and body, and the mapping of its response.
-- [ ] The suite passes on a machine with networking disabled.
+- [x] The suite passes on a machine with networking disabled.
