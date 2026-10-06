@@ -1,5 +1,5 @@
 // Test setup for every unit test file, in Node and in the browser.
-// implements: REQ-TEST-001 — the global `fetch` is replaced with one that fails
+// supports: REQ-TEST-001 — the global `fetch` is replaced with one that fails
 // the test, so a request that was not substituted cannot reach the network.
 import { afterEach } from 'vitest';
 
