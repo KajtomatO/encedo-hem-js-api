@@ -47,6 +47,17 @@ describe('static source check', () => {
     expect(rulesOf(source)).toContain(rule);
   });
 
+  // verifies: REQ-API-001
+  it.each([
+    ['let calls = 0;', 'module-level let/var'],
+    ['export let cache = new Map();', 'module-level let/var'],
+    ['var legacy;', 'module-level let/var'],
+    ["const a = 1;\nlet shared: string | undefined;\nfunction f() {\n  let local = 0;\n}", 'module-level let/var'],
+  ])('flags module-level state in %j', (source, rule) => {
+    const violations = checkSource('sample.ts', source).filter((v) => v.rule === rule);
+    expect(violations).toHaveLength(1);
+  });
+
   // verifies: REQ-BUILD-003, REQ-API-009
   it('accepts relative imports, globalThis.crypto, fetch and look-alike names', () => {
     const clean = [
@@ -63,6 +74,14 @@ describe('static source check', () => {
       "const message = 'console.log(token) and node:fs in a string';",
       'const text = `process ${count} items from localStorage`;',
       'const pattern = /console|process/g;',
+      'const TABLE = Object.freeze([1, 2, 3]);',
+      'function count(items: number[]): number {',
+      '  let total = 0;',
+      '  for (const item of items) total += item;',
+      '  return total;',
+      '}',
+      '// let comment = 1;',
+      "const letter = 'let x';",
     ].join('\n');
     expect(checkSource('clean.ts', clean)).toEqual([]);
   });

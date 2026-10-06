@@ -53,7 +53,7 @@ describe('token cache', () => {
     await call(client, 'keymgmt:list');
     await call(client, 'keymgmt:search');
     expect(logins(fake)).toEqual(['keymgmt:list', 'keymgmt:search']);
-  }, 60_000);
+  });
 
   // verifies: REQ-AUTH-004, REQ-AUTH-005
   it('keys the cache by the exact scope string and attaches that scope’s token as a Bearer header', async () => {
@@ -72,7 +72,7 @@ describe('token cache', () => {
     const scopes = calls.map((request) => claimsOf((request.headers['authorization'] as string).replace(/^Bearer /, ''))['scope']);
     expect(scopes).toEqual([`keymgmt:use:${kidA}`, `keymgmt:use:${kidB}`, `keymgmt:use:${kidA}`, 'keymgmt:list', 'keymgmt:search']);
     for (const request of calls) expect(request.headers['authorization']).toMatch(/^Bearer [\w-]+\.[\w-]+\.[\w-]+$/);
-  }, 60_000);
+  });
 
   // verifies: REQ-AUTH-004, REQ-AUTH-007
   it('reads the expiry from the token’s exp claim', async () => {
@@ -86,7 +86,7 @@ describe('token cache', () => {
     clock = (v.iat + 600 - 60) * 1000;
     await call(client, 'keymgmt:list');
     expect(logins(fake)).toHaveLength(2);
-  }, 60_000);
+  });
 
   // verifies: REQ-AUTH-004
   it('falls back to the requested expiry when the token cannot be decoded', async () => {
@@ -100,7 +100,7 @@ describe('token cache', () => {
     clock = (v.iat + 1_000 - 60) * 1000;
     await call(client, 'keymgmt:list');
     expect(logins(fake)).toHaveLength(2);
-  }, 60_000);
+  });
 });
 
 describe('renewal', () => {
@@ -118,7 +118,7 @@ describe('renewal', () => {
     expect(logins(fake)).toHaveLength(2);
     // The login came before the call.
     expect(fake.requests.slice(-3).map((r) => `${r.method} ${r.path}`)).toEqual(['GET /api/auth/token', 'POST /api/auth/token', 'GET /api/test/a']);
-  }, 60_000);
+  });
 
   // verifies: REQ-AUTH-007
   it('starts no background timer', async () => {
@@ -130,7 +130,7 @@ describe('renewal', () => {
     await call(client, 'keymgmt:gen');
     expect(vi.getTimerCount()).toBe(0);
     expect(intervals).not.toHaveBeenCalled();
-  }, 60_000);
+  });
 });
 
 describe('roles', () => {
@@ -144,7 +144,7 @@ describe('roles', () => {
     expect(client.auth.role).toBeUndefined();
     await call(client, 'system:config');
     expect(client.auth.role).toEqual(role);
-  }, 60_000);
+  });
 
   // verifies: REQ-AUTH-010
   it('passes a master session’s 403 on a key operation through as HemForbiddenError', async () => {
@@ -152,7 +152,7 @@ describe('roles', () => {
     const client = newClient(fake);
     await expect(call(client, 'keymgmt:list')).rejects.toThrow(HemForbiddenError);
     expect(client.auth.role).toEqual({ kind: 'master' });
-  }, 60_000);
+  });
 });
 
 describe('public operations', () => {
@@ -184,7 +184,7 @@ describe('public operations', () => {
       'POST /api/auth/token',
     ]);
     for (const request of publicRequests) expect(request.headers['authorization'], request.path).toBeUndefined();
-  }, 60_000);
+  });
 });
 
 describe('logout', () => {
@@ -203,7 +203,7 @@ describe('logout', () => {
     await expect(call(client, 'keymgmt:list')).rejects.toThrow(HemUnauthenticatedError);
     await expect(call(client, 'keymgmt:gen')).rejects.toThrow(HemUnauthenticatedError);
     expect(fake.requests).toHaveLength(before);
-  }, 60_000);
+  });
 
   it('leaves public calls working', async () => {
     const fake = device().on('GET', '/api/system/status', { body: { ctx: 0, uptime: 1, temp: 1, fls_state: 0 } });
@@ -231,7 +231,7 @@ describe('client isolation', () => {
     expect(logins(fakeA)).toEqual(['keymgmt:list']); // b logged in on its own; a's token was not reused
     a.auth.logout();
     await call(b, 'keymgmt:list'); // unaffected by the other client's logout
-  }, 60_000);
+  });
 });
 
 describe('time limit with a login first', () => {
@@ -247,7 +247,7 @@ describe('time limit with a login first', () => {
     // Each request takes 200 ms; the three together exceed the 300 ms limit.
     const client = newClient(fake, { timeoutMs: 300 });
     await expect(call(client, 'keymgmt:list')).resolves.toEqual({});
-  }, 60_000);
+  });
 });
 
 describe('secrets in errors of authenticated calls', () => {
@@ -265,7 +265,7 @@ describe('secrets in errors of authenticated calls', () => {
         expect(view).not.toContain(token);
       }
     }
-  }, 60_000);
+  });
 });
 
 describe('no token parameter', () => {

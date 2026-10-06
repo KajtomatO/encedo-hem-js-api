@@ -37,6 +37,9 @@ const codeRules: Rule[] = [
   { name: 'cache or cookie storage', pattern: /(?<![\w$])(?:caches|cookieStore)\b|\bdocument\s*\.\s*cookie\b/g },
   { name: 'file system', pattern: /\bnavigator\s*\.\s*storage\b|(?<![\w$.])(?:showSaveFilePicker|showOpenFilePicker|showDirectoryPicker)\b/g },
   { name: 'environment variables', pattern: /\bimport\s*\.\s*meta\s*\.\s*env\b/g },
+  // REQ-API-001: no module-level state. A `let` or `var` at column 0 (optionally
+  // exported) is module state; `const` bindings and block-scoped variables are not.
+  { name: 'module-level let/var', pattern: /^(?:export\s+)?(?:let|var)\b/gm },
 ];
 
 /**

@@ -16,7 +16,7 @@ describe('login key derivation', () => {
     expect(bytesToBase64(key.publicKey)).toBe(v.iss);
     expect(key.eid).toBe(v.eid);
     expect(key.privateKey.extractable).toBe(false);
-  }, 60_000);
+  });
 
   // verifies: REQ-AUTH-003
   it('uses the eid text as the salt, not its decoded bytes, and the 32-byte output as the X25519 key', async () => {
@@ -28,7 +28,7 @@ describe('login key derivation', () => {
     const decodedSalt = base64ToBytes(v.eid);
     const asDecoded = await pbkdf2Sha256(utf8Encode(v.passphrase), decodedSalt, PBKDF2_ITERATIONS, 32);
     expect(bytesToHex(asDecoded)).not.toBe(bytesToHex(asText));
-  }, 60_000);
+  });
 
   // verifies: REQ-AUTH-003
   it('uses the passphrase as UTF-8 without Unicode normalisation', async () => {
@@ -51,7 +51,7 @@ describe('login proof (eJWT)', () => {
     const proof = await buildLoginProof(key, { jti: v.jti, spk: v.spk, exp: v.exp, iat: v.iat, scope: v.scope });
     expect(proof).toBe(`${v.header}.${v.claims}.${v.tag}`);
     expect(proof.split('.')).toEqual([v.header, v.claims, v.tag]);
-  }, 60_000);
+  });
 
   // verifies: REQ-AUTH-002
   it('uses the fixed header and compact claims in the order jti, aud, exp, iat, iss, scope, with / unescaped', async () => {
@@ -71,7 +71,7 @@ describe('login proof (eJWT)', () => {
     expect(Object.keys(JSON.parse(json) as object)).toEqual(['jti', 'aud', 'exp', 'iat', 'iss', 'scope']);
     for (const part of [header, claims, tag]) expect(part).toMatch(/^[A-Za-z0-9_-]+$/);
     expect(base64ToBytes(tag)).toHaveLength(32);
-  }, 60_000);
+  });
 
   it('rejects a challenge spk that is not a 32-byte key, and non-integer times', async () => {
     const key = await deriveLoginKey(v.passphrase, v.eid);
@@ -79,5 +79,5 @@ describe('login proof (eJWT)', () => {
     await expect(buildLoginProof(key, { ...claims, spk: 'AQID' })).rejects.toThrow(HemProtocolError);
     await expect(buildLoginProof(key, { ...claims, spk: 'not base64!' })).rejects.toThrow(HemProtocolError);
     await expect(buildLoginProof(key, { ...claims, exp: 1.5 })).rejects.toThrow(RangeError);
-  }, 60_000);
+  });
 });

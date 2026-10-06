@@ -33,7 +33,7 @@ describe('re-authentication after a 401', () => {
 
     expect(sequence(fake, from)).toEqual(['GET /api/test/a', 'GET /api/auth/token', 'POST /api/auth/token', 'GET /api/test/a']);
     expect(fake.requests[from]?.headers['authorization']).toBe(firstToken);
-  }, 60_000);
+  });
 
   // verifies: REQ-AUTH-008
   it('raises HemUnauthenticatedError on a second 401, with no third attempt', async () => {
@@ -44,7 +44,7 @@ describe('re-authentication after a 401', () => {
     expect((error as HemUnauthenticatedError).status).toBe(401);
     expect(fake.requestsTo('GET', '/api/test/a')).toHaveLength(2);
     expect(fake.requestsTo('POST', '/api/auth/token')).toHaveLength(2);
-  }, 60_000);
+  });
 
   // verifies: REQ-AUTH-008
   it('does not keep the token the repeated call was refused with: the next call starts with a login', async () => {
@@ -57,7 +57,7 @@ describe('re-authentication after a 401', () => {
     const from = fake.requests.length;
     await expect(call(client)).resolves.toEqual({});
     expect(sequence(fake, from)).toEqual(['GET /api/auth/token', 'POST /api/auth/token', 'GET /api/test/a']);
-  }, 60_000);
+  });
 
   // verifies: REQ-AUTH-008
   it('discards only the token of the affected scope', async () => {
@@ -72,13 +72,13 @@ describe('re-authentication after a 401', () => {
     expect(scopes).toEqual(['keymgmt:list', 'keymgmt:search', 'keymgmt:list']);
     const session = contextOf(client).tokens as unknown as { cachedScopes: string[] };
     expect(session.cachedScopes.sort()).toEqual(['keymgmt:list', 'keymgmt:search']);
-  }, 60_000);
+  });
 
   it('does not retry other errors', async () => {
     const fake = loginDevice().on('GET', '/api/test/a', { status: 403 });
     await expect(call(newClient(fake))).rejects.toMatchObject({ status: 403 });
     expect(fake.requestsTo('GET', '/api/test/a')).toHaveLength(1);
-  }, 60_000);
+  });
 
   it('never retries a public operation through a login', async () => {
     const fake = loginDevice().on('GET', '/api/system/status', { status: 401 });
@@ -106,7 +106,7 @@ describe('re-authentication after a 401', () => {
     for (let i = 1; i < starts.length; i += 1) {
       expect((starts[i] as number) - (starts[i - 1] as number)).toBeGreaterThanOrEqual(39);
     }
-  }, 60_000);
+  });
 });
 
 describe('shared login', () => {
@@ -118,7 +118,7 @@ describe('shared login', () => {
     expect(fake.requestsTo('GET', '/api/auth/token')).toHaveLength(1);
     expect(fake.requestsTo('POST', '/api/auth/token')).toHaveLength(1);
     expect(fake.requestsTo('GET', /^\/api\/test\//)).toHaveLength(5);
-  }, 60_000);
+  });
 
   // verifies: REQ-AUTH-013
   it('rejects every waiting call with an error of the same class when the login fails, and the next call starts a new login', async () => {
@@ -135,7 +135,7 @@ describe('shared login', () => {
 
     await expect(call(client)).resolves.toEqual({});
     expect(fake.requestsTo('GET', '/api/auth/token')).toHaveLength(2);
-  }, 60_000);
+  });
 
   // verifies: REQ-NET-005, REQ-AUTH-013
   it('lets one call be aborted without failing another call that shares the same login', async () => {
@@ -161,5 +161,5 @@ describe('shared login', () => {
     await expect(other).resolves.toEqual({});
     expect(fake.requestsTo('POST', '/api/auth/token')).toHaveLength(1);
     expect(fake.requestsTo('GET', /^\/api\/test\//).map((r) => r.path)).toEqual(['/api/test/b']);
-  }, 60_000);
+  });
 });

@@ -26,7 +26,7 @@ describe('crypto.hmac', () => {
     expect(result).toEqual(mac);
     expect(loginScopes(fake)).toEqual([`keymgmt:use:${KID}`]);
     expect(expectJsonPost(fake, '/api/crypto/hmac/hash')).toEqual({ kid: KID, msg: 'AQID' });
-  }, 60_000);
+  });
 
   // verifies: REQ-OPS-001, REQ-API-005
   it.each([0, 2049])('rejects a %i-byte message with HemValidationError and no request', async (length) => {
@@ -42,13 +42,13 @@ describe('crypto.hmac', () => {
     const fake = loginDevice().on('POST', '/api/crypto/hmac/hash', { body: { mac: 'AA==' } });
     await loggedInClient(fake).crypto.hmac({ kid: KID, msg: bytes(2048) });
     expect(operationRequests(fake)).toHaveLength(1);
-  }, 60_000);
+  });
 
   // verifies: REQ-OPS-001
   it('raises HemOperationFailedError for a 406', async () => {
     const fake = loginDevice().on('POST', '/api/crypto/hmac/hash', { status: 406 });
     await expect(loggedInClient(fake).crypto.hmac({ kid: KID, msg: bytes(1) })).rejects.toThrow(HemOperationFailedError);
-  }, 60_000);
+  });
 });
 
 describe('crypto.wrap', () => {
@@ -60,14 +60,14 @@ describe('crypto.wrap', () => {
     expect(result).toEqual(wrapped);
     expect(loginScopes(fake)).toEqual([`keymgmt:use:${KID}`]);
     expect(expectJsonPost(fake, '/api/crypto/cipher/wrap')).toEqual({ kid: KID, msg: b64(bytes(32)) });
-  }, 60_000);
+  });
 
   // verifies: REQ-OPS-002
   it.each(['AES128', 'AES192', 'AES256'] as const)('adds alg %s and iv when given', async (alg) => {
     const fake = loginDevice().on('POST', '/api/crypto/cipher/wrap', { body: { wrapped: 'AA==' } });
     await loggedInClient(fake).crypto.wrap({ kid: KID, msg: bytes(16), alg, iv: Uint8Array.from([1, 2, 3, 4, 5, 6, 7, 8]) });
     expect(expectJsonPost(fake, '/api/crypto/cipher/wrap')).toEqual({ kid: KID, msg: b64(bytes(16)), alg, iv: 'AQIDBAUGBwg=' });
-  }, 60_000);
+  });
 
   // verifies: REQ-OPS-002
   it.each([
@@ -93,7 +93,7 @@ describe('crypto.wrap', () => {
     await client.crypto.wrap({ kid: KID, msg: bytes(16) });
     await client.crypto.wrap({ kid: KID, msg: bytes(2048) });
     expect(operationRequests(fake)).toHaveLength(2);
-  }, 60_000);
+  });
 });
 
 describe('crypto.unwrap', () => {
@@ -107,7 +107,7 @@ describe('crypto.unwrap', () => {
 
     await client.crypto.unwrap({ kid: KID, msg: bytes(24), alg: 'AES128', iv: bytes(8, 0xa6) });
     expect(operationRequests(fake)[1]?.json()).toEqual({ kid: KID, msg: b64(bytes(24)), alg: 'AES128', iv: 'pqampqampqY=' });
-  }, 60_000);
+  });
 
   // verifies: REQ-OPS-003
   it.each([[bytes(39)], [bytes(4)], [bytes(0)]])('rejects input that is not a positive multiple of 8 bytes', async (msg) => {
@@ -120,7 +120,7 @@ describe('crypto.unwrap', () => {
   it('raises HemOperationFailedError for a 406 (integrity check failed)', async () => {
     const fake = loginDevice().on('POST', '/api/crypto/cipher/unwrap', { status: 406 });
     await expect(loggedInClient(fake).crypto.unwrap({ kid: KID, msg: bytes(40) })).rejects.toThrow(HemOperationFailedError);
-  }, 60_000);
+  });
 });
 
 describe('crypto operations share the per-key token with key get', () => {
@@ -137,7 +137,7 @@ describe('crypto operations share the per-key token with key get', () => {
     await client.crypto.wrap({ kid: KID, msg: bytes(16) });
     await client.crypto.unwrap({ kid: KID, msg: bytes(24) });
     expect(loginScopes(fake)).toEqual([`keymgmt:use:${KID}`]);
-  }, 60_000);
+  });
 });
 
 describe('crypto operations over plain HTTP', () => {

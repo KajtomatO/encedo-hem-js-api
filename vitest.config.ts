@@ -11,6 +11,8 @@ const nodeOnlyTests = 'tests/unit/**/*.node.test.ts';
 export default defineConfig({
   test: {
     setupFiles: ['tests/support/setup.ts'],
+    // The login vector runs the full 600 000 PBKDF2 iterations, which takes seconds in the browser.
+    testTimeout: 60_000,
     projects: [
       {
         extends: true,

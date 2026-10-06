@@ -29,7 +29,7 @@ describe('keys.create', () => {
     expect(Object.keys(request?.headers ?? {}).sort()).toEqual(['authorization', 'content-type']);
     expect(request?.headers['content-type']).toBe('application/json');
     expect(request?.text()).toBe('{"label":"root key","type":"AES256"}');
-  }, 60_000);
+  });
 
   // verifies: REQ-KEY-001, REQ-API-004
   it('adds mode and descr (standard base64) when given', async () => {
@@ -42,14 +42,14 @@ describe('keys.create', () => {
     });
     expect(kid).toBe(KID);
     expect(operationRequests(fake)[0]?.json()).toEqual({ label: 'signer', type: 'SECP256R1', mode: 'ECDH,ExDSA', descr: '+/+/AA==' });
-  }, 60_000);
+  });
 
   // verifies: REQ-KEY-001
   it.each(KEY_TYPES)('accepts type %s', async (type) => {
     const fake = loginDevice().on('POST', '/api/keymgmt/create', { body: { kid: KID } });
     await loggedInClient(fake).keys.create({ label: 'k', type });
     expect((operationRequests(fake)[0]?.json() as { type: string }).type).toBe(type);
-  }, 60_000);
+  });
 
   // verifies: REQ-KEY-001, REQ-API-005
   it.each([
@@ -74,12 +74,12 @@ describe('keys.create', () => {
     const fake = loginDevice().on('POST', '/api/keymgmt/create', { body: { kid: KID } });
     await loggedInClient(fake).keys.create({ label: 'L'.repeat(32), type: 'AES256', descr: new Uint8Array(64) });
     expect(operationRequests(fake)).toHaveLength(1);
-  }, 60_000);
+  });
 
   it('rejects a reply without a valid key id', async () => {
     const fake = loginDevice().on('POST', '/api/keymgmt/create', { body: { kid: 'xyz' } });
     await expect(loggedInClient(fake).keys.create({ label: 'k', type: 'AES256' })).rejects.toThrow(HemProtocolError);
-  }, 60_000);
+  });
 });
 
 describe('keys.get', () => {
@@ -95,7 +95,7 @@ describe('keys.get', () => {
     expect(requests[0]?.method).toBe('GET');
     expect(Object.keys(requests[0]?.headers ?? {})).toEqual(['authorization']);
     expect(requests[0]?.body).toBeUndefined();
-  }, 60_000);
+  });
 
   // verifies: REQ-KEY-002, REQ-KEY-005
   it('returns updated, and type, pubkey, der and descr (bytes) when present', async () => {
@@ -110,13 +110,13 @@ describe('keys.get', () => {
       der: Uint8Array.from([0x30, 0]),
       descr: Uint8Array.from([0x68, 0x69]),
     });
-  }, 60_000);
+  });
 
   // verifies: REQ-KEY-002
   it('raises HemOperationFailedError for 406 (key not found)', async () => {
     const fake = loginDevice().on('GET', `/api/keymgmt/get/${KID}`, { status: 406 });
     await expect(loggedInClient(fake).keys.get(KID)).rejects.toThrow(HemOperationFailedError);
-  }, 60_000);
+  });
 
   // verifies: REQ-API-005
   it.each(['', 'xyz', `${KID}0`, `${KID.slice(0, 31)}g`])('rejects key id %j with HemValidationError and no request', async (kid) => {
@@ -134,7 +134,7 @@ describe('key operations and roles', () => {
     await expect(client.keys.create({ label: 'k', type: 'AES256' })).rejects.toThrow(HemForbiddenError);
     await expect(client.keys.get(KID)).rejects.toThrow(HemForbiddenError);
     expect(client.auth.role).toEqual({ kind: 'master' });
-  }, 60_000);
+  });
 });
 
 describe('key operations over plain HTTP', () => {

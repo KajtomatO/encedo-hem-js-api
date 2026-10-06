@@ -48,7 +48,7 @@ describe('keys.list', () => {
     expect(request?.method).toBe('GET');
     expect(Object.keys(request?.headers ?? {})).toEqual(['authorization']);
     expect(request?.body).toBeUndefined();
-  }, 60_000);
+  });
 
   // verifies: REQ-KEY-004
   it('chooses the path from the parameters, for any offset and any count from 1 to 15', async () => {
@@ -64,7 +64,7 @@ describe('keys.list', () => {
     expect(paths.slice(3, 18)).toEqual(Array.from({ length: 15 }, (_, i) => `/api/keymgmt/list/7/${i + 1}`));
     expect(paths[18]).toBe('/api/keymgmt/list/0/5');
     expect(loginScopes(fake)).toEqual(['keymgmt:list']);
-  }, 60_000);
+  });
 
   // verifies: REQ-KEY-004
   it.each([{ count: 16 }, { count: 0 }, { count: 2.5 }, { offset: -1 }, { offset: 1.5 }, { offset: Number.NaN }])(
@@ -81,7 +81,7 @@ describe('keys.list', () => {
     const fake = loginDevice().on('GET', '/api/keymgmt/list', { body: envelope(0, 1, [noLabel]) });
     await expect(loggedInClient(fake).keys.list()).rejects.toThrow(/list\[0\]\.label/);
     expect(HemProtocolError).toBeDefined();
-  }, 60_000);
+  });
 });
 
 describe('keys.listAll', () => {
@@ -95,7 +95,7 @@ describe('keys.listAll', () => {
     const keys = await loggedInClient(fake).keys.listAll();
     expect(keys.map((key) => key.kid)).toEqual(Array.from({ length: 20 }, (_, i) => kid(i)));
     expect(operationRequests(fake).map((r) => r.path)).toEqual(['/api/keymgmt/list/0/15', '/api/keymgmt/list/15/15', '/api/keymgmt/list/17/15']);
-  }, 60_000);
+  });
 
   // verifies: REQ-KEY-004
   it('stops at an empty page even when total says more', async () => {
@@ -103,12 +103,12 @@ describe('keys.listAll', () => {
       .on('GET', '/api/keymgmt/list/0/15', { body: envelope(0, 9, [record(1)]) })
       .on('GET', '/api/keymgmt/list/1/15', { body: envelope(1, 9, []) });
     expect((await loggedInClient(fake).keys.listAll()).map((k) => k.kid)).toEqual([kid(1)]);
-  }, 60_000);
+  });
 
   it('makes one request for an empty repository', async () => {
     const fake = loginDevice().on('GET', '/api/keymgmt/list/0/15', { body: envelope(0, 0, []) });
     expect(await loggedInClient(fake).keys.listAll()).toEqual([]);
-  }, 60_000);
+  });
 });
 
 describe('keys.search', () => {
@@ -124,7 +124,7 @@ describe('keys.search', () => {
     expect(request?.path).toBe('/api/keymgmt/search');
     expect(Object.keys(request?.headers ?? {}).sort()).toEqual(['authorization', 'content-type']);
     expect(request?.text()).toBe('{"descr":"AQIDBA=="}');
-  }, 60_000);
+  });
 
   // verifies: REQ-KEY-003
   it('sends prefix, suffix and contains needles as base64 with ^, $ or neither, plus offset and limit when given', async () => {
@@ -139,7 +139,7 @@ describe('keys.search', () => {
       { descr: '+/8=$', offset: 15, limit: 5 },
       { descr: '+/8=', offset: 0 },
     ]);
-  }, 60_000);
+  });
 
   // verifies: REQ-KEY-003
   it.each([
@@ -161,7 +161,7 @@ describe('keys.search', () => {
     const fake = loginDevice().on('POST', '/api/keymgmt/search', { body: envelope(0, 0, []) });
     await loggedInClient(fake).keys.search({ descr: new Uint8Array(64) });
     expect(operationRequests(fake)).toHaveLength(1);
-  }, 60_000);
+  });
 
   // verifies: REQ-KEY-003
   it('gives an empty result for a 200 with an empty list and for a 404', async () => {
@@ -170,12 +170,12 @@ describe('keys.search', () => {
     const empty = { offset: 0, total: 0, listed: 0, deleted: 0, keys: [] };
     expect(await client.keys.search({ descr: Uint8Array.from([1]) })).toEqual(empty);
     expect(await client.keys.search({ descr: Uint8Array.from([1]) })).toEqual(empty);
-  }, 60_000);
+  });
 
   it('does not map a 404 of another operation to an empty result', async () => {
     const fake = loginDevice().on('GET', '/api/keymgmt/list', { status: 404 });
     await expect(loggedInClient(fake).keys.list()).rejects.toMatchObject({ status: 404 });
-  }, 60_000);
+  });
 });
 
 describe('keys.findByDescription', () => {
@@ -193,7 +193,7 @@ describe('keys.findByDescription', () => {
       { descr: '^b206cm9vdA==', offset: 0, limit: 15 },
       { descr: '^b206cm9vdA==', offset: 15, limit: 15 },
     ]);
-  }, 60_000);
+  });
 });
 
 describe('list and search over plain HTTP', () => {

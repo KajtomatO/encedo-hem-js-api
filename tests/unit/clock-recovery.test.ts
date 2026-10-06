@@ -73,7 +73,7 @@ describe('clock recovery', () => {
       'POST /api/auth/token',
       'GET /api/test',
     ]);
-  }, 60_000);
+  });
 
   // verifies: REQ-AUTH-009
   it('answers a 401 on the proof with drift evidence the same way, with a fresh challenge', async () => {
@@ -96,7 +96,7 @@ describe('clock recovery', () => {
     ]);
     const second = fake.requestsTo('POST', '/api/auth/token')[1]?.json() as { auth: string };
     expect(atob((second.auth.split('.')[1] as string).replace(/-/g, '+').replace(/_/g, '/'))).toContain('"jti":"fresh-nonce"');
-  }, 60_000);
+  });
 
   // verifies: REQ-AUTH-009
   it('treats a 401 without drift evidence as a wrong passphrase: no check-in', async () => {
@@ -106,7 +106,7 @@ describe('clock recovery', () => {
     expect(relay.calls).toBe(0);
     expect(checkins(fake)).toBe(0);
     expect(fake.requestsTo('GET', '/api/system/checkin')).toHaveLength(0);
-  }, 60_000);
+  });
 
   // verifies: REQ-AUTH-009
   it('runs at most one check-in per acquisition and reports the second failure', async () => {
@@ -116,7 +116,7 @@ describe('clock recovery', () => {
     expect(error).toBeInstanceOf(HemForbiddenError);
     expect(relay.calls).toBe(1);
     expect(fake.requestsTo('GET', '/api/auth/token')).toHaveLength(2);
-  }, 60_000);
+  });
 
   // verifies: REQ-AUTH-009
   it.each([

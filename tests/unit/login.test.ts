@@ -38,7 +38,7 @@ describe('passphrase login', () => {
     expect(fake.requests[0]?.headers).toEqual({});
     expect(fake.last.headers).toEqual({ 'content-type': 'application/json' });
     expect(fake.last.text()).toBe(JSON.stringify({ auth: `${v.header}.${v.claims}.${v.tag}` }));
-  }, 60_000);
+  });
 
   // verifies: REQ-AUTH-001
   it.each(['eid', 'spk', 'jti'])('raises HemProtocolError for a challenge missing %s', async (field) => {
@@ -63,7 +63,7 @@ describe('passphrase login', () => {
   it.each([{}, { token: 42 }, { token: '' }])('raises HemProtocolError for a proof reply %j without a token', async (reply) => {
     const fake = new FakeFetch().on('GET', '/api/auth/token', { body: vectorChallenge }).on('POST', '/api/auth/token', { body: reply });
     await expect(login(fake).acquire(v.scope)).rejects.toThrow(HemProtocolError);
-  }, 60_000);
+  });
 
   // verifies: REQ-AUTH-001
   it('raises HemUnauthenticatedError for a 401 on the proof, and HemDeviceStateError for a 409', async () => {
@@ -73,7 +73,7 @@ describe('passphrase login', () => {
     const session = login(fake);
     await expect(session.acquire(v.scope)).rejects.toThrow(HemUnauthenticatedError);
     await expect(session.acquire(v.scope)).rejects.toThrow(HemDeviceStateError);
-  }, 60_000);
+  });
 
   it('raises HemDeviceStateError for a 409 on the challenge (device not initialised)', async () => {
     const fake = new FakeFetch().on('GET', '/api/auth/token', { status: 409 });
@@ -96,13 +96,13 @@ describe('token lifetime', () => {
     expect((claims['exp'] as number) - (claims['iat'] as number)).toBe(28_800);
     expect(claims['iat']).toBe(v.iat);
     expect(vectorChallenge.exp - v.iat).toBe(60);
-  }, 60_000);
+  });
 
   // verifies: REQ-AUTH-006
   it('uses a configured lifetime', async () => {
     const claims = await proofClaims(86_400);
     expect((claims['exp'] as number) - (claims['iat'] as number)).toBe(86_400);
-  }, 60_000);
+  });
 
   // verifies: REQ-AUTH-006
   it('defaults to 28 800 s through the client options', async () => {
@@ -117,7 +117,7 @@ describe('token lifetime', () => {
     expect((claims['exp'] as number) - (claims['iat'] as number)).toBe(28_800);
     expect(claims['scope']).toBe('system:config');
     expect(fake.last.headers['authorization']).toBe(`Bearer ${TOKEN}`);
-  }, 60_000);
+  });
 
   // verifies: REQ-AUTH-006
   it.each([0, -1, 1.5, Number.NaN, '3600'])('rejects a lifetime of %j with HemValidationError', (tokenLifetimeSeconds) => {
@@ -152,7 +152,7 @@ describe('credential handling', () => {
     } finally {
       deriveBits.mockRestore();
     }
-  }, 60_000);
+  });
 
   // verifies: REQ-AUTH-011
   it('holds the private key as a non-extractable CryptoKey', async () => {
@@ -160,7 +160,7 @@ describe('credential handling', () => {
     const key = await deriveLoginKey(v.passphrase, v.eid);
     expect(key.privateKey).toBeInstanceOf(CryptoKey);
     expect(key.privateKey.extractable).toBe(false);
-  }, 60_000);
+  });
 
   // verifies: REQ-AUTH-003
   it('offers no option to select another key derivation', () => {
@@ -206,7 +206,7 @@ describe('secrets in errors', () => {
       expect(error).toBeInstanceOf(HemError);
       expect(leaks(error, [v.passphrase, proof, v.tag, TOKEN])).toEqual([]);
     }
-  }, 60_000);
+  });
 
   it('describes the auth operations as data', () => {
     expect(AUTH_CHALLENGE).toMatchObject({ method: 'GET', path: '/api/auth/token', scope: null, tlsOnly: false });
