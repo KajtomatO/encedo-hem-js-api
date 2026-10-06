@@ -94,7 +94,7 @@ Decisions already made and not up for re-litigation. REQs cite these.
 | D7 | Default relays for the Encedo cloud (check-in backend and mobile-approval broker at `api.encedo.com`) ship with the library behind small interfaces, so a caller can replace or disable them. | user decision 2026-10-02 |
 | D8 | Each milestone is split into an **A** part (implementation and unit tests, no device) and a **B** part (tests and verification on hardware, with user interaction). Order is strict: M1A → M1B → M2A → M2B → M3A → M3B. | user decision 2026-10-02 |
 | D9 | Requirements for all three milestones are drafted at bootstrap; each stays `draft` until a human approves it. All 117 were approved on 2026-10-02. | user decision 2026-10-02 |
-| D10 | The hardware used in the B parts, and the policy for what tests may do to it, are defined just before M1B starts — not earlier. | user decision 2026-10-02 |
+| D10 | The hardware used in the B parts, and the policy for what tests may do to it, are defined just before M1B starts — not earlier. Done at the M1B decomposition (2026-10-06): REQ-TEST-005 (the device and the permitted actions) and REQ-TEST-006 (test-key hygiene). | user decision 2026-10-02 |
 | D11 | The library targets API version 1.2.2 as described by [YAML]. Out of scope: PKCS#11 and native code; endpoints that exist only in diagnostic firmware; endpoints not in the 1.2.2 reference; the Open Mercato integration itself; the device's static web dashboard. | [BRIEF] §1 |
 | D12 | Credentials and tokens are held in memory only; the library never logs or persists them and reads no configuration files or environment variables. | [BRIEF] G13 |
 | D13 | Each milestone ends in a usable, versioned release; later milestones add to the public API without breaking earlier ones. | [BRIEF] G4 |
@@ -375,7 +375,8 @@ and JSON body → ask the session engine for a token of its declared scope
 | system | config read (1) | `system:config` | M2 |
 | system | config write, attestation, provisioning certificate, selftest, reboot, shutdown, usbmode, firmware and dashboard upload/check/install (13) | `system:config`, `system:upgrade`, `system:shutdown`, or none on a factory-fresh device | M3 |
 | keymgmt | create, get, search, list ×3 (6) | `keymgmt:gen`, `keymgmt:use:<kid>`, `keymgmt:search`, `keymgmt:list` | M1 |
-| keymgmt | update, delete, import, derive (4) | `keymgmt:upd`, `keymgmt:del`, `keymgmt:imp`, `keymgmt:gen` | M2 |
+| keymgmt | delete (1) | `keymgmt:del` | M1 — implemented in M1B, moved from M2 so device tests can clean up (user decision 2026-10-06) |
+| keymgmt | update, import, derive (3) | `keymgmt:upd`, `keymgmt:imp`, `keymgmt:gen` | M2 |
 | crypto | HMAC hash, wrap, unwrap (3) | `keymgmt:use:<kid>` | M1 |
 | crypto | HMAC verify, ExDSA sign/verify, encrypt, decrypt, ECDH, ML-KEM encaps/decaps, ML-DSA sign/verify (10) | `keymgmt:use:<kid>` | M2 |
 | logger | key, list ×2, download (4) | `logger:get` | M2 |
@@ -548,22 +549,28 @@ strict sequence (D8). Scope comes from [BRIEF] §3–§5.
   REQ-SYS-001…007, REQ-KEY-001…005, REQ-OPS-001…003, REQ-TEST-001…002,
   REQ-BUILD-001…005.
   **Gate:** A gate (§8); the login vector reproduces byte for byte.
-- **M1B — MVP: hardware verification.** Starts with two reviews: defining
-  the device and its test policy (D10) and drafting the requirement for it;
-  and re-reviewing the exclusion of Argon2 (D6; §11, risk 14). Then the
-  integration harness and live runs of everything in [BRIEF] §3 "Complete
-  when": unattended passphrase login; create a root key and find it by
-  description; HMAC; wrap and unwrap; health; check-in. Attended: approve,
-  reject and time out a mobile approval on the real phone; keep working
-  across a device reboot and a token expiry.
-  REQs: REQ-TEST-003…004, REQ-BUILD-006, and the `(M1B)` criteria of the
-  M1A REQs.
+- **M1B — MVP: hardware verification.** Its two opening reviews were
+  concluded at the decomposition (2026-10-06): the device and its test
+  policy are REQ-TEST-005 and REQ-TEST-006 (D10), and the exclusion of
+  Argon2 stands (D6; §11, risk 14). Key delete (REQ-KEY-007) is implemented
+  here, moved from M2A so that tests can delete the keys they create (user
+  decision 2026-10-06). Then the integration harness and live runs of
+  everything in [BRIEF] §3 "Complete when": unattended passphrase login;
+  create a root key and find it by description; HMAC; wrap and unwrap;
+  health; check-in. Attended: approve, reject and time out a mobile
+  approval on the real phone; keep working across a device reboot and a
+  token expiry; a browser page against the device's origin allow-list; the
+  parallel-request probe. The four public-surface changes deferred at the
+  M1A review land before the release (user decision 2026-10-06).
+  REQs: REQ-TEST-003…006, REQ-BUILD-006, REQ-KEY-007, and the `(M1B)`
+  criteria of the M1A REQs.
   **Gate:** B gate (§8); findings for Q1–Q6 recorded in §11; version 0.1.0.
 - **M2A — daily usage and audit logs: implementation and unit tests.**
-  Key update, delete, import, derive; every remaining crypto operation
-  with all key modes; config read; audit-log key, listing and download;
+  Key update, import, derive; every remaining crypto operation with all
+  key modes; config read; audit-log key, listing and download;
   mass-storage-only handling.
-  REQs: REQ-API-011, REQ-KEY-006…009, REQ-OPS-004…015, REQ-SYS-008…011.
+  REQs: REQ-API-011, REQ-KEY-006, REQ-KEY-008…009, REQ-OPS-004…015,
+  REQ-SYS-008…011.
   **Gate:** A gate.
 - **M2B — daily usage and audit logs: hardware verification.** Live run
   of every M2 operation on the device, including the firmware-quirk probes
@@ -635,7 +642,9 @@ strict sequence (D8). Scope comes from [BRIEF] §3–§5.
 9. **Master login unverified.** [YAML] defines the master role; no source
    has exercised a master login, and how a device's master key was derived
    depends on how it was provisioned. *Resolved by:* M1B if the device's
-   master passphrase is available, otherwise M3B.
+   master passphrase is available, otherwise M3B. No master passphrase
+   exists for the M1B device (user, 2026-10-06), so the check is carried to
+   M3B.
 10. **Description search alignment.** Matching happens on base64 text
     (quirk 8), so a byte prefix whose length is not a multiple of three may
     not match as expected. This is an inference, not a recorded fact.
@@ -655,4 +664,14 @@ strict sequence (D8). Scope comes from [BRIEF] §3–§5.
     request 2026-10-02): confirm how the M1B test device was initialised,
     and whether any device this library has to support needs a derivation
     other than PBKDF2. If one does, REQ-AUTH-003 changes through the §6.2
-    impact analysis.
+    impact analysis. **RESOLVED (2026-10-06, at the M1B decomposition):**
+    D6 stands. [C-SDK] closed the same question that day: the current
+    Encedo Manager derives with PBKDF2-HMAC-SHA256 (600 000 iterations, salt
+    = the `eid` string), and a Manager login to the M1B test device with the
+    same passphrase succeeded, so the device was initialised with the PBKDF2
+    derivation; the Argon2 text in [DOC] and older [C-SDK] documents
+    described legacy Manager files that no longer run. No device this
+    library has to support needs another derivation; REQ-AUTH-003 is
+    unchanged. A device initialised by an older, Argon2-deriving Manager
+    would reject this library's login — supporting one would be a new
+    decision through §6.2.

@@ -11,7 +11,7 @@ evidence:
   tests: []
   notes: null
 reopened: []
-cancelled: null
+cancelled: "Replaced by STEP-M1B-010…150 at the M1B decomposition (2026-10-06)"
 ---
 
 **Goal:** Stand-in for the detailed M1B steps: everything in the M1B entry of
@@ -30,4 +30,4 @@ ARCHITECTURE.md §10, ending in the B gate and version 0.1.0.
   and `verified` in the A part (§5.5).
 
 **Definition of done**
-- [ ] Cancelled and replaced by the detailed M1B steps.
+- [x] Cancelled and replaced by the detailed M1B steps.
