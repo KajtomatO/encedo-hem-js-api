@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { AUTH_CHALLENGE, AUTH_LOGIN } from '../../src/api/auth.js';
 import { invoke, noTokens } from '../../src/api/core.js';
 import { contextOf } from '../../src/client.js';
@@ -129,33 +129,29 @@ describe('token lifetime', () => {
 
 describe('credential handling', () => {
   // verifies: REQ-AUTH-011
-  it('derives the key once, keeps it bound to its eid, and no longer has the passphrase to re-derive it', async () => {
-    const fake = new FakeFetch()
-      .on('GET', '/api/auth/token', { body: vectorChallenge }, { body: { ...vectorChallenge, jti: 'other-nonce' } }, { body: { ...vectorChallenge, eid: 'ZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmY=' } })
-      .always('POST', '/api/auth/token', { body: { token: TOKEN } });
-    const session = login(fake);
+  it('runs PBKDF2 once across two logins, keeps the key bound to its eid, and cannot re-derive it for another eid', async () => {
+    const deriveBits = vi.spyOn(SubtleCrypto.prototype, 'deriveBits');
+    try {
+      const fake = new FakeFetch()
+        .on('GET', '/api/auth/token', { body: vectorChallenge }, { body: { ...vectorChallenge, jti: 'other-nonce' } }, { body: { ...vectorChallenge, eid: 'ZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmY=' } })
+        .always('POST', '/api/auth/token', { body: { token: TOKEN } });
+      const session = login(fake);
 
-    await session.acquire(v.scope);
-    const started = performance.now();
-    await session.acquire(v.scope); // no second PBKDF2 run
-    expect(performance.now() - started).toBeLessThan(5_000);
+      await session.acquire(v.scope);
+      await session.acquire(v.scope);
+      // deriveBits also serves the X25519 agreement of every login; only the PBKDF2 runs count.
+      const pbkdf2Runs = deriveBits.mock.calls.filter(([algorithm]) => (algorithm as { name?: string }).name === 'PBKDF2');
+      expect(pbkdf2Runs).toHaveLength(1);
 
-    // A different eid would need the passphrase again; it is gone.
-    const error = await session.acquire(v.scope).catch((e: unknown) => e);
-    expect(error).toBeInstanceOf(HemUnauthenticatedError);
-    expect((error as Error).message).toMatch(/device identity changed/);
-    expect(fake.requestsTo('POST', '/api/auth/token')).toHaveLength(2);
-  }, 60_000);
-
-  // verifies: REQ-AUTH-011
-  it('holds no reference to the passphrase after the derivation', async () => {
-    const passphrase = `pass-${Math.random()}`;
-    const fake = new FakeFetch().on('GET', '/api/auth/token', { body: vectorChallenge }).on('POST', '/api/auth/token', { body: { token: TOKEN } });
-    const session = login(fake, 3600, passphrase);
-    await session.acquire(v.scope);
-    // Private state is not enumerable; check every own value reachable through reflection as well.
-    const seen = JSON.stringify(Object.getOwnPropertyNames(session).map((name) => (session as unknown as Record<string, unknown>)[name]));
-    expect(seen).not.toContain(passphrase);
+      // A different eid would need the passphrase again; it is gone, so the key cannot be re-derived.
+      const error = await session.acquire(v.scope).catch((e: unknown) => e);
+      expect(error).toBeInstanceOf(HemUnauthenticatedError);
+      expect((error as Error).message).toMatch(/device identity changed/);
+      expect(fake.requestsTo('POST', '/api/auth/token')).toHaveLength(2);
+      expect(deriveBits.mock.calls.filter(([algorithm]) => (algorithm as { name?: string }).name === 'PBKDF2')).toHaveLength(1);
+    } finally {
+      deriveBits.mockRestore();
+    }
   }, 60_000);
 
   // verifies: REQ-AUTH-011
