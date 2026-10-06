@@ -142,8 +142,11 @@ Multiple REQ IDs may appear comma-separated in one tag. Tag the few load-bearing
 points, not every touched line. The greppable ground-truth patterns are
 `implements: REQ-`, `verifies: REQ-` and `supports: REQ-`. A `supports:` tag
 is reported in the trace matrix but never counts as verification evidence.
-Build/CI REQs may be realized outside `src/` (e.g. `package.json`,
-`.github/workflows/`); scan those locations too and say so in TRACE.md.
+Build/CI REQs, test-infrastructure REQs (`TEST`) and REQs whose normative
+statement is about the README may be realized outside `src/` (e.g.
+`package.json`, `tsconfig.json`, `vitest.config.ts`, `.github/workflows/`,
+the test setup under `tests/`, `README.md`); scan those locations too and say
+so in TRACE.md (user decision 2026-10-05).
 
 ### 4.3 PROCEDURE: regenerate the trace matrix
 
@@ -330,15 +333,18 @@ Claude SHOULD propose capturing it as a REQ on the spot.
   | https://github.com/KajtomatO/encedo-hem-c-api | device-verified C client for the same API: auth flow and KDF facts, recorded firmware quirks, endpoint coverage dispositions |
   | `ref/api/hem-api-1.2.2.yaml` | HEM REST API (fw 1.2.2): endpoints, request/response payloads, scopes, error codes |
   | https://github.com/KajtomatO/encedo-hem-api-doc | HEM REST API prose documentation, incl. its record of known doc/implementation divergences |
+  | https://github.com/encedo/encedo-manager | Encedo's own web client for the device: how the vendor uses the API in practice (request sequences, which values it passes through untouched) (user decision 2026-10-06) |
   | `requirements/start_point/` (`high-level-requirements.md`) | the user's brief: scope, milestones, consumer needs |
 
-  REQs and `ARCHITECTURE.md` abbreviate the middle three rows as **[C-SDK]**,
-  **[YAML]** and **[DOC]**, and the brief as **[BRIEF]** or `start_point`
-  followed by the item (`G6`, `M1.2`, `§6 Q4`).
+  REQs and `ARCHITECTURE.md` abbreviate the C client, the yaml, the API doc
+  repo and Encedo Manager as **[C-SDK]**, **[YAML]**, **[DOC]** and **[MGR]**,
+  and the brief as **[BRIEF]** or `start_point` followed by the item (`G6`,
+  `M1.2`, `§6 Q4`).
 
   Precedence when sources conflict: device > encedo-hem-c-api > OpenAPI
-  yaml > API doc repo; conflicts are recorded in the affected REQ, not
-  silently resolved. `start_point/` states intent, not device behavior.
+  yaml > API doc repo > Encedo Manager; conflicts are recorded in the
+  affected REQ, not silently resolved. `start_point/` states intent, not
+  device behavior.
 
 - **No references outside this repo.** Files in this repo never reference
   local machine paths or individual files in other repositories. Other

@@ -1,9 +1,9 @@
 ---
 id: REQ-AUTH-017
 title: Default approval relay for the Encedo broker
-status: approved
+status: verified
 priority: must
-revision: 1
+revision: 3
 source: user decision 2026-10-02; start_point §6 Q2; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: ["REQ-AUTH-016"]
 supersedes: null
@@ -33,11 +33,11 @@ undocumented and can change without notice, which is why it sits behind the
 interface of REQ-AUTH-016. Introduced in M1.
 
 **Acceptance criteria:**
-- [ ] Each relay operation makes the broker call in the table and maps the
+- [x] Each relay operation makes the broker call in the table and maps the
       responses as stated.
-- [ ] Any other broker status raises an error carrying the status and the
+- [x] Any other broker status raises an error carrying the status and the
       body.
-- [ ] The relay uses its own `fetch` (the global one by default), never the
+- [x] The relay uses its own `fetch` (the global one by default), never the
       device `fetch`; the base URL is configurable.
 - [ ] (M1B) attended: against the real broker, the session call succeeds, a
       submitted request produces a push on the paired phone, and the check

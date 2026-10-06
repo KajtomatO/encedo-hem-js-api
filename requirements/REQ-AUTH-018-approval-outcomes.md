@@ -1,9 +1,9 @@
 ---
 id: REQ-AUTH-018
 title: Approval attempts end as approved, rejected or timed out
-status: approved
+status: verified
 priority: must
-revision: 1
+revision: 3
 source: start_point §3; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: ["REQ-AUTH-014", "REQ-AUTH-015", "REQ-AUTH-016"]
 supersedes: null
@@ -28,13 +28,13 @@ phone. The consumer has to treat those differently: proceed, stop, or ask
 again. Introduced in M1.
 
 **Acceptance criteria:**
-- [ ] Approved: the token is cached under the requested scope and the wait
+- [x] Approved: the token is cached under the requested scope and the wait
       resolves.
-- [ ] Rejected: `HemApprovalRejectedError` is raised and `ext/token` is
+- [x] Rejected: `HemApprovalRejectedError` is raised and `ext/token` is
       never called.
-- [ ] No answer within the limit, or the relay reporting the request as
+- [x] No answer within the limit, or the relay reporting the request as
       expired: `HemApprovalTimeoutError`.
-- [ ] A transport error during one poll does not end the wait.
-- [ ] An `AbortSignal` cancels the wait.
+- [x] A transport error during one poll does not end the wait.
+- [x] An `AbortSignal` cancels the wait.
 - [ ] (M1B) attended: approving, rejecting and ignoring the request on the
       real phone produce the three outcomes.

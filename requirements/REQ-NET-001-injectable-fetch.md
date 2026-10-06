@@ -1,9 +1,9 @@
 ---
 id: REQ-NET-001
 title: Caller-supplied fetch implementation
-status: approved
+status: verified
 priority: must
-revision: 1
+revision: 3
 source: start_point G6
 depends_on: []
 supersedes: null
@@ -24,12 +24,12 @@ them under the caller's control without the library growing options for
 each. Introduced in M1.
 
 **Acceptance criteria:**
-- [ ] With a supplied `fetch`, the global `fetch` is never called (the test
+- [x] With a supplied `fetch`, the global `fetch` is never called (the test
       replaces the global with one that throws).
-- [ ] Without one, the global `fetch` is used.
-- [ ] The supplied function is called with the standard `(url, init)`
+- [x] Without one, the global `fetch` is used.
+- [x] The supplied function is called with the standard `(url, init)`
       arguments only.
-- [ ] If no `fetch` is supplied and none exists globally, construction
+- [x] If no `fetch` is supplied and none exists globally, construction
       throws `HemUnsupportedError`.
 - [ ] (M1B) a caller-supplied `fetch` with custom TLS trust reaches the
       device.

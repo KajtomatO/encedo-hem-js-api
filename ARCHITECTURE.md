@@ -15,6 +15,7 @@ Source tags used for device and API facts (REQUIREMENTS-MANAGEMENT.md §8):
 | **[C-SDK]** | https://github.com/KajtomatO/encedo-hem-c-api — device-verified C client, fw 1.2.2 |
 | **[YAML]** | `ref/api/hem-api-1.2.2.yaml` |
 | **[DOC]** | https://github.com/KajtomatO/encedo-hem-api-doc |
+| **[MGR]** | https://github.com/encedo/encedo-manager — Encedo's own web client |
 | **[BRIEF]** | `requirements/start_point/high-level-requirements.md` (items G1–G23, M1.1–M3.6, Q1–Q7) |
 
 Nothing in this document has been verified by this library against a device
@@ -220,6 +221,7 @@ during M1A and then frozen by the additive-API rule (D13).
   | `HemProtocolError` | a success response is missing a required field or is not parseable |
   | `HemUnsupportedError` | the operation does not exist on this hardware, or the runtime lacks a required capability |
   | `HemApprovalRejectedError`, `HemApprovalTimeoutError` | mobile approval was denied, or not answered in time |
+  | `HemRelayError` | a cloud relay call failed: `api.encedo.com` (or the configured relay URL) answered with an unexpected status or reply, or could not be reached (user decision 2026-10-05) |
 
 - **Verify operations** return `true` or `false`; an invalid signature or
   MAC is a result, not an error [BRIEF M2.2].
@@ -642,8 +644,10 @@ strict sequence (D8). Scope comes from [BRIEF] §3–§5.
     allowing cross-origin requests; unverified. *Resolved by:* M1B.
 12. **Package name and publishing** are undecided. *Resolved by:* user
     decision before the 0.1.0 release.
-13. **Node 24 is not installed on the development machine** (2026-10-02).
-    M1A cannot build or test until it is.
+13. **Node 24 on the development machine.** RESOLVED (2026-10-05): Node.js
+    v24.21.0 is installed (npm 11.19.0), and M1A was built and tested with it
+    (TypeScript 7.0.2, Vitest 5.0.3, headless Chromium through Playwright
+    1.63). It was not installed when this risk was raised on 2026-10-02.
 14. **The exclusion of Argon2 is to be re-reviewed.** D6 rests on the
     user's statement of 2026-10-02 that Encedo Manager does not use Argon2,
     while [DOC] and older [C-SDK] text describe such a derivation; the

@@ -1,9 +1,9 @@
 ---
 id: REQ-SYS-003
 title: Single health operation
-status: approved
+status: verified
 priority: must
-revision: 1
+revision: 3
 source: start_point M1.5
 depends_on: ["REQ-SYS-001", "REQ-NET-006"]
 supersedes: null
@@ -23,11 +23,11 @@ use the device now". All four facts come from the status call; the health
 call saves every consumer from re-deriving them. Introduced in M1.
 
 **Acceptance criteria:**
-- [ ] The call makes exactly one request, the status request.
-- [ ] An unreachable device or an elapsed time limit yields a result with
+- [x] The call makes exactly one request, the status request.
+- [x] An unreachable device or an elapsed time limit yields a result with
       reachable false; the call does not throw for these.
-- [ ] A caller abort still raises `HemAbortError`.
-- [ ] The four facts map from the status result: initialised, `fls_state`
+- [x] A caller abort still raises `HemAbortError`.
+- [x] The four facts map from the status result: initialised, `fls_state`
       equal to 0, clock set; a summary flag is true only when all four are.
 - [ ] (M1B) a healthy device reports all four true; with the device
       unplugged the call reports unreachable within the time limit.

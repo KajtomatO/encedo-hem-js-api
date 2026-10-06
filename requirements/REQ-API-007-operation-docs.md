@@ -1,9 +1,9 @@
 ---
 id: REQ-API-007
 title: Every public operation documents its scope and milestone
-status: approved
+status: verified
 priority: must
-revision: 1
+revision: 3
 source: start_point G23
 depends_on: []
 supersedes: null
@@ -22,8 +22,8 @@ needs to see them without reading the source. The milestone tells which
 release an operation first appeared in. Introduced in M1.
 
 **Acceptance criteria:**
-- [ ] An automated check over the public API fails for any operation whose
+- [x] An automated check over the public API fails for any operation whose
       documentation lacks the scope or the milestone.
-- [ ] Operations that need no token state the scope as none.
-- [ ] The documentation comments are present in the published type
+- [x] Operations that need no token state the scope as none.
+- [x] The documentation comments are present in the published type
       declarations.

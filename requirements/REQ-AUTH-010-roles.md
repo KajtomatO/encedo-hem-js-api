@@ -1,9 +1,9 @@
 ---
 id: REQ-AUTH-010
 title: User and master roles
-status: approved
+status: verified
 priority: must
-revision: 1
+revision: 4
 source: start_point G12; ref/api/hem-api-1.2.2.yaml
 depends_on: ["REQ-AUTH-001"]
 supersedes: null
@@ -24,9 +24,9 @@ by every key-management and crypto operation [YAML]. Both roles log in
 through the same flow, each with its own passphrase. Introduced in M1.
 
 **Acceptance criteria:**
-- [ ] A token with `sub` `U` reports the user role, `M` the master role, and
+- [x] A token with `sub` `U` reports the user role, `M` the master role, and
       any other value the app role together with that value.
-- [ ] A master-role session that calls a key-management or crypto operation
+- [x] A master-role session that calls a key-management or crypto operation
       gets the device's 403 as `HemForbiddenError`.
 - [ ] (M1B) a login with the user passphrase reports the user role.
 - [ ] (M1B) a login with the master passphrase reports the master role and

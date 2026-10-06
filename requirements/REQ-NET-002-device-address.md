@@ -1,9 +1,9 @@
 ---
 id: REQ-NET-002
 title: Configurable device address
-status: approved
+status: verified
 priority: must
-revision: 1
+revision: 3
 source: start_point G5; ref/api/hem-api-1.2.2.yaml
 depends_on: []
 supersedes: null
@@ -22,11 +22,11 @@ reference lists `my.ence.do` and `192.168.7.1` [YAML], or be reachable
 across a network under another name. Introduced in M1.
 
 **Acceptance criteria:**
-- [ ] Requests for `https://my.ence.do`, `https://192.168.7.1`,
+- [x] Requests for `https://my.ence.do`, `https://192.168.7.1`,
       `http://192.168.7.1`, a URL with a port and an IPv6 literal all go to
       `<origin>/api/…`.
-- [ ] A trailing slash on the URL makes no difference.
-- [ ] A path prefix on the URL is kept in front of `/api/…`.
-- [ ] A URL carrying a username or password is rejected with
+- [x] A trailing slash on the URL makes no difference.
+- [x] A path prefix on the URL is kept in front of `/api/…`.
+- [x] A URL carrying a username or password is rejected with
       `HemValidationError`.
 - [ ] (M1B) the device is reached by hostname and by IP address.

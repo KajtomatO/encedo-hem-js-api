@@ -1,9 +1,9 @@
 ---
 id: REQ-SYS-005
 title: Check-in step 2
-status: approved
+status: verified
 priority: must
-revision: 1
+revision: 3
 source: start_point M1.3; ref/api/hem-api-1.2.2.yaml
 depends_on: ["REQ-API-002", "REQ-API-007"]
 supersedes: null
@@ -27,13 +27,13 @@ backend's say-so. A caller relaying replies has to know that, so the call's
 documentation states it. Introduced in M1.
 
 **Acceptance criteria:**
-- [ ] The body is `{checked}` with the reply string unmodified; no
+- [x] The body is `{checked}` with the reply string unmodified; no
       `Authorization` header is sent.
-- [ ] The result contains `status`, and `newcrt`, `newfws` and `newuis` when
+- [x] The result contains `status`, and `newcrt`, `newfws` and `newuis` when
       present.
-- [ ] A 401 (reply invalid, nonce unknown or issuer not trusted) raises
+- [x] A 401 (reply invalid, nonce unknown or issuer not trusted) raises
       `HemUnauthenticatedError` without a login attempt.
-- [ ] The call's documentation lists the management actions and the
+- [x] The call's documentation lists the management actions and the
       condition under which they run.
 - [ ] (M1B) after a completed check-in the status call reports the clock as
       set.

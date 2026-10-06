@@ -1,9 +1,9 @@
 ---
 id: REQ-NET-010
 title: Redirects not followed
-status: approved
+status: verified
 priority: should
-revision: 1
+revision: 3
 source: ARCHITECTURE.md §7
 depends_on: ["REQ-API-002"]
 supersedes: null
@@ -21,5 +21,5 @@ of following it.
 send a bearer token to another host. Introduced in M1.
 
 **Acceptance criteria:**
-- [ ] Device requests are made with redirect following disabled.
-- [ ] A redirect response raises an error; no second request is made.
+- [x] Device requests are made with redirect following disabled.
+- [x] A redirect response raises an error; no second request is made.

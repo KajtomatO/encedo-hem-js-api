@@ -1,9 +1,9 @@
 ---
 id: REQ-TEST-001
 title: Unit tests run without a device
-status: approved
+status: verified
 priority: must
-revision: 1
+revision: 5
 source: start_point G21
 depends_on: []
 supersedes: null
@@ -21,10 +21,10 @@ network access, using a substituted `fetch`.
 to run anywhere, including CI, where no device exists. Introduced in M1.
 
 **Acceptance criteria:**
-- [ ] The test setup replaces the global `fetch` with one that fails the
+- [x] The test setup replaces the global `fetch` with one that fails the
       test, so an unsubstituted request cannot go unnoticed.
-- [ ] A shared fake-`fetch` module lives in `tests/support/` and is tagged
+- [x] A shared fake-`fetch` module lives in `tests/support/` and is tagged
       `supports:`.
-- [ ] Every binding has at least one unit test asserting the request's
+- [x] Every binding has at least one unit test asserting the request's
       method, path, headers and body, and the mapping of its response.
-- [ ] The suite passes on a machine with networking disabled.
+- [x] The suite passes on a machine with networking disabled.
