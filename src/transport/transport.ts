@@ -38,8 +38,8 @@ export interface CallOptions {
 export type FetchFunction = (input: string, init: RequestInit) => Promise<Response>;
 
 export interface TransportOptions {
-  /** Device base URL, `https:` or `http:`, hostname or IP address. */
-  url: string;
+  /** Device base URL as a string or a `URL`: `https:` or `http:`, hostname or IP address. */
+  url: string | URL;
   /** `fetch` to use; defaults to `globalThis.fetch`. */
   fetch?: FetchFunction | undefined;
   /** Default time limit of each request in milliseconds (30 000). */
@@ -79,7 +79,8 @@ export interface TransportResponse {
  * prefix without its trailing slash (empty for a bare host).
  */
 // implements: REQ-NET-002
-export function parseDeviceUrl(url: unknown): { url: URL; prefix: string } {
+export function parseDeviceUrl(given: unknown): { url: URL; prefix: string } {
+  const url = given instanceof URL ? given.href : given;
   if (typeof url !== 'string' || url === '') {
     throw new HemValidationError('Invalid url: the device URL is required', { parameter: 'url' });
   }

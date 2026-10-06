@@ -108,7 +108,7 @@ HemClientOptions.now	now?:Clock|undefined
 HemClientOptions.passphrase	passphrase?:string|undefined
 HemClientOptions.timeoutMs	timeoutMs?:number|undefined
 HemClientOptions.tokenLifetimeSeconds	tokenLifetimeSeconds?:number|undefined
-HemClientOptions.url	url:string
+HemClientOptions.url	url:string|URL
 HemDeviceError	export declare class HemDeviceError extends HemError
 HemDeviceError.constructor	constructor(message:string,options?:HemErrorOptions)
 HemDeviceError.name	name:string

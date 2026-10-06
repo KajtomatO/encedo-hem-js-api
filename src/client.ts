@@ -19,12 +19,12 @@ import { type FetchFunction, Transport } from './transport/transport.js';
 /** Options of {@link HemClient}. */
 export interface HemClientOptions {
   /**
-   * Device URL, `https:` or `http:`, with a hostname or an IP address, for
-   * example `https://my.ence.do` or `https://192.168.7.1`. A path prefix is
-   * kept. There is no default. Key-management and crypto operations need
-   * `https:`.
+   * Device URL, as a string or a `URL`: `https:` or `http:`, with a hostname
+   * or an IP address, for example `https://my.ence.do` or
+   * `https://192.168.7.1`. A path prefix is kept. There is no default.
+   * Key-management and crypto operations need `https:`.
    */
-  url: string;
+  url: string | URL;
   /**
    * `fetch` used for every device request; defaults to `globalThis.fetch`.
    * TLS trust for the device certificate, proxies and test doubles are
@@ -105,6 +105,21 @@ export interface MobileApprovalOptions {
 // helpers; not exported from the package root.
 const contexts = new WeakMap<HemClient, BindingContext>();
 
+/**
+ * A relay option is `null` (disabled) or an object with the interface's
+ * methods; anything else fails here, at construction, rather than at the
+ * first check-in or approval.
+ */
+// implements: REQ-API-001
+function checkRelay<T>(relay: T | null, parameter: string, methods: readonly string[]): T | null {
+  if (relay === null) return null;
+  const missing = methods.filter((method) => typeof (relay as Record<string, unknown> | undefined)?.[method] !== 'function');
+  if (missing.length > 0) {
+    throw new HemValidationError(`Invalid ${parameter}: must be null or implement ${methods.join(', ')} (missing: ${missing.join(', ')})`, { parameter });
+  }
+  return relay;
+}
+
 /** @internal The binding context of a client. */
 export function contextOf(client: HemClient): BindingContext {
   const context = contexts.get(client);
@@ -143,7 +158,7 @@ export class HemClient {
     }
     // The login requests themselves are public operations and never go through the session.
     const publicContext: BindingContext = { transport, tokens: noTokens };
-    const checkinRelay = options.checkinRelay === undefined ? new EncedoCheckinRelay() : options.checkinRelay;
+    const checkinRelay = options.checkinRelay === undefined ? new EncedoCheckinRelay() : checkRelay(options.checkinRelay, 'checkinRelay', ['exchange']);
     const recovery = new ClockRecovery(
       checkinRelay !== null && options.clockRecovery !== false ? (callOptions) => this.system.checkin(callOptions) : null,
     );
@@ -166,7 +181,8 @@ export class HemClient {
     }
     const session = new Session(source, now);
     const context: BindingContext = { transport, tokens: session };
-    const approvalRelay = options.approvalRelay === undefined ? new EncedoApprovalRelay() : options.approvalRelay;
+    const approvalRelay =
+      options.approvalRelay === undefined ? new EncedoApprovalRelay() : checkRelay(options.approvalRelay, 'approvalRelay', ['getKey', 'submit', 'check']);
     this.auth = new AuthApi(session, publicContext, recovery, approvalRelay, now);
     this.system = new SystemApi(context, checkinRelay);
     this.keys = new KeysApi(context);

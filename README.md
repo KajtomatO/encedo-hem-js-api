@@ -42,7 +42,8 @@ const unwrapped = await hem.crypto.unwrap({ kid, msg: wrapped });
 ```
 
 Every call accepts `{ signal, timeoutMs }` as its last argument. Binary values
-are `Uint8Array`; key ids are 32 lower-case hex characters.
+are `Uint8Array`; key ids are 32 lower-case hex characters. The device
+address (`url`) is a string or a `URL`.
 
 The library never reads environment variables or files. The example reads
 the passphrase itself and passes it in.

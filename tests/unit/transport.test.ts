@@ -83,7 +83,9 @@ describe('device URL', () => {
     ['https://gw.example/hem', 'https://gw.example/hem/api/system/status'],
     ['https://gw.example/hem/', 'https://gw.example/hem/api/system/status'],
     ['https://gw.example/a/b//', 'https://gw.example/a/b/api/system/status'],
-  ])('sends a request for %s to %s', async (base, expected) => {
+    [new URL('https://my.ence.do/hem/'), 'https://my.ence.do/hem/api/system/status'],
+    [new URL('http://[fe80::1]:8080'), 'http://[fe80::1]:8080/api/system/status'],
+  ] as [string | URL, string][])('sends a request for %s to %s', async (base, expected) => {
     const fake = new FakeFetch().always('GET', /status/, { body: {} });
     await new Transport({ url: base, fetch: fake.fetch }).send(get());
     expect(fake.last.url.href).toBe(expected);

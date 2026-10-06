@@ -24,6 +24,45 @@ describe('HemClient construction', () => {
     expect(() => new (HemClient as unknown as new () => HemClient)()).toThrow(HemValidationError);
   });
 
+  // verifies: REQ-NET-002
+  it('accepts the device address as a URL instance', async () => {
+    const fake = new FakeFetch().on('GET', '/api/system/status', { body: status });
+    await new HemClient({ url: new URL('https://my.ence.do/'), fetch: fake.fetch }).system.status();
+    expect(fake.last.url.href).toBe('https://my.ence.do/api/system/status');
+  });
+
+  // verifies: REQ-API-001
+  it.each([
+    ['checkinRelay', {}],
+    ['checkinRelay', { exchange: 'not a function' }],
+    ['approvalRelay', {}],
+    ['approvalRelay', { getKey: () => Promise.resolve('k'), submit: () => Promise.resolve('h') }],
+    ['approvalRelay', 'relay'],
+  ])('rejects a %s that lacks the interface methods with HemValidationError at construction, before any request', (parameter, relay) => {
+    const fake = new FakeFetch();
+    const error = (() => {
+      try {
+        new HemClient({ url: 'https://my.ence.do', fetch: fake.fetch, [parameter]: relay } as never);
+      } catch (caught) {
+        return caught;
+      }
+      return undefined;
+    })();
+    expect(error).toBeInstanceOf(HemValidationError);
+    expect((error as HemValidationError).parameter).toBe(parameter);
+    expect(fake.requests).toHaveLength(0);
+  });
+
+  // verifies: REQ-API-001
+  it('accepts null and complete implementations for both relays', () => {
+    const fake = new FakeFetch();
+    expect(() => new HemClient({ url: 'https://my.ence.do', fetch: fake.fetch, checkinRelay: null, approvalRelay: null })).not.toThrow();
+    const checkinRelay = { exchange: () => Promise.resolve('checked') };
+    const approvalRelay = { getKey: () => Promise.resolve('k'), submit: () => Promise.resolve('h'), check: () => Promise.resolve({ status: 'pending' as const }) };
+    expect(() => new HemClient({ url: 'https://my.ence.do', fetch: fake.fetch, checkinRelay, approvalRelay })).not.toThrow();
+    expect(fake.requests).toHaveLength(0);
+  });
+
   // verifies: REQ-API-001
   it('gives two clients separate request queues', async () => {
     let release: () => void = () => {};
