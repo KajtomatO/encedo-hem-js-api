@@ -1,9 +1,9 @@
 ---
 id: REQ-NET-009
 title: Only headers the device's CORS policy allows
-status: approved
+status: verified
 priority: must
-revision: 3
+revision: 4
 source: start_point §6 Q6; ref/api/hem-api-1.2.2.yaml
 depends_on: []
 supersedes: null

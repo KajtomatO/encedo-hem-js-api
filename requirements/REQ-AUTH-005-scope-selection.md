@@ -1,9 +1,9 @@
 ---
 id: REQ-AUTH-005
 title: Scope chosen and token attached by the library
-status: approved
+status: verified
 priority: must
-revision: 4
+revision: 5
 source: start_point G9; start_point G10; ref/api/hem-api-1.2.2.yaml; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: ["REQ-AUTH-004"]
 supersedes: null

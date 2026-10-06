@@ -1,9 +1,9 @@
 ---
 id: REQ-API-008
 title: Public API only grows between releases
-status: approved
+status: verified
 priority: must
-revision: 2
+revision: 3
 source: start_point G4; ARCHITECTURE.md §4
 depends_on: []
 supersedes: null
