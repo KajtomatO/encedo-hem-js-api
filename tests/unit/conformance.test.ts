@@ -2,8 +2,8 @@
 // so a new operation without an entry in the sample table fails the coverage check.
 import { describe, expect, it } from 'vitest';
 import { ALL_OPERATIONS } from '../../src/api/operations.js';
-import { type HemClient, HemTlsRequiredError } from '../../src/index.js';
-import { loggedInClient, loginScopes } from '../support/device.js';
+import { type HemClient, HemTlsRequiredError, HemValidationError } from '../../src/index.js';
+import { loggedInClient, loginScopes, operationRequests } from '../support/device.js';
 import { FakeFetch, type RecordedRequest } from '../support/fake-fetch.js';
 import { claimsOf, fakeToken, issueToken, vectorChallenge } from '../support/login.js';
 import { loginVector as v } from '../support/vectors.js';
@@ -180,7 +180,7 @@ describe('every operation', () => {
     if (sample.body === 'proof') expect(Object.keys(request.json() as object)).toEqual(['auth']);
     else expect(request.json()).toEqual(sample.body);
     if (!isLoginStep(spec.name)) expect(result).toEqual(sample.result);
-  }, 60_000);
+  });
 });
 
 describe('scopes', () => {
@@ -191,7 +191,7 @@ describe('scopes', () => {
     expect(loginScopes(fake)).toEqual([ARCHITECTURE_SCOPES[spec.name]]);
     const request = requestOf(fake, spec.method, (samples[key] as Sample).path, spec.name);
     expect(claimsOf((request.headers['authorization'] as string).replace('Bearer ', ''))['scope']).toBe(ARCHITECTURE_SCOPES[spec.name]);
-  }, 60_000);
+  });
 
   // verifies: REQ-AUTH-005
   it('declares no scope for the operations ARCHITECTURE.md §6 lists as needing none', () => {
@@ -215,7 +215,7 @@ describe('public operations with tokens cached', () => {
     const requests = fake.requests.slice(before).filter((r) => r.method === spec.method && r.path === (samples[key] as Sample).path);
     expect(requests.length, key).toBeGreaterThan(0);
     for (const request of requests) expect(request.headers['authorization'], key).toBeUndefined();
-  }, 60_000);
+  });
 });
 
 describe('plain HTTP', () => {
@@ -239,5 +239,77 @@ describe('plain HTTP', () => {
       expect(outcome, key).toBe('sent');
       expect(fake.requests.every((r) => r.url.protocol === 'http:')).toBe(true);
     }
-  }, 60_000);
+  });
+});
+
+interface Limit {
+  name: string;
+  /** The parameter named by the validation error. */
+  parameter: string;
+  /** A call with the boundary value: it is sent. */
+  atLimit: (client: HemClient) => Promise<unknown>;
+  /** A call with the first value past the boundary: refused before anything is sent. */
+  pastLimit: (client: HemClient) => Promise<unknown>;
+}
+
+const bytes = (n: number): Uint8Array => new Uint8Array(n);
+const chars = (n: number): string => 'x'.repeat(n);
+
+// Every documented hard limit (ARCHITECTURE.md §2 and the reference), each with
+// its boundary value and the first value past it. The 7300-byte body limit
+// cannot be reached through any M1 operation's fields and is covered in
+// tests/unit/binding-core.test.ts with a synthetic operation.
+const LIMITS: Limit[] = [
+  { name: 'kid: 32 hex characters, not 33', parameter: 'kid', atLimit: (c) => c.keys.get(KID), pastLimit: (c) => c.keys.get(`${KID}0`) },
+  { name: 'kid: 32 hex characters, not 31', parameter: 'kid', atLimit: (c) => c.keys.get(UPPER_KID), pastLimit: (c) => c.keys.get(KID.slice(1)) },
+  { name: 'kid: hex only', parameter: 'kid', atLimit: (c) => c.crypto.hmac({ kid: KID, msg: bytes(1) }), pastLimit: (c) => c.crypto.hmac({ kid: `g${KID.slice(1)}`, msg: bytes(1) }) },
+  { name: 'label: 1 character, not 0', parameter: 'label', atLimit: (c) => c.keys.create({ label: 'k', type: 'AES256' }), pastLimit: (c) => c.keys.create({ label: '', type: 'AES256' }) },
+  { name: 'label: 32 characters, not 33', parameter: 'label', atLimit: (c) => c.keys.create({ label: chars(32), type: 'AES256' }), pastLimit: (c) => c.keys.create({ label: chars(33), type: 'AES256' }) },
+  { name: 'label: printable ASCII only', parameter: 'label', atLimit: (c) => c.keys.create({ label: ' ~', type: 'AES256' }), pastLimit: (c) => c.keys.create({ label: 'k\u0007', type: 'AES256' }) },
+  { name: 'descr on create: 64 bytes, not 65', parameter: 'descr', atLimit: (c) => c.keys.create({ label: 'k', type: 'AES256', descr: bytes(64) }), pastLimit: (c) => c.keys.create({ label: 'k', type: 'AES256', descr: bytes(65) }) },
+  { name: 'descr on search: 64 bytes, not 65', parameter: 'descr', atLimit: (c) => c.keys.search({ descr: bytes(64) }), pastLimit: (c) => c.keys.search({ descr: bytes(65) }) },
+  { name: 'search limit: 1, not 0', parameter: 'limit', atLimit: (c) => c.keys.search({ descr: bytes(1), limit: 1 }), pastLimit: (c) => c.keys.search({ descr: bytes(1), limit: 0 }) },
+  { name: 'search limit: 15, not 16', parameter: 'limit', atLimit: (c) => c.keys.search({ descr: bytes(1), limit: 15 }), pastLimit: (c) => c.keys.search({ descr: bytes(1), limit: 16 }) },
+  { name: 'search offset: 0, not -1', parameter: 'offset', atLimit: (c) => c.keys.search({ descr: bytes(1), offset: 0 }), pastLimit: (c) => c.keys.search({ descr: bytes(1), offset: -1 }) },
+  { name: 'list count: 1, not 0', parameter: 'count', atLimit: (c) => c.keys.list({ offset: 0, count: 1 }), pastLimit: (c) => c.keys.list({ offset: 0, count: 0 }) },
+  { name: 'list count: 15, not 16', parameter: 'count', atLimit: (c) => c.keys.list({ offset: 0, count: 15 }), pastLimit: (c) => c.keys.list({ offset: 0, count: 16 }) },
+  { name: 'list offset: 0, not -1', parameter: 'offset', atLimit: (c) => c.keys.list({ offset: 0 }), pastLimit: (c) => c.keys.list({ offset: -1 }) },
+  { name: 'hmac msg: 1 byte, not 0', parameter: 'msg', atLimit: (c) => c.crypto.hmac({ kid: KID, msg: bytes(1) }), pastLimit: (c) => c.crypto.hmac({ kid: KID, msg: bytes(0) }) },
+  { name: 'hmac msg: 2048 bytes, not 2049', parameter: 'msg', atLimit: (c) => c.crypto.hmac({ kid: KID, msg: bytes(2048) }), pastLimit: (c) => c.crypto.hmac({ kid: KID, msg: bytes(2049) }) },
+  { name: 'wrap msg: 16 bytes, not 8', parameter: 'msg', atLimit: (c) => c.crypto.wrap({ kid: KID, msg: bytes(16) }), pastLimit: (c) => c.crypto.wrap({ kid: KID, msg: bytes(8) }) },
+  { name: 'wrap msg: 2048 bytes, not 2056', parameter: 'msg', atLimit: (c) => c.crypto.wrap({ kid: KID, msg: bytes(2048) }), pastLimit: (c) => c.crypto.wrap({ kid: KID, msg: bytes(2056) }) },
+  { name: 'wrap msg: a multiple of 8', parameter: 'msg', atLimit: (c) => c.crypto.wrap({ kid: KID, msg: bytes(24) }), pastLimit: (c) => c.crypto.wrap({ kid: KID, msg: bytes(20) }) },
+  { name: 'wrap iv: 8 bytes, not 7', parameter: 'iv', atLimit: (c) => c.crypto.wrap({ kid: KID, msg: bytes(16), iv: bytes(8) }), pastLimit: (c) => c.crypto.wrap({ kid: KID, msg: bytes(16), iv: bytes(7) }) },
+  { name: 'wrap iv: 8 bytes, not 9', parameter: 'iv', atLimit: (c) => c.crypto.wrap({ kid: KID, msg: bytes(16), iv: bytes(8) }), pastLimit: (c) => c.crypto.wrap({ kid: KID, msg: bytes(16), iv: bytes(9) }) },
+  { name: 'unwrap msg: a non-empty multiple of 8', parameter: 'msg', atLimit: (c) => c.crypto.unwrap({ kid: KID, msg: bytes(16) }), pastLimit: (c) => c.crypto.unwrap({ kid: KID, msg: bytes(12) }) },
+  { name: 'unwrap msg: not empty', parameter: 'msg', atLimit: (c) => c.crypto.unwrap({ kid: KID, msg: bytes(8) }), pastLimit: (c) => c.crypto.unwrap({ kid: KID, msg: bytes(0) }) },
+  { name: 'approval scope: 1023 characters, not 1024', parameter: 'scope', atLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: chars(1023) }), pastLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: chars(1024) }) },
+  { name: 'approval scope: 1 character, not 0', parameter: 'scope', atLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: 'k' }), pastLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: '' }) },
+  { name: 'approval ctx: 64 characters, not 65', parameter: 'ctx', atLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: 'k', ctx: chars(64) }), pastLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: 'k', ctx: chars(65) }) },
+  { name: 'approval ctx: 1 character, not 0', parameter: 'ctx', atLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: 'k', ctx: 'c' }), pastLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: 'k', ctx: '' }) },
+  { name: 'approval note: 128 characters, not 129', parameter: 'note', atLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: 'k', note: chars(128) }), pastLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: 'k', note: chars(129) }) },
+  { name: 'approval note: 1 character, not 0', parameter: 'note', atLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: 'k', note: 'n' }), pastLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: 'k', note: '' }) },
+  { name: 'approval epk: base64 of 32 bytes', parameter: 'epk', atLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: 'k' }), pastLimit: (c) => c.auth.requestApproval({ epk: 'AQEB', scope: 'k' }) },
+  { name: 'redeem authreply: not empty', parameter: 'authreply', atLimit: (c) => c.auth.redeemApproval({ authreply: 'r', scope: 'k' }), pastLimit: (c) => c.auth.redeemApproval({ authreply: '', scope: 'k' }) },
+  { name: 'redeem scope: 1023 characters, not 1024', parameter: 'scope', atLimit: (c) => c.auth.redeemApproval({ authreply: 'r', scope: chars(1023) }), pastLimit: (c) => c.auth.redeemApproval({ authreply: 'r', scope: chars(1024) }) },
+];
+
+describe('documented limits', () => {
+  // verifies: REQ-API-005
+  it.each(LIMITS)('$name: the first value past the limit is refused with zero fetch calls, the boundary value is sent', async ({ parameter, atLimit, pastLimit }) => {
+    const fake = device();
+    const client = loggedInClient(fake);
+    const error = await pastLimit(client).then(() => undefined, (e: unknown) => e);
+    expect(error).toBeInstanceOf(HemValidationError);
+    expect((error as HemValidationError).parameter).toBe(parameter);
+    expect(fake.requests).toHaveLength(0);
+
+    await atLimit(client);
+    expect(operationRequests(fake)).toHaveLength(1);
+  });
+
+  it('covers every validated parameter at least once', () => {
+    const parameters = new Set(LIMITS.map((limit) => limit.parameter));
+    expect([...parameters].sort()).toEqual(['authreply', 'count', 'ctx', 'descr', 'epk', 'iv', 'kid', 'label', 'limit', 'msg', 'note', 'offset', 'scope']);
+  });
 });
