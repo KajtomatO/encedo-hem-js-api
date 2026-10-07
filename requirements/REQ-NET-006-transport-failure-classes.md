@@ -3,7 +3,7 @@ id: REQ-NET-006
 title: Transport failures classified
 status: verified
 priority: must
-revision: 3
+revision: 4
 source: start_point G14
 depends_on: ["REQ-API-002", "REQ-NET-004", "REQ-NET-005"]
 supersedes: null
@@ -30,3 +30,10 @@ classes. Introduced in M1.
       decides the error.
 - [ ] (M1B) what Node's `fetch` reports for a powered-off device, a name
       that does not resolve and an expired certificate is recorded.
+      2026-10-07, through the Node transport (REQ-NET-013): a name that does
+      not resolve → `HemUnreachableError` with cause `ENOTFOUND`
+      (`getaddrinfo ENOTFOUND no-such-host.invalid`); a certificate the
+      trust anchors cannot validate → cause
+      `UNABLE_TO_GET_ISSUER_CERT_LOCALLY`. An expired certificate was not
+      observable: the device's certificate was renewed that day (valid to
+      2027-01-05). The powered-off case is STEP-M1B-090.

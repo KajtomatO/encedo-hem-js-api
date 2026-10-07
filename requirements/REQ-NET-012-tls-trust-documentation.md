@@ -3,7 +3,7 @@ id: REQ-NET-012
 title: Custom TLS trust through the caller's fetch documented
 status: needs-reverify
 priority: must
-revision: 5
+revision: 6
 source: start_point §6 Q4; start_point G6; https://github.com/KajtomatO/encedo-hem-c-api; user decision 2026-10-07 (methods built on REQ-NET-013)
 depends_on: ["REQ-NET-001"]
 supersedes: null
@@ -35,5 +35,10 @@ firmware 1.2.2 (ARCHITECTURE.md §6 quirk 18); they are still passed as
 - [x] It states that browsers offer no such override.
 - [x] It states that the library has no TLS option and does not recover
       automatically from an expired device certificate.
-- [ ] (M1B) the documented method is used against the device, and the
-      certificate's issuer, subject and validity are recorded.
+- [x] (M1B) the documented method is used against the device, and the
+      certificate's issuer, subject and validity are recorded — 2026-10-07:
+      both README methods reached the device. Certificate: subject
+      `CN=my.ence.do`; issuer `ZeroSSL ECC DV SSL CA 2` (ZeroSSL GmbH, AT);
+      valid 2026-10-07 00:00:00 to 2027-01-05 23:59:59 GMT; chain through
+      `Sectigo Public Server Authentication Root E46` to `USERTrust ECC
+      Certification Authority`. Default (system) trust works.

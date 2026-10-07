@@ -3,7 +3,7 @@ id: REQ-TEST-005
 title: The test device and what tests may do to it
 status: verified
 priority: must
-revision: 2
+revision: 3
 source: user decision 2026-10-06 (M1B decomposition); ARCHITECTURE.md §1 D10, §8; https://github.com/KajtomatO/encedo-hem-c-api (device record and test policy)
 depends_on: ["REQ-TEST-003", "REQ-TEST-004"]
 supersedes: null
@@ -49,8 +49,14 @@ disposable-except-protected policy carry over, and both projects share one
 `hem.env`. Introduced in M1B.
 
 **Acceptance criteria:**
-- [ ] (M1B) the live `version` and `status` responses are recorded here and
-      match the description above.
+- [x] (M1B) the live `version` and `status` responses are recorded here and
+      match the description above — 2026-10-07: hardware "PPA rev 2.2",
+      firmware "Encedo nGINE FW v1.2.2-DIAG", bootloader "Encedo Secure
+      Bootloader v2.0.1"; `status` reports `storage` (two slots: 8388607
+      sectors read-only, 234364924 unassigned), so mass-storage hardware;
+      reached as `my.ence.do` and `192.168.7.1`; the clock was unset after
+      the day's power cycle and set again by the first login's automatic
+      check-in. Full records in REQ-SYS-001 and REQ-SYS-002.
 - [ ] Integration tests use only operations permitted unattended; every
       other device test lives under `tests/attended/` (REQ-TEST-004).
 - [ ] No test sends a request that modifies a key of the protected set

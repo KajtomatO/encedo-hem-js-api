@@ -3,7 +3,7 @@ id: REQ-NET-001
 title: Caller-supplied fetch implementation
 status: needs-reverify
 priority: must
-revision: 5
+revision: 6
 source: start_point G6; user decision 2026-10-07 (Node.js fallback, REQ-NET-013)
 depends_on: []
 supersedes: null
@@ -38,5 +38,8 @@ Introduced in M1.
 - [x] Outside Node.js, if no `fetch` is supplied and none exists globally,
       construction throws `HemUnsupportedError`; on Node.js the built-in
       transport needs no global `fetch`.
-- [ ] (M1B) a caller-supplied `fetch` with custom TLS trust reaches the
-      device.
+- [x] (M1B) a caller-supplied `fetch` with custom TLS trust reaches the
+      device — 2026-10-07: `createNodeFetch({ ca: <Node's bundled roots> })`
+      and `createNodeFetch({ servername: 'my.ence.do' })` (by IP) both
+      answered; a single unrelated root as `ca` failed with
+      `UNABLE_TO_GET_ISSUER_CERT_LOCALLY`, so the option is honoured.

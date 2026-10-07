@@ -3,7 +3,7 @@ id: REQ-NET-013
 title: Node.js transport that spells header names as the device requires
 status: verified
 priority: must
-revision: 3
+revision: 4
 source: device finding 2026-10-07 (STEP-M1B-030; firmware matches header names case-sensitively); user decision 2026-10-07 (the library handles it itself); https://github.com/encedo/hem-sdk-js (same approach in Encedo's SDK)
 depends_on: ["REQ-NET-001", "REQ-NET-009"]
 supersedes: null
@@ -44,5 +44,8 @@ keep-alive (quirk 19), so the transport reuses none. Introduced in M1B.
 - [x] A caller-supplied `fetch` is used for every request, as before.
 - [x] The browser run of the unit suite loads nothing from `node:` (the
       dynamic imports stay unexecuted; the Chromium run passes).
-- [ ] (M1B) a login — a POST — succeeds on Node.js against the device
-      through the default transport.
+- [x] (M1B) a login — a POST — succeeds on Node.js against the device
+      through the default transport — 2026-10-07: the integration run's
+      sweep logged in on a cold-booted device (clock unset → one automatic
+      check-in, then the proof accepted) and listed the keys; a second run
+      with the clock set logged in directly.

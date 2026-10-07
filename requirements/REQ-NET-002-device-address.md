@@ -3,7 +3,7 @@ id: REQ-NET-002
 title: Configurable device address
 status: verified
 priority: must
-revision: 3
+revision: 4
 source: start_point G5; ref/api/hem-api-1.2.2.yaml
 depends_on: []
 supersedes: null
@@ -29,4 +29,7 @@ across a network under another name. Introduced in M1.
 - [x] A path prefix on the URL is kept in front of `/api/…`.
 - [x] A URL carrying a username or password is rejected with
       `HemValidationError`.
-- [ ] (M1B) the device is reached by hostname and by IP address.
+- [x] (M1B) the device is reached by hostname and by IP address — 2026-10-07:
+      `https://my.ence.do` with the default transport and
+      `https://192.168.7.1` with `createNodeFetch({ servername: 'my.ence.do' })`
+      both answered `system.status()` (tests/integration/reach.test.ts).
