@@ -7,9 +7,9 @@ traces:
   architecture: ["ARCHITECTURE.md#7-transport", "ARCHITECTURE.md#1-decisions-fixed", "ARCHITECTURE.md#8-testing-policy"]
 depends_on: ["STEP-M1B-020"]
 evidence:
-  commits: []
-  tests: []
-  notes: null
+  commits: ["587fc6d"]
+  tests: ["verifies: REQ-NET-013 (tests/unit/node-transport.node.test.ts, tests/unit/node-transport.test.ts)", "verifies: REQ-NET-001 (tests/unit/node-transport.node.test.ts, tests/unit/transport.test.ts)", "verifies: REQ-BUILD-003 (tests/unit/node-transport.test.ts, tests/unit/source-tree.node.test.ts, tests/unit/package.node.test.ts)", "verifies: REQ-NET-012 (tests/unit/readme.node.test.ts)", "verifies: REQ-TEST-001 (tests/unit/network-guard.node.test.ts, tests/unit/network-guard.test.ts)"]
+  notes: "npm run check: 81 files, 1315 tests passed, 2 skipped (the browser-only fallback tests in the Node run) in Node v24.21.0 and headless Chromium. The browser run needed no bundler configuration for the dynamic node: imports. Surface snapshot grew by createNodeFetch and NodeFetchOptions only. The dynamic import carries a commented @ts-ignore because tsconfig.build.json has no Node typings; the shape used is typed locally. tests/fixtures/tls holds a self-signed certificate (CN my.ence.do, SAN DNS:my.ence.do + IP:127.0.0.1, valid to 2126) generated once with openssl; its key is test-only. The device was not contacted; REQ-NET-013's (M1B) box (a live login) closes when STEP-M1B-030 resumes."
 reopened: []
 cancelled: null
 ---
@@ -64,22 +64,22 @@ trust on the same transport. Browsers are untouched.
   say so in the README.
 
 **Definition of done**
-- [ ] A request with a body from a Node client without `fetch` reaches a
+- [x] A request with a body from a Node client without `fetch` reaches a
       local server with `Content-Length`, `Content-Type`, `Authorization`
       spelled exactly so and no `transfer-encoding`; each request on a new
       socket.
-- [ ] Time limit, cancellation, `HemUnreachableError`, no redirect
+- [x] Time limit, cancellation, `HemUnreachableError`, no redirect
       following and status 795 pass-through hold on the Node transport.
-- [ ] `createNodeFetch` honours `ca`, `servername`, `rejectUnauthorized`
+- [x] `createNodeFetch` honours `ca`, `servername`, `rejectUnauthorized`
       against the local TLS fixture and throws `HemUnsupportedError` outside
       Node.
-- [ ] A supplied `fetch` is used for everything; on Node the global `fetch`
+- [x] A supplied `fetch` is used for everything; on Node the global `fetch`
       is never called by a client without one.
-- [ ] The Node unit run blocks `node:https`/`node:http` beyond loopback; the
+- [x] The Node unit run blocks `node:https`/`node:http` beyond loopback; the
       browser run loads nothing from `node:`.
-- [ ] Static checks pass with the single exemption; the surface snapshot
+- [x] Static checks pass with the single exemption; the surface snapshot
       changes only by the new export; README and its test updated;
       `undici` gone; harness switched to `createNodeFetch`.
-- [ ] `npm run check` green in Node 24 and Chromium; `implements:` and
+- [x] `npm run check` green in Node 24 and Chromium; `implements:` and
       `verifies:` tags for the five REQs; their non-`(M1B)` boxes ticked
       (revisions bumped).
