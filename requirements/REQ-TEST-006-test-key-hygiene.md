@@ -3,7 +3,7 @@ id: REQ-TEST-006
 title: Test keys carry the EHEMTEST label prefix and are cleaned up
 status: approved
 priority: must
-revision: 1
+revision: 2
 source: user decision 2026-10-06 (M1B decomposition); https://github.com/KajtomatO/encedo-hem-c-api (same rule and prefix on the same device)
 depends_on: ["REQ-TEST-005", "REQ-KEY-001", "REQ-KEY-007"]
 supersedes: null
@@ -23,13 +23,14 @@ a person created, and the device accumulates nothing between runs.
 Introduced in M1B.
 
 **Acceptance criteria:**
-- [ ] A shared helper produces unique labels `EHEMTEST-<time>-<n>`, records
+- [x] A shared helper produces unique labels `EHEMTEST-<time>-<n>`, records
       every key it creates, and deletes them in teardown — also after a
       failed test body.
-- [ ] A sweep at the start of the integration run deletes leftover
-      `EHEMTEST` keys from interrupted earlier runs.
-- [ ] No integration or attended test creates a key with a label outside
-      the helper (grep-checkable).
+- [x] A sweep at the start of the integration run deletes leftover
+      `EHEMTEST` keys from interrupted earlier runs (Vitest global setup of
+      the device configuration).
+- [x] No integration or attended test creates a key with a label outside
+      the helper (grep-checkable; enforced by a unit test).
 - [ ] No test deletes a key it did not create or sweep by prefix (review
       criterion at the B gate).
 - [ ] (M1B) after the full M1B run the device lists no `EHEMTEST` key.

@@ -209,6 +209,38 @@ npm run check                     # build, type-check, unit tests in Node 24 and
 ```
 
 Unit tests use a substituted `fetch` and need neither a device nor a network.
+
+### Device tests
+
+Tests under `tests/integration/` talk to a real HEM. They are never part of
+`npm test`, `npm run check` or CI; they have their own command and are
+skipped — reported as skipped, not failed — unless `EHEM_TEST_URL` is set:
+
+```sh
+export EHEM_TEST_URL=https://my.ence.do
+export EHEM_TEST_PASSPHRASE='…'
+export EHEM_TEST_INSECURE=1        # or EHEM_TEST_CACERT=/path/to/ca.pem; default: system trust
+export EHEM_TEST_PACE_MS=150       # minimum interval between device requests; default 150
+npm run test:integration
+```
+
+Keep the exports in `hem.env` (git-ignored) and source it before a run. The
+variable names are those of the C client
+(https://github.com/KajtomatO/encedo-hem-c-api), so one file serves both.
+Only the test harness reads them; the library never reads the environment.
+
+Tests under `tests/attended/` need a person at the device or the phone: they
+push notifications, or wait for a power cycle. Each needs
+`EHEM_ALLOW_DISRUPTIVE=1` in addition, is started by file, and prints what it
+is about to do before doing it:
+
+```sh
+EHEM_ALLOW_DISRUPTIVE=1 npm run test:attended -- tests/attended/<name>.test.ts
+```
+
+Device tests create keys only with labels starting with `EHEMTEST` and delete
+them afterwards; no other key on the device is modified.
+
 How work is planned and traced is described in
 [REQUIREMENTS-MANAGEMENT.md](REQUIREMENTS-MANAGEMENT.md); the design is in
 [ARCHITECTURE.md](ARCHITECTURE.md).

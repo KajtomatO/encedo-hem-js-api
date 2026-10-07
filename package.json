@@ -27,14 +27,17 @@
     "test:browser": "vitest run --project browser",
     "test:unit": "vitest run",
     "check": "npm run build && npm run typecheck && vitest run",
-    "surface:update": "npm run build && HEM_UPDATE_SURFACE=1 vitest run --project node tests/unit/surface.node.test.ts"
+    "surface:update": "npm run build && HEM_UPDATE_SURFACE=1 vitest run --project node tests/unit/surface.node.test.ts",
+    "test:integration": "vitest run --config vitest.integration.config.ts --project integration",
+    "test:attended": "vitest run --config vitest.integration.config.ts --project attended"
   },
   "devDependencies": {
     "@types/node": "24.19.1",
     "@vitest/browser-playwright": "5.0.3",
     "playwright": "1.63.0",
     "typescript": "7.0.2",
+    "undici": "8.11.2",
     "vitest": "5.0.3"
   },
-  "//": "implements: REQ-BUILD-001, REQ-BUILD-002, REQ-BUILD-004 — ESM with types, no runtime dependencies or install scripts, Node >= 24"
+  "//": "implements: REQ-BUILD-001, REQ-BUILD-002, REQ-BUILD-004, REQ-TEST-003 — ESM with types, no runtime dependencies or install scripts, Node >= 24; device tests run only through test:integration and test:attended"
 }
