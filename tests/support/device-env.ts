@@ -62,6 +62,8 @@ export function requireDevice(): DeviceEnv {
 export interface DeviceTls {
   /** Name to check the certificate against, for a device addressed by IP. */
   servername?: string | undefined;
+  /** Trust anchors (PEM) replacing both the system roots and `EHEM_TEST_CACERT`. */
+  ca?: string | readonly string[] | undefined;
 }
 
 /**
@@ -73,6 +75,7 @@ export function deviceFetch(env: DeviceEnv, tls: DeviceTls = {}): FetchFunction 
   if (tls.servername !== undefined) connect['servername'] = tls.servername;
   if (env.insecure) connect['rejectUnauthorized'] = false;
   if (env.caCert !== undefined) connect['ca'] = readFileSync(env.caCert);
+  if (tls.ca !== undefined) connect['ca'] = tls.ca;
   const agent = new Agent({ connect });
   return (input, init) => undiciFetch(input, { ...(init as UndiciRequestInit), dispatcher: agent }) as unknown as Promise<Response>;
 }

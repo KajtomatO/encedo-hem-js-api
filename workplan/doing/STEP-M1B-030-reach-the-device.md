@@ -20,6 +20,12 @@ documents; the device's certificate and the transport failure classes are
 recorded.
 
 **Notes:**
+- Paused 2026-10-07 after the first live run: the sweep's login — a POST —
+  got 411 because the firmware matches header names case-sensitively and
+  Node's `fetch` writes `content-length` in lowercase (§6 quirk 18; report
+  in `docs/`). The device also stalled after the probes and was
+  power-cycled. Resumes after STEP-M1B-035 (Node transport), with
+  `createNodeFetch` for the CA and IP cases.
 - B step: before anything runs, state what it does to the device (read-only
   status and version calls, TLS handshakes) and what the user has to do
   (device plugged in, `hem.env` sourced), then stop until told to go (§5.5).

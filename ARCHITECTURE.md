@@ -66,7 +66,9 @@ status is mapped to a typed error.
 **Key architectural decisions:**
 
 - **Built only on `fetch` and Web Crypto** — the same package runs in Node
-  and in browsers, with nothing to install or compile.
+  and in browsers, with nothing to install or compile. One exception,
+  forced by firmware quirk 18: on Node.js, device requests go through
+  `node:https` (D3, REQ-NET-013).
 - **The caller owns the network edge** — TLS trust, proxies and test
   doubles are all handled by passing a `fetch`; the library has no TLS
   settings of its own.
@@ -87,7 +89,7 @@ Decisions already made and not up for re-litigation. REQs cite these.
 |---|---|---|
 | D1 | Written in TypeScript; published as ESM JavaScript with type declarations. | [BRIEF] G1 |
 | D2 | No runtime dependencies, no native addons, no PKCS#11. | [BRIEF] G2 |
-| D3 | Only `fetch` and Web Crypto are used as platform APIs; `src/` imports nothing from `node:`. | [BRIEF] G3 |
+| D3 | Only `fetch` and Web Crypto are used as platform APIs; `src/` imports nothing from `node:` — except `src/transport/node-https.ts`, the Node.js device transport (REQ-NET-013), which imports `node:https` dynamically and is never loaded in a browser. Forced by firmware quirk 18 (§6). | [BRIEF] G3; exception: user decision 2026-10-07 |
 | D4 | Minimum Node.js version is 24. Browsers are supported wherever Web Crypto provides X25519. | user decision 2026-10-02 |
 | D5 | Toolchain: npm, `tsc` for the build, Vitest for unit tests (run in Node and in a headless browser). All of it is development-only. | user decision 2026-10-02 |
 | D6 | The login KDF is PBKDF2-HMAC-SHA256 only (600 000 iterations, 32-byte output, salt = the challenge `eid` as its raw string). Argon2 is not supported: the description of an Argon2 derivation attributed to Encedo Manager in [DOC] and in older [C-SDK] text is incorrect and is ignored. There is no KDF hook and no raw-secret credential. This exclusion is re-reviewed before M1B starts (§11, risk 14). | user decision 2026-10-02; parameters from [C-SDK] |
@@ -142,6 +144,17 @@ Facts about the device that shape the design:
   control, attestation, firmware and dashboard upgrade [YAML].
 - **Login is deliberately slow.** Login responses are delayed to at least
   500 ms, and to 1500 ms after three consecutive failures [YAML].
+- **Header names are matched case-sensitively.** `Content-Length`,
+  `Content-Type` and `Authorization` are recognised only in that exact
+  spelling; a lowercase name counts as absent — 411 for a body without a
+  recognised length, 413 without a recognised type, a bearer silently
+  ignored. Node's built-in `fetch` writes its own `content-length` in
+  lowercase, so on Node.js the library sends through `node:https` (§7,
+  REQ-NET-013) [device, 2026-10-07].
+- **Keep-alive is advertised but not honoured.** Responses carry
+  `connection: keep-alive`, yet the device closes the socket after each
+  response; a client that reuses it fails its next request [device,
+  2026-10-07].
 
 Consumer constraints:
 
@@ -425,13 +438,18 @@ Firmware quirks the bindings normalise or document [BRIEF G16]:
 | 15 | Audit-log files are pipe-delimited text. | [C-SDK] | Returned verbatim; never parsed [BRIEF M2.3]. |
 | 16 | Firmware 1.2.2 acknowledges a certificate delivered by check-in but never installs it. | [C-SDK] | Documented; the working path is TLS import through config write (M3). |
 | 17 | The device clock runs about 8% fast and is unset after a cold boot. | [C-SDK] | Clock recovery (§5.2). |
+| 18 | Header names are matched case-sensitively: a lowercase `content-length` gets 411, `content-type` 413, `authorization` is ignored. Node's `fetch` cannot spell `content-length` any other way. | device (2026-10-07) | On Node.js the device transport is `node:https` with the names spelled as required (REQ-NET-013); browsers and libcurl spell them so already. |
+| 19 | Responses say `connection: keep-alive` but the socket is closed after each response. | device (2026-10-07) | One connection per request on the Node transport; undici copes by itself. |
 
 ## 7. Transport
 
-- **`fetch` injection.** The client uses `globalThis.fetch` unless the
-  caller passes its own. TLS trust for the device certificate, proxies,
-  connection settings and test doubles are all the caller's `fetch`
-  [BRIEF G6].
+- **`fetch` injection.** The client uses the caller's `fetch` when one is
+  passed; otherwise the library's own `node:https` transport on Node.js
+  (quirk 18 rules out Node's built-in `fetch`; REQ-NET-013) and
+  `globalThis.fetch` elsewhere. TLS trust for the device certificate,
+  proxies, connection settings and test doubles are all the caller's
+  `fetch` [BRIEF G6]; on Node.js `createNodeFetch({ ca, servername,
+  rejectUnauthorized })` builds one on the same transport.
 - **Address.** The device URL is required and may be a hostname or an IP
   address, `https:` or `http:` [BRIEF G5]. The library has no default
   address.
@@ -620,7 +638,11 @@ strict sequence (D8). Scope comes from [BRIEF] §3–§5.
    a transport error.
 3. **Connection reuse.** The device closes TCP after each response
    [C-SDK]. Whether Node's `fetch` then fails on a reused connection is
-   unknown. *Resolved by:* M1B.
+   unknown. *Resolved by:* M1B. **RESOLVED (2026-10-07):** Node's `fetch`
+   (undici) copes with the close by itself (10 of 10 consecutive calls);
+   the device also advertises keep-alive while closing (quirk 19), which
+   breaks a reusing `https.Agent` — so the Node transport of REQ-NET-013
+   opens one connection per request.
 4. **Cloud dependency for unattended operation.** After a cold boot the
    clock is unset and login needs a check-in, which needs
    `api.encedo.com` reachable from the client. Whether a soft reboot also

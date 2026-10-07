@@ -10,6 +10,10 @@ export async function setup(): Promise<void> {
     process.stderr.write('[sweep] EHEM_TEST_PASSPHRASE is not set: leftover EHEMTEST keys are not swept\n');
     return;
   }
-  const swept = await sweepTestKeys(deviceClient());
+  const client = deviceClient();
+  // Public call, no token: says whether the login below will have to repair the clock first.
+  const status = await client.system.status();
+  process.stderr.write(`[sweep] device up ${status.uptime} s, clock ${status.clockSet ? 'set' : 'NOT set (the login will run one check-in)'}\n`);
+  const swept = await sweepTestKeys(client);
   process.stderr.write(swept.length === 0 ? '[sweep] no leftover EHEMTEST keys on the device\n' : `[sweep] deleted ${swept.length} leftover EHEMTEST key(s): ${swept.join(', ')}\n`);
 }
