@@ -1,9 +1,9 @@
 ---
 id: REQ-TEST-001
 title: Unit tests run without a device
-status: needs-reverify
+status: verified
 priority: must
-revision: 7
+revision: 8
 source: start_point G21; user decision 2026-10-07 (Node transport guard, REQ-NET-013)
 depends_on: []
 supersedes: null

@@ -1,9 +1,9 @@
 ---
 id: REQ-BUILD-003
 title: Only APIs present in both Node.js and browsers
-status: needs-reverify
+status: verified
 priority: must
-revision: 5
+revision: 6
 source: start_point G3; ARCHITECTURE.md §1; user decision 2026-10-07 (Node transport exception, REQ-NET-013)
 depends_on: ["REQ-TEST-002"]
 supersedes: null

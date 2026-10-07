@@ -1,9 +1,9 @@
 ---
 id: REQ-NET-013
 title: Node.js transport that spells header names as the device requires
-status: approved
+status: verified
 priority: must
-revision: 2
+revision: 3
 source: device finding 2026-10-07 (STEP-M1B-030; firmware matches header names case-sensitively); user decision 2026-10-07 (the library handles it itself); https://github.com/encedo/hem-sdk-js (same approach in Encedo's SDK)
 depends_on: ["REQ-NET-001", "REQ-NET-009"]
 supersedes: null
