@@ -7,9 +7,9 @@ traces:
   architecture: ["ARCHITECTURE.md#8-testing-policy", "ARCHITECTURE.md#9-directory-layout"]
 depends_on: ["STEP-M1B-010"]
 evidence:
-  commits: []
-  tests: []
-  notes: null
+  commits: ["b793131"]
+  tests: ["verifies: REQ-TEST-003 (tests/unit/harness.node.test.ts, tests/integration/harness.test.ts)", "verifies: REQ-TEST-004 (tests/unit/harness.node.test.ts)", "verifies: REQ-TEST-005 (tests/unit/test-keys.test.ts)", "verifies: REQ-TEST-006 (tests/unit/test-keys.test.ts, tests/unit/harness.node.test.ts)"]
+  notes: "npm run check: 78 files, 1299 tests passed in Node v24.21.0 and headless Chromium. With EHEM_TEST_URL unset: npm run test:integration → 1 passed (guard check), 1 skipped (device smoke), exit 0, one note on stderr; npm run test:attended → no files yet, exit 0 (passWithNoTests). No device was contacted. The device projects live in vitest.integration.config.ts rather than as extra projects of vitest.config.ts because ci.node.test.ts pins the check/test scripts to a bare `vitest run`; fileParallelism is off (one device). The start-of-run sweep is a Vitest globalSetup, so the env helpers were split into device-env.ts (no vitest import) and integration-env.ts (describeDevice). The sweep and the smoke test are the first live calls and run at STEP-M1B-030."
 reopened: []
 cancelled: null
 ---
@@ -46,25 +46,25 @@ file; shared helpers build the device client from the environment and manage
   live call, which belongs to STEP-M1B-030 — here it is only shown to skip.
 
 **Definition of done**
-- [ ] `npm run test:integration` exists; with `EHEM_TEST_URL` unset every
+- [x] `npm run test:integration` exists; with `EHEM_TEST_URL` unset every
       integration test is reported skipped and the command exits 0.
-- [ ] `npm test`, `npm run check` and CI run no file under
+- [x] `npm test`, `npm run check` and CI run no file under
       `tests/integration/` or `tests/attended/`.
-- [ ] Attended tests skip unless both `EHEM_TEST_URL` and
+- [x] Attended tests skip unless both `EHEM_TEST_URL` and
       `EHEM_ALLOW_DISRUPTIVE=1` are set, print their intended action first,
       and nothing in the repository sets the variable (grep).
-- [ ] The device-client helper builds `HemClient` from the environment in
+- [x] The device-client helper builds `HemClient` from the environment in
       `tests/support/` only; the existing source checks still show the
       library reading no environment variable.
-- [ ] `EHEM_TEST_INSECURE=1` and `EHEM_TEST_CACERT` are honoured through an
+- [x] `EHEM_TEST_INSECURE=1` and `EHEM_TEST_CACERT` are honoured through an
       `undici` Agent; `undici` is a devDependency and the package test still
       shows zero runtime dependencies.
-- [ ] Key helper: unique `EHEMTEST-<time>-<n>` labels, tracked kids deleted
+- [x] Key helper: unique `EHEMTEST-<time>-<n>` labels, tracked kids deleted
       in teardown also after a failed body, start-of-run sweep by prefix —
       unit-tested with the fake fetch; grep shows no literal non-`EHEMTEST`
       label under `tests/integration/` or `tests/attended/`.
-- [ ] README "Development" documents the integration and attended commands
+- [x] README "Development" documents the integration and attended commands
       and the variables.
-- [ ] `implements:` tags (in `tests/support/`, `vitest.config.ts`,
+- [x] `implements:` tags (in `tests/support/`, `vitest.integration.config.ts`,
       `package.json`) and `verifies:` tags exist for REQ-TEST-003…006; the
       non-`(M1B)`, non-review boxes they close are ticked.
