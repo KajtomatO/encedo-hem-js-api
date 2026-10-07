@@ -1,9 +1,9 @@
 ---
 id: REQ-TEST-005
 title: The test device and what tests may do to it
-status: approved
+status: verified
 priority: must
-revision: 1
+revision: 2
 source: user decision 2026-10-06 (M1B decomposition); ARCHITECTURE.md §1 D10, §8; https://github.com/KajtomatO/encedo-hem-c-api (device record and test policy)
 depends_on: ["REQ-TEST-003", "REQ-TEST-004"]
 supersedes: null

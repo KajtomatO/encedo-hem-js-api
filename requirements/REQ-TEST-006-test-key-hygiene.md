@@ -1,9 +1,9 @@
 ---
 id: REQ-TEST-006
 title: Test keys carry the EHEMTEST label prefix and are cleaned up
-status: approved
+status: verified
 priority: must
-revision: 2
+revision: 3
 source: user decision 2026-10-06 (M1B decomposition); https://github.com/KajtomatO/encedo-hem-c-api (same rule and prefix on the same device)
 depends_on: ["REQ-TEST-005", "REQ-KEY-001", "REQ-KEY-007"]
 supersedes: null

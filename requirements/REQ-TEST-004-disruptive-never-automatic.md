@@ -1,9 +1,9 @@
 ---
 id: REQ-TEST-004
 title: Disruptive tests never run automatically
-status: approved
+status: verified
 priority: must
-revision: 2
+revision: 3
 source: CLAUDE.md; ARCHITECTURE.md §8; ARCHITECTURE.md §1
 depends_on: ["REQ-TEST-003"]
 supersedes: null

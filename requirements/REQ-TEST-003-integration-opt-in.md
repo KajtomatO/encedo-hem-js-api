@@ -1,9 +1,9 @@
 ---
 id: REQ-TEST-003
 title: Device tests run only when explicitly configured
-status: approved
+status: verified
 priority: must
-revision: 2
+revision: 3
 source: start_point G22; ARCHITECTURE.md §8
 depends_on: []
 supersedes: null
