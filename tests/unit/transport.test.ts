@@ -6,6 +6,7 @@ import {
   HemUnsupportedError,
   HemValidationError,
 } from '../../src/errors.js';
+import { isNode } from '../../src/transport/node-https.js';
 import { Transport, type TransportRequest } from '../../src/transport/transport.js';
 import { FakeFetch } from '../support/fake-fetch.js';
 import { blockedFetch } from '../support/setup.js';
@@ -34,8 +35,8 @@ describe('fetch injection', () => {
     expect(globalSpy).not.toHaveBeenCalled();
   });
 
-  // verifies: REQ-NET-001
-  it('falls back to the global fetch when none is supplied', async () => {
+  // verifies: REQ-NET-001 — in a browser; on Node the fallback is the Node transport (tests/unit/node-transport.node.test.ts).
+  it.skipIf(isNode())('falls back to the global fetch when none is supplied, in a browser', async () => {
     const fake = new FakeFetch().on('GET', '/api/system/status', { body: {} });
     vi.stubGlobal('fetch', fake.fetch);
 
@@ -47,7 +48,7 @@ describe('fetch injection', () => {
   });
 
   // verifies: REQ-NET-001
-  it('throws HemUnsupportedError at construction when there is no fetch at all', () => {
+  it.skipIf(isNode())('throws HemUnsupportedError at construction when there is no fetch at all, in a browser', () => {
     vi.stubGlobal('fetch', undefined);
     expect(() => new Transport({ url: 'https://hem.test' })).toThrow(HemUnsupportedError);
   });

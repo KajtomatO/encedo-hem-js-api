@@ -3,7 +3,7 @@ id: REQ-NET-012
 title: Custom TLS trust through the caller's fetch documented
 status: needs-reverify
 priority: must
-revision: 4
+revision: 5
 source: start_point §6 Q4; start_point G6; https://github.com/KajtomatO/encedo-hem-c-api; user decision 2026-10-07 (methods built on REQ-NET-013)
 depends_on: ["REQ-NET-001"]
 supersedes: null
@@ -28,11 +28,12 @@ firmware 1.2.2 (ARCHITECTURE.md §6 quirk 18); they are still passed as
 `fetch`. Introduced in M1.
 
 **Acceptance criteria:**
-- [ ] The README shows a working Node 24 method for trusting a certificate
+- [x] The README shows a working Node 24 method for trusting a certificate
       the runtime rejects, and one for connecting by IP address — both
-      through `createNodeFetch`, passed as `fetch`.
-- [ ] It states that browsers offer no such override.
-- [ ] It states that the library has no TLS option and does not recover
+      through `createNodeFetch`, passed as `fetch` (each exercised against
+      a local HTTPS server with a self-signed certificate in the unit suite).
+- [x] It states that browsers offer no such override.
+- [x] It states that the library has no TLS option and does not recover
       automatically from an expired device certificate.
 - [ ] (M1B) the documented method is used against the device, and the
       certificate's issuer, subject and validity are recorded.

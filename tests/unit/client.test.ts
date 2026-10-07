@@ -84,9 +84,12 @@ describe('HemClient construction', () => {
 
   // verifies: REQ-API-001
   it('exports no function that could change an already constructed client', () => {
+    // createNodeFetch builds a new function from its arguments and keeps no state, so it cannot touch an existing client.
+    const statelessFactories = ['createNodeFetch'];
     for (const [name, value] of Object.entries(hem)) {
       if (typeof value === 'function') {
-        // Only classes are exported as functions.
+        if (statelessFactories.includes(name)) continue;
+        // Otherwise only classes are exported as functions.
         expect(Function.prototype.toString.call(value), name).toMatch(/^class\b/);
       } else if (typeof value === 'object' && value !== null) {
         // Constant tables are frozen.

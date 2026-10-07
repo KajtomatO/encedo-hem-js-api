@@ -167,25 +167,37 @@ function lineOf(source: string, index: number): number {
 }
 
 /**
+ * The one file allowed `node:` modules and `process` (REQ-BUILD-003): the
+ * Node.js device transport, whose imports are dynamic and never reached in a
+ * browser (REQ-NET-013). Keyed by path relative to the repository root.
+ */
+export const EXEMPTIONS: Readonly<Record<string, { readonly nodeModules: readonly string[]; readonly rules: readonly string[] }>> = {
+  'src/transport/node-https.ts': { nodeModules: ['node:https', 'node:http'], rules: ['process'] },
+};
+
+/**
  * Check one source file. Relative imports are reported only by the caller,
  * which knows the directory layout; everything else that is not relative is
- * a violation here.
+ * a violation here, except what {@link EXEMPTIONS} allows the file.
  */
 export function checkSource(file: string, source: string): Violation[] {
   const violations: Violation[] = [];
   const lines = source.split('\n');
+  const exempt = EXEMPTIONS[file];
   const report = (index: number, rule: string): void => {
     const line = lineOf(source, index);
     violations.push({ file, line, rule, text: (lines[line - 1] ?? '').trim() });
   };
 
   for (const { specifier, index } of moduleSpecifiers(source)) {
-    if (specifier.startsWith('node:')) report(index, 'node: import');
-    else if (!specifier.startsWith('./') && !specifier.startsWith('../')) report(index, 'bare module specifier');
+    if (specifier.startsWith('node:')) {
+      if (!exempt?.nodeModules.includes(specifier)) report(index, 'node: import');
+    } else if (!specifier.startsWith('./') && !specifier.startsWith('../')) report(index, 'bare module specifier');
   }
 
   const code = stripCommentsAndStrings(source);
   for (const rule of codeRules) {
+    if (exempt?.rules.includes(rule.name)) continue;
     for (const match of code.matchAll(rule.pattern)) {
       report(match.index, rule.name);
     }

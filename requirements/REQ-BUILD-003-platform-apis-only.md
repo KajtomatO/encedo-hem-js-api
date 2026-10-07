@@ -3,7 +3,7 @@ id: REQ-BUILD-003
 title: Only APIs present in both Node.js and browsers
 status: needs-reverify
 priority: must
-revision: 4
+revision: 5
 source: start_point G3; ARCHITECTURE.md §1; user decision 2026-10-07 (Node transport exception, REQ-NET-013)
 depends_on: ["REQ-TEST-002"]
 supersedes: null
@@ -29,11 +29,11 @@ quirk 18), so the Node.js device transport is the one file that uses a
 Introduced in M1.
 
 **Acceptance criteria:**
-- [ ] A static check finds no `node:` import, no bare module specifier, and
+- [x] A static check finds no `node:` import, no bare module specifier, and
       no use of `Buffer`, `process` or `require` in `src/` — the only
       exceptions being the dynamic `node:https`/`node:http` import and
       `process` in `src/transport/node-https.ts`.
-- [ ] Cryptography is done only through `globalThis.crypto`, networking only
+- [x] Cryptography is done only through `globalThis.crypto`, networking only
       through `fetch` or, on Node.js, the transport of REQ-NET-013.
-- [ ] The browser run of the unit suite (REQ-TEST-002) is the behavioural
+- [x] The browser run of the unit suite (REQ-TEST-002) is the behavioural
       check, and it loads nothing from `node:`.

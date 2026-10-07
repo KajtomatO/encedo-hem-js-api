@@ -31,8 +31,9 @@ describe('network guard in a real run', () => {
       testResults: { assertionResults: { title: string; status: string; failureMessages: string[] }[] }[];
     };
     const results = report.testResults.flatMap((file) => file.assertionResults);
-    expect(results.map(({ title, status }) => [title, status])).toEqual([
+    expect(results.map(({ title, status }) => [title, status]).sort()).toEqual([
       ['awaits an unsubstituted request', 'failed'],
+      ['sends through the Node transport without substituting it', 'failed'],
       ['swallows the rejection of an unsubstituted request', 'failed'],
     ]);
     for (const result of results) {

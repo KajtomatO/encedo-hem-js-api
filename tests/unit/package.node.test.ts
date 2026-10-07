@@ -84,10 +84,12 @@ describe('build output', () => {
     }
   });
 
-  // verifies: REQ-BUILD-002
-  it('imports nothing outside itself', () => {
+  // verifies: REQ-BUILD-002, REQ-BUILD-003
+  it('imports nothing outside itself, except the Node transport’s dynamic node:https/node:http', () => {
+    const nodeModulesAllowed: Record<string, string[]> = { 'transport/node-https.js': ['node:https', 'node:http'] };
     for (const file of listFiles(dist).filter((path) => path.endsWith('.js') || path.endsWith('.d.ts'))) {
       for (const specifier of moduleSpecifiers(readFileSync(file, 'utf8'))) {
+        if ((nodeModulesAllowed[relative(dist, file)] ?? []).includes(specifier)) continue;
         expect(specifier, `${relative(root, file)} imports "${specifier}"`).toMatch(/^\.\.?\//);
         const target = resolve(dirname(file), specifier);
         expect(relative(dist, target).startsWith('..'), `${relative(root, file)} reaches outside dist/`).toBe(false);

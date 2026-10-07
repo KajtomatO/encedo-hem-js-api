@@ -70,9 +70,10 @@ describe('device tests are separate from the unit suite', () => {
   });
 
   // verifies: REQ-TEST-003
-  it('the TLS helper is a devDependency only', () => {
-    expect(pkg.devDependencies['undici']).toBeDefined();
+  it('needs no HTTP library: TLS trust goes through the library’s own createNodeFetch', () => {
+    expect(pkg.devDependencies['undici']).toBeUndefined();
     expect(pkg.dependencies).toBeUndefined();
+    expect(readFileSync(join(root, 'tests/support/device-env.ts'), 'utf8')).toContain('createNodeFetch(');
   });
 });
 

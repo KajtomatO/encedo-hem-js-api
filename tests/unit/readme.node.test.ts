@@ -47,10 +47,11 @@ describe('README', () => {
   });
 
   // verifies: REQ-NET-012
-  it('documents custom TLS trust: a CA method, an IP-address method, no browser override, no TLS option, no expiry recovery', () => {
+  it('documents custom TLS trust: a CA method and an IP-address method through createNodeFetch, no browser override, no TLS option, no expiry recovery', () => {
     const text = section("Trusting the device's TLS certificate");
-    expect(text).toMatch(/connect: \{ ca:/);
-    expect(text).toMatch(/servername: 'my\.ence\.do'/);
+    expect(text).toMatch(/createNodeFetch\(\{ ca:/);
+    expect(text).toMatch(/createNodeFetch\(\{ servername: 'my\.ence\.do'/);
+    expect(text).not.toMatch(/undici/);
     expect(text).toContain('https://192.168.7.1');
     expect(text).toMatch(/Browsers offer no such override/);
     expect(text).toMatch(/no TLS option/);

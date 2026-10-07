@@ -3,7 +3,7 @@ id: REQ-NET-001
 title: Caller-supplied fetch implementation
 status: needs-reverify
 priority: must
-revision: 4
+revision: 5
 source: start_point G6; user decision 2026-10-07 (Node.js fallback, REQ-NET-013)
 depends_on: []
 supersedes: null
@@ -28,14 +28,14 @@ Node.js transport; a supplied `fetch` is still used for everything.
 Introduced in M1.
 
 **Acceptance criteria:**
-- [ ] With a supplied `fetch`, the global `fetch` is never called (the test
+- [x] With a supplied `fetch`, the global `fetch` is never called (the test
       replaces the global with one that throws), and neither is the Node.js
       transport.
-- [ ] Without one, the global `fetch` is used in a browser, and the Node.js
+- [x] Without one, the global `fetch` is used in a browser, and the Node.js
       transport on Node.js — where the global `fetch` is then never called.
-- [ ] The supplied function is called with the standard `(url, init)`
+- [x] The supplied function is called with the standard `(url, init)`
       arguments only.
-- [ ] Outside Node.js, if no `fetch` is supplied and none exists globally,
+- [x] Outside Node.js, if no `fetch` is supplied and none exists globally,
       construction throws `HemUnsupportedError`; on Node.js the built-in
       transport needs no global `fetch`.
 - [ ] (M1B) a caller-supplied `fetch` with custom TLS trust reaches the

@@ -161,41 +161,50 @@ self-signed certificate, or for connecting by IP address, supply your own
 `fetch`. The library does **not** recover automatically from an expired
 device certificate; renew it on the device.
 
-These Node.js 24 methods were tried against a local HTTPS server with a
-self-signed CA, through this library. Both use the `undici` package (the
-HTTP client inside Node's own `fetch`); add it to your application.
+On Node.js the library does not use Node's built-in `fetch` for the device
+at all: firmware 1.2.2 matches header names case-sensitively, and Node's
+`fetch` writes its `content-length` in lowercase, which the device answers
+with 411. By default the client therefore sends through `node:https` with
+the names spelled as the device expects, with system trust. For other
+trust, `createNodeFetch` builds a `fetch` on that same transport (both
+methods below were tried against a local HTTPS server with a self-signed
+certificate, through this library):
 
 **A certificate the runtime rejects** (private or self-signed CA): trust that
 CA for device requests only.
 
 ```ts
 import { readFileSync } from 'node:fs';
-import { Agent, fetch as undiciFetch } from 'undici';
+import { HemClient, createNodeFetch } from 'encedo-hem-js-api';
 
-const agent = new Agent({ connect: { ca: readFileSync('device-ca.pem') } });
 const hem = new HemClient({
   url: 'https://my.ence.do',
-  fetch: (url, init) => undiciFetch(url, { ...init, dispatcher: agent }),
+  fetch: createNodeFetch({ ca: readFileSync('device-ca.pem') }),
 });
 ```
 
-Without `undici`, `NODE_EXTRA_CA_CERTS=device-ca.pem node app.js` adds the CA
-to the trust of the global `fetch` for the whole process.
+Alternatively, `NODE_EXTRA_CA_CERTS=device-ca.pem node app.js` adds the CA to
+Node's trust for the whole process, which the default transport uses too.
 
 **Connecting by IP address** (for example `https://192.168.7.1`, where the
 certificate names `my.ence.do`): check the certificate against the name it
 carries.
 
 ```ts
-const agent = new Agent({ connect: { servername: 'my.ence.do' } }); // add `ca` too if the CA is private
 const hem = new HemClient({
   url: 'https://192.168.7.1',
-  fetch: (url, init) => undiciFetch(url, { ...init, dispatcher: agent }),
+  fetch: createNodeFetch({ servername: 'my.ence.do' }), // add `ca` too if the CA is private
 });
 ```
 
+`createNodeFetch({ rejectUnauthorized: false })` accepts any certificate —
+for a laboratory only.
+
 **Browsers offer no such override.** A page can reach the device only when
-the browser itself trusts the certificate for the address used.
+the browser itself trusts the certificate for the address used. Browsers
+use their own `fetch`, which spells header names as the device expects; the
+`node:https` and `node:http` imports exist only for Node and are dynamic —
+if your bundler complains about them, mark them external.
 
 The cloud relays use their own `fetch` (the global one by default), so a
 relaxed device `fetch` is never used for `api.encedo.com`.

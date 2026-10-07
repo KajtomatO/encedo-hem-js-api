@@ -218,6 +218,10 @@ MobileApprovalOptions.ctx	ctx?:string|undefined
 MobileApprovalOptions.intervalMs	intervalMs?:number|undefined
 MobileApprovalOptions.note	note?:string|undefined
 MobileApprovalOptions.timeoutMs	timeoutMs?:number|undefined
+NodeFetchOptions	export interface NodeFetchOptions
+NodeFetchOptions.ca	ca?:string|Uint8Array|readonly(string|Uint8Array)[]|undefined
+NodeFetchOptions.rejectUnauthorized	rejectUnauthorized?:boolean|undefined
+NodeFetchOptions.servername	servername?:string|undefined
 PendingApproval	export interface PendingApproval
 PendingApproval.handle	readonly handle:string
 PendingApproval.scope	readonly scope:string
@@ -275,3 +279,4 @@ WrapParams.alg	alg?:WrapAlgorithm|undefined
 WrapParams.iv	iv?:Uint8Array|undefined
 WrapParams.kid	kid:string
 WrapParams.msg	msg:Uint8Array
+createNodeFetch	export declare function createNodeFetch(options?:NodeFetchOptions):FetchFunction

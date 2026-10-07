@@ -3,7 +3,7 @@ id: REQ-TEST-001
 title: Unit tests run without a device
 status: needs-reverify
 priority: must
-revision: 6
+revision: 7
 source: start_point G21; user decision 2026-10-07 (Node transport guard, REQ-NET-013)
 depends_on: []
 supersedes: null
@@ -23,13 +23,14 @@ since the Node.js transport (REQ-NET-013) bypasses `fetch`, the Node run
 guards that path too. Introduced in M1.
 
 **Acceptance criteria:**
-- [ ] The test setup replaces the global `fetch` with one that fails the
+- [x] The test setup replaces the global `fetch` with one that fails the
       test, so an unsubstituted request cannot go unnoticed.
-- [ ] In the Node run the setup also blocks `node:https` and `node:http`
+- [x] In the Node run the setup also blocks `node:https` and `node:http`
       requests to anything but the loopback address, so a client built
-      without a `fetch` cannot reach the network from a unit test.
-- [ ] A shared fake-`fetch` module lives in `tests/support/` and is tagged
+      without a `fetch` cannot reach the network from a unit test
+      (`tests/support/setup.node.ts`; proven by the guard fixture run).
+- [x] A shared fake-`fetch` module lives in `tests/support/` and is tagged
       `supports:`.
-- [ ] Every binding has at least one unit test asserting the request's
+- [x] Every binding has at least one unit test asserting the request's
       method, path, headers and body, and the mapping of its response.
-- [ ] The suite passes on a machine with networking disabled.
+- [x] The suite passes on a machine with networking disabled.

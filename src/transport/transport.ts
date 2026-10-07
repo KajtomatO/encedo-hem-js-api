@@ -5,6 +5,7 @@
  * @packageDocumentation
  */
 import { utf8Decode } from '../codec/utf8.js';
+import { createNodeFetch, isNode } from './node-https.js';
 import {
   HemAbortError,
   HemDeviceError,
@@ -40,7 +41,7 @@ export type FetchFunction = (input: string, init: RequestInit) => Promise<Respon
 export interface TransportOptions {
   /** Device base URL as a string or a `URL`: `https:` or `http:`, hostname or IP address. */
   url: string | URL;
-  /** `fetch` to use; defaults to `globalThis.fetch`. */
+  /** `fetch` to use; defaults to the Node.js transport on Node.js and to `globalThis.fetch` elsewhere. */
   fetch?: FetchFunction | undefined;
   /** Default time limit of each request in milliseconds (30 000). */
   timeoutMs?: number | undefined;
@@ -170,8 +171,10 @@ export class Transport {
     const { url, prefix } = parseDeviceUrl(options.url);
     this.baseUrl = url;
     this.#prefix = prefix;
-    // implements: REQ-NET-001
-    const fetchFunction = options.fetch ?? (typeof globalThis.fetch === 'function' ? globalThis.fetch.bind(globalThis) : undefined);
+    // implements: REQ-NET-001 — the caller's fetch; else the Node.js transport on Node.js
+    // (Node's built-in fetch cannot drive the device, REQ-NET-013); else the global fetch.
+    const fetchFunction =
+      options.fetch ?? (isNode() ? createNodeFetch() : typeof globalThis.fetch === 'function' ? globalThis.fetch.bind(globalThis) : undefined);
     if (!fetchFunction) {
       throw new HemUnsupportedError('No fetch implementation: pass one in the options, or run where globalThis.fetch exists');
     }

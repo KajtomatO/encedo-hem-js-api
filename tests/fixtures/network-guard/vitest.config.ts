@@ -7,6 +7,6 @@ export default defineConfig({
   root: fileURLToPath(new URL('.', import.meta.url)),
   test: {
     include: ['*.fixture.ts'],
-    setupFiles: [fileURLToPath(new URL('../../support/setup.ts', import.meta.url))],
+    setupFiles: [fileURLToPath(new URL('../../support/setup.ts', import.meta.url)), fileURLToPath(new URL('../../support/setup.node.ts', import.meta.url))],
   },
 });

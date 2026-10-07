@@ -20,6 +20,8 @@ export default defineConfig({
           name: 'node',
           environment: 'node',
           include: [unitTests],
+          // The Node transport bypasses fetch, so node:http(s) is guarded here too (REQ-TEST-001).
+          setupFiles: ['tests/support/setup.ts', 'tests/support/setup.node.ts'],
         },
       },
       {

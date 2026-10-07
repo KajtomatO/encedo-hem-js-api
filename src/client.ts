@@ -26,9 +26,12 @@ export interface HemClientOptions {
    */
   url: string | URL;
   /**
-   * `fetch` used for every device request; defaults to `globalThis.fetch`.
-   * TLS trust for the device certificate, proxies and test doubles are
-   * configured here.
+   * `fetch` used for every device request. Default: on Node.js the library's
+   * own transport over `node:https` (Node's built-in `fetch` cannot talk to
+   * the device, which matches header names case-sensitively), elsewhere
+   * `globalThis.fetch`. TLS trust for the device certificate, proxies and
+   * test doubles are configured here; on Node.js, `createNodeFetch` builds
+   * one with custom trust.
    */
   fetch?: FetchFunction | undefined;
   /** Time limit of each device request in milliseconds; default 30 000. */

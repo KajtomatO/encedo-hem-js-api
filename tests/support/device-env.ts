@@ -12,11 +12,10 @@
 //
 // This module imports nothing from vitest, so the global setup can use it too.
 // implements: REQ-TEST-003 — the device is configured through the environment, or not at all.
-// implements: REQ-TEST-005 — the device under test is the one the environment names; its TLS trust
-//   is the caller-supplied fetch of README "Trusting the device's TLS certificate".
+// implements: REQ-TEST-005 — the device under test is the one the environment names; custom TLS
+//   trust goes through createNodeFetch, as README "Trusting the device's TLS certificate" shows.
 import { readFileSync } from 'node:fs';
-import { Agent, type RequestInit as UndiciRequestInit, fetch as undiciFetch } from 'undici';
-import { HemClient, type HemClientOptions } from '../../src/index.js';
+import { HemClient, type HemClientOptions, type NodeFetchOptions, createNodeFetch } from '../../src/index.js';
 import type { FetchFunction } from '../../src/transport/transport.js';
 
 /** The default minimum interval between device requests (the C client's suite uses the same). */
@@ -66,28 +65,35 @@ export interface DeviceTls {
   ca?: string | readonly string[] | undefined;
 }
 
+/** Whether the environment asks for trust the system does not have. */
+export function customTrust(env: DeviceEnv): boolean {
+  return env.insecure || env.caCert !== undefined;
+}
+
 /**
  * A `fetch` for the device with the TLS trust the environment asks for, built
  * exactly as README "Trusting the device's TLS certificate" shows.
  */
 export function deviceFetch(env: DeviceEnv, tls: DeviceTls = {}): FetchFunction {
-  const connect: Record<string, unknown> = {};
-  if (tls.servername !== undefined) connect['servername'] = tls.servername;
-  if (env.insecure) connect['rejectUnauthorized'] = false;
-  if (env.caCert !== undefined) connect['ca'] = readFileSync(env.caCert);
-  if (tls.ca !== undefined) connect['ca'] = tls.ca;
-  const agent = new Agent({ connect });
-  return (input, init) => undiciFetch(input, { ...(init as UndiciRequestInit), dispatcher: agent }) as unknown as Promise<Response>;
+  const options: NodeFetchOptions = {};
+  if (tls.servername !== undefined) options.servername = tls.servername;
+  if (env.insecure) options.rejectUnauthorized = false;
+  if (env.caCert !== undefined) options.ca = readFileSync(env.caCert);
+  if (tls.ca !== undefined) options.ca = tls.ca;
+  return createNodeFetch(options);
 }
 
 /**
- * A client for the configured device: its URL, passphrase, TLS trust and pacing
- * from the environment; `extra` overrides any option (for example `fetch` with a
- * `servername`, or `url` for the IP address).
+ * A client for the configured device: its URL, passphrase and pacing from the
+ * environment, and a `fetch` only when the environment asks for custom trust
+ * — otherwise the library's default Node transport, which is what consumers
+ * get. `extra` overrides any option (for example `fetch` with a `servername`,
+ * or `url` for the IP address).
  */
 export function deviceClient(extra: Partial<HemClientOptions> = {}): HemClient {
   const env = requireDevice();
-  const options: HemClientOptions = { url: env.url, fetch: deviceFetch(env), minIntervalMs: env.paceMs };
+  const options: HemClientOptions = { url: env.url, minIntervalMs: env.paceMs };
+  if (customTrust(env)) options.fetch = deviceFetch(env);
   if (env.passphrase !== undefined) options.passphrase = env.passphrase;
   return new HemClient({ ...options, ...extra });
 }
