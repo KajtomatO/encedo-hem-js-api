@@ -3,7 +3,7 @@ id: REQ-SYS-005
 title: Check-in step 2
 status: verified
 priority: must
-revision: 3
+revision: 4
 source: start_point M1.3; ref/api/hem-api-1.2.2.yaml
 depends_on: ["REQ-API-002", "REQ-API-007"]
 supersedes: null
@@ -35,5 +35,8 @@ documentation states it. Introduced in M1.
       `HemUnauthenticatedError` without a login attempt.
 - [x] The call's documentation lists the management actions and the
       condition under which they run.
-- [ ] (M1B) after a completed check-in the status call reports the clock as
-      set.
+- [x] (M1B) after a completed check-in the status call reports the clock as
+      set — 2026-10-07: `postCheckin` answered `{status: "OK"}` and the next
+      `status` had `ts`/`time` (clock set). The check-in also corrected the
+      clock: 4.2 h after the previous sync the device was 19 minutes ahead
+      (about 9 % fast, §6 quirk 17) and read the right time afterwards.

@@ -3,7 +3,7 @@ id: REQ-SYS-007
 title: One-call check-in
 status: verified
 priority: must
-revision: 4
+revision: 5
 source: start_point M1.3; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: ["REQ-SYS-004", "REQ-SYS-005", "REQ-SYS-006"]
 supersedes: null
@@ -28,6 +28,8 @@ in M1.
 - [x] A failure names the leg that failed.
 - [x] With no relay configured the call raises `HemUnsupportedError`.
 - [x] A check-in never triggers another check-in.
-- [ ] (M1B) a check-in on the test device returns status `OK` and leaves the
+- [x] (M1B) a check-in on the test device returns status `OK` and leaves the
       clock set; whether `newcrt` is reported is recorded (ARCHITECTURE.md
-      §6, quirk 16).
+      §6, quirk 16) — 2026-10-07: `checkin()` → `{status: "OK"}` in 564 ms,
+      clock set afterwards; `newcrt` was not reported (the device's
+      certificate had been renewed that day), nor `newfws`/`newuis`.

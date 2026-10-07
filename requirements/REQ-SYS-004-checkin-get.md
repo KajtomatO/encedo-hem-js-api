@@ -3,7 +3,7 @@ id: REQ-SYS-004
 title: Check-in step 1
 status: verified
 priority: must
-revision: 3
+revision: 4
 source: start_point M1.3; ref/api/hem-api-1.2.2.yaml
 depends_on: ["REQ-API-006"]
 supersedes: null
@@ -26,4 +26,6 @@ Introduced in M1.
 - [x] No `Authorization` header is sent; the result is the `check` string,
       unmodified.
 - [x] A reply without `check` raises `HemProtocolError`.
-- [ ] (M1B) the device returns a check-in token.
+- [x] (M1B) the device returns a check-in token — 2026-10-07: a 761-character
+      JWT-shaped token with the claims `jti`, `iss`, `qid`, `aud`, `fws`,
+      `bls`, `uis`, `csn` (tests/integration/checkin-health.test.ts).
