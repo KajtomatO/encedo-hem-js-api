@@ -1,9 +1,9 @@
 ---
 id: REQ-NET-001
 title: Caller-supplied fetch implementation
-status: needs-reverify
+status: verified
 priority: must
-revision: 6
+revision: 7
 source: start_point G6; user decision 2026-10-07 (Node.js fallback, REQ-NET-013)
 depends_on: []
 supersedes: null
