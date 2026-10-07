@@ -2,9 +2,9 @@
 
 # Traceability matrix
 
-Generated: 2026-10-07 (STEP-M1B-030 done; device reached through the Node transport, findings recorded)
+Generated: 2026-10-07 (STEP-M1B-040 done; check-in and health verified live)
 
-Scan inputs: 120 REQ files (`requirements/`), 46 step files (`workplan/{todo,doing,done}/`: 17 in `todo/`, 0 in `doing/`, 29 in `done/`). Code tags (`implements: REQ-`) scanned across `src/`; test tags (`verifies:`/`supports: REQ-`) scanned across `tests/`. Build/CI, test-infrastructure and README requirements are realised outside `src/` per REQUIREMENTS-MANAGEMENT.md §4.2, so `implements:` tags are also scanned in `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `vitest.integration.config.ts`, `tests/support`, `.github/workflows`, `README.md`. Locations present: `src/`, `tests/`, `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `vitest.integration.config.ts`, `tests/support`, `.github/workflows`, `README.md`. Unit suite: passed (`npm run check`) at generation.
+Scan inputs: 120 REQ files (`requirements/`), 46 step files (`workplan/{todo,doing,done}/`: 16 in `todo/`, 0 in `doing/`, 30 in `done/`). Code tags (`implements: REQ-`) scanned across `src/`; test tags (`verifies:`/`supports: REQ-`) scanned across `tests/`. Build/CI, test-infrastructure and README requirements are realised outside `src/` per REQUIREMENTS-MANAGEMENT.md §4.2, so `implements:` tags are also scanned in `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `vitest.integration.config.ts`, `tests/support`, `.github/workflows`, `README.md`. Locations present: `src/`, `tests/`, `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `vitest.integration.config.ts`, `tests/support`, `.github/workflows`, `README.md`. Unit suite: passed (`npm run check`) at generation.
 
 Steps column: step ID and its folder. A REQ listed in several steps becomes `implemented` only when all of them are in `done/` (§3.2). Tests column: `verifies:` locations; `supports …` entries are test support and never count as verification.
 
@@ -95,11 +95,11 @@ Steps column: step ID and its folder. A REQ listed in several steps becomes `imp
 | REQ-OPS-015 | ECDH-agreed keys for HMAC, cipher and wrap | approved | must | §6 | STEP-M2A-000 (todo) | — | — |
 | REQ-SYS-001 | Device status | verified | must | §6 | STEP-M1A-100 (done), STEP-M1B-030 (done) | src/api/system.ts:280 | tests/integration/reach.test.ts:59, tests/unit/system.test.ts:9, tests/unit/system.test.ts:19, tests/unit/system.test.ts:34, tests/unit/system.test.ts:73 |
 | REQ-SYS-002 | Hardware and firmware version | verified | must | §6 | STEP-M1A-100 (done), STEP-M1B-030 (done) | src/api/system.ts:315 | tests/integration/reach.test.ts:59, tests/unit/system.test.ts:97, tests/unit/system.test.ts:112, tests/unit/system.test.ts:131 |
-| REQ-SYS-003 | Single health operation | verified | must | §6 | STEP-M1A-110 (done), STEP-M1B-040 (todo), STEP-M1B-090 (todo) | src/api/system.ts:185 | tests/unit/health.test.ts:14, tests/unit/health.test.ts:24, tests/unit/health.test.ts:37, tests/unit/health.test.ts:45, tests/unit/health.test.ts:56 |
-| REQ-SYS-004 | Check-in step 1 | verified | must | §6 | STEP-M1A-110 (done), STEP-M1B-040 (todo) | src/api/system.ts:214 | tests/unit/checkin.test.ts:32, tests/unit/checkin.test.ts:41 |
-| REQ-SYS-005 | Check-in step 2 | verified | must | §6 | STEP-M1A-110 (done), STEP-M1B-040 (todo) | src/api/system.ts:241 | tests/unit/checkin.test.ts:49, tests/unit/checkin.test.ts:63 |
-| REQ-SYS-006 | Check-in relay, replaceable, with a default for the Encedo backend | verified | must | §6, §3, §11 | STEP-M1A-110 (done), STEP-M1B-040 (todo), STEP-M1B-120 (todo) | src/relay/checkin.ts:46 | tests/unit/checkin.test.ts:77, tests/unit/checkin.test.ts:135, tests/unit/checkin.test.ts:156, tests/unit/checkin.test.ts:168, tests/unit/checkin.test.ts:175, tests/unit/checkin.test.ts:185 |
-| REQ-SYS-007 | One-call check-in | verified | must | §6 | STEP-M1A-110 (done), STEP-M1A-150 (done), STEP-M1A-240 (done), STEP-M1B-040 (todo) | src/api/system.ts:263, src/relay/http.ts:26 | tests/unit/checkin.test.ts:77, tests/unit/checkin.test.ts:93, tests/unit/checkin.test.ts:108, tests/unit/checkin.test.ts:128, tests/unit/clock-recovery.test.ts:58, tests/unit/clock-recovery.test.ts:152 |
+| REQ-SYS-003 | Single health operation | verified | must | §6 | STEP-M1A-110 (done), STEP-M1B-040 (done), STEP-M1B-090 (todo) | src/api/system.ts:185 | tests/integration/checkin-health.test.ts:60, tests/unit/health.test.ts:14, tests/unit/health.test.ts:24, tests/unit/health.test.ts:37, tests/unit/health.test.ts:45, tests/unit/health.test.ts:56 |
+| REQ-SYS-004 | Check-in step 1 | verified | must | §6 | STEP-M1A-110 (done), STEP-M1B-040 (done) | src/api/system.ts:214 | tests/integration/checkin-health.test.ts:25, tests/unit/checkin.test.ts:32, tests/unit/checkin.test.ts:41 |
+| REQ-SYS-005 | Check-in step 2 | verified | must | §6 | STEP-M1A-110 (done), STEP-M1B-040 (done) | src/api/system.ts:241 | tests/integration/checkin-health.test.ts:25, tests/unit/checkin.test.ts:49, tests/unit/checkin.test.ts:63 |
+| REQ-SYS-006 | Check-in relay, replaceable, with a default for the Encedo backend | verified | must | §6, §3, §11 | STEP-M1A-110 (done), STEP-M1B-040 (done), STEP-M1B-120 (todo) | src/relay/checkin.ts:46 | tests/integration/checkin-health.test.ts:25, tests/unit/checkin.test.ts:77, tests/unit/checkin.test.ts:135, tests/unit/checkin.test.ts:156, tests/unit/checkin.test.ts:168, tests/unit/checkin.test.ts:175, tests/unit/checkin.test.ts:185 |
+| REQ-SYS-007 | One-call check-in | verified | must | §6 | STEP-M1A-110 (done), STEP-M1A-150 (done), STEP-M1A-240 (done), STEP-M1B-040 (done) | src/api/system.ts:263, src/relay/http.ts:26 | tests/integration/checkin-health.test.ts:50, tests/unit/checkin.test.ts:77, tests/unit/checkin.test.ts:93, tests/unit/checkin.test.ts:108, tests/unit/checkin.test.ts:128, tests/unit/clock-recovery.test.ts:58, tests/unit/clock-recovery.test.ts:152 |
 | REQ-SYS-008 | Read device configuration | approved | must | §6 | STEP-M2A-000 (todo) | — | — |
 | REQ-SYS-009 | Audit-log verification key | approved | must | §6 | STEP-M2A-000 (todo) | — | — |
 | REQ-SYS-010 | Paged audit-log listing | approved | must | §6 | STEP-M2A-000 (todo) | — | — |
@@ -133,7 +133,7 @@ Steps column: step ID and its folder. A REQ listed in several steps becomes `imp
 
 ## Coverage report
 
-- Totals: 120 REQs (51 approved, 69 verified), 46 steps (17 todo, 0 doing, 29 done; 1 cancelled).
+- Totals: 120 REQs (51 approved, 69 verified), 46 steps (16 todo, 0 doing, 30 done; 1 cancelled).
 - By area: API 14, AUTH 26, BUILD 6, KEY 9, NET 13, OPS 15, SYS 31, TEST 6.
 - Steps by milestone: M1A 25, M1B 17, M2A 1, M2B 1, M3A 1, M3B 1.
 - REQs with no step: none.
@@ -145,4 +145,4 @@ Steps column: step ID and its folder. A REQ listed in several steps becomes `imp
 - Steps in `done/` with empty evidence: none.
 - Broken architecture anchors: none.
 - REQs in `needs-reverify`: none.
-- Status transitions applied in this run: REQ-NET-001: needs-reverify → verified, REQ-NET-012: needs-reverify → verified.
+- Status transitions applied in this run: none.
