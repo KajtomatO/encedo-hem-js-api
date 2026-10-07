@@ -186,6 +186,16 @@ describe('createNodeFetch and TLS trust', () => {
   });
 
   // verifies: REQ-NET-013
+  it('returns responses a fetch wrapper can read more than once, clone and parse', async () => {
+    const response = await createNodeFetch()(`${plainUrl}/api/x`, { method: 'GET' });
+    expect(response.status).toBe(200);
+    expect(await response.clone().text()).toBe('{"ok":true}');
+    expect(await response.json()).toEqual({ ok: true });
+    expect(new Uint8Array(await response.arrayBuffer())).toEqual(new TextEncoder().encode('{"ok":true}'));
+    expect(await response.text()).toBe('{"ok":true}');
+  });
+
+  // verifies: REQ-NET-013
   it('spells the headers the same way through createNodeFetch', async () => {
     await new Transport({ url: plainUrl, fetch: createNodeFetch() }).send({ operation: 'test.op', method: 'POST', path: '/api/x', body: '{}', bearer: 't' });
     expect(seen[0]?.names).toEqual(expect.arrayContaining(['Content-Type', 'Content-Length', 'Authorization']));

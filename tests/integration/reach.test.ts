@@ -24,7 +24,8 @@ function describeError(error: unknown): unknown {
 function recording(inner: FetchFunction): FetchFunction {
   return async (input, init) => {
     const response = await inner(input, init);
-    log(`${init.method ?? 'GET'} ${new URL(input).pathname} → ${response.status}`, await response.clone().text());
+    const copy = typeof response.clone === 'function' ? response.clone() : response;
+    log(`${init.method ?? 'GET'} ${new URL(input).pathname} → ${response.status}`, await copy.text());
     return response;
   };
 }

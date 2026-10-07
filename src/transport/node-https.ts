@@ -86,9 +86,10 @@ function concat(chunks: Uint8Array[]): Uint8Array {
 }
 
 /**
- * A response with the fields the transport reads. Not a `Response`: that
- * constructor rejects statuses outside 200–599, which the device uses (§6
- * quirk 3).
+ * A response with the fields the transport reads, plus the body readers a
+ * `fetch` wrapper may expect; the body can be read any number of times. Not
+ * a `Response`: that constructor rejects statuses outside 200–599, which the
+ * device uses (§6 quirk 3).
  */
 function toResponse(status: number, raw: Record<string, string | string[] | undefined>, body: Uint8Array): Response {
   const headers = new Headers();
@@ -98,14 +99,17 @@ function toResponse(status: number, raw: Record<string, string | string[] | unde
     else headers.set(name, value);
   }
   const bytes = body.buffer.slice(body.byteOffset, body.byteOffset + body.byteLength) as ArrayBuffer;
+  const text = (): string => new TextDecoder().decode(body);
   const like = {
     status,
     ok: status >= 200 && status < 300,
     type: 'basic',
     redirected: false,
     headers,
-    arrayBuffer: () => Promise.resolve(bytes),
-    text: () => Promise.resolve(new TextDecoder().decode(body)),
+    arrayBuffer: () => Promise.resolve(bytes.slice(0)),
+    text: () => Promise.resolve(text()),
+    json: () => Promise.resolve(JSON.parse(text()) as unknown),
+    clone: () => toResponse(status, raw, body),
   };
   return like as unknown as Response;
 }
