@@ -204,6 +204,7 @@ KeyTypeInfo.raw	readonly raw:string
 KeyTypeInfo.unknown	readonly unknown:readonly string[]
 KeysApi	export declare class KeysApi
 KeysApi.create	create(params:CreateKeyParams,options?:CallOptions):Promise<string>
+KeysApi.delete	delete(kid:string,options?:CallOptions):Promise<void>
 KeysApi.findByDescription	findByDescription(descr:Uint8Array,options?:CallOptions):Promise<KeyEntry[]>
 KeysApi.get	get(kid:string,options?:CallOptions):Promise<KeyDetails>
 KeysApi.list	list(params?:ListKeysParams,options?:CallOptions):Promise<KeyPage>

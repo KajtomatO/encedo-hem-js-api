@@ -103,6 +103,12 @@ export class Session implements TokenProvider {
     return [...this.#cache.keys()];
   }
 
+  /** Drop the cached token for `scope`, if any. */
+  // implements: REQ-KEY-007 — the per-key token of a deleted key is not kept.
+  forget(scope: string): void {
+    this.#cache.delete(scope);
+  }
+
   /** Discard the credential and every cached token. Authenticated calls fail afterwards. */
   logout(): void {
     this.#loggedOut = true;

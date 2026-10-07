@@ -3,7 +3,7 @@ id: REQ-KEY-007
 title: Delete a key
 status: approved
 priority: must
-revision: 2
+revision: 3
 source: start_point §4; ref/api/hem-api-1.2.2.yaml; user decision 2026-10-06 (moved from M2A to M1B)
 depends_on: ["REQ-AUTH-005", "REQ-NET-003"]
 supersedes: null
@@ -23,8 +23,8 @@ Introduced in M1B — moved from M2A at the M1B decomposition so that device
 tests can delete the keys they create (user decision 2026-10-06).
 
 **Acceptance criteria:**
-- [ ] The scope used is `keymgmt:del`; a 200 with an empty body resolves the
+- [x] The scope used is `keymgmt:del`; a 200 with an empty body resolves the
       call.
-- [ ] A 406 (key not present) raises `HemOperationFailedError`.
-- [ ] A cached `keymgmt:use:<kid>` token for the deleted key is discarded.
+- [x] A 406 (key not present) raises `HemOperationFailedError`.
+- [x] A cached `keymgmt:use:<kid>` token for the deleted key is discarded.
 - [ ] (M1B) a test key is deleted and no longer appears in the list.

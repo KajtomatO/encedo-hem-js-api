@@ -139,7 +139,7 @@ export class HemClient {
   readonly auth: AuthApi;
   /** Device-wide calls: status, version, health, check-in. */
   readonly system: SystemApi;
-  /** Key repository: create, get, list, search. */
+  /** Key repository: create, get, list, search, delete. */
   readonly keys: KeysApi;
   /** Operations with stored keys: HMAC, wrap, unwrap. */
   readonly crypto: CryptoApi;

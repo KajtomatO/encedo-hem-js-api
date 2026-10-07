@@ -1,5 +1,5 @@
 /**
- * Key-management bindings (M1): create and get; list and search.
+ * Key-management bindings (M1): create and get; list and search; delete.
  *
  * @packageDocumentation
  */
@@ -61,6 +61,17 @@ export const KEY_SEARCH: OperationSpec = {
   scope: 'keymgmt:search',
   tlsOnly: true,
   required: ['offset', 'total', 'listed', 'list'],
+};
+
+export const KEY_DELETE: OperationSpec = {
+  name: 'keys.delete',
+  group: 'keymgmt',
+  method: 'DELETE',
+  path: '/api/keymgmt/delete/{kid}',
+  scope: 'keymgmt:del',
+  tlsOnly: true,
+  required: [],
+  emptyResponse: true,
 };
 
 /** Largest page the device returns. */
@@ -271,6 +282,26 @@ export class KeysApi {
   }
 
   /**
+   * Delete one key: the device marks its record as deleted. A key id that
+   * is not present raises `HemOperationFailedError` (406). A paired mobile
+   * app is stored as a key, so this is also how a pairing is removed. The
+   * cached `keymgmt:use:<kid>` token of the deleted key is discarded.
+   *
+   * Device call: `DELETE /api/keymgmt/delete/{kid}`. HTTPS only — over
+   * plain HTTP the device would answer 409 rather than 418; the client
+   * refuses before sending either way.
+   *
+   * @remarks Token scope: `keymgmt:del`. Introduced in M1.
+   */
+  // implements: REQ-KEY-007
+  async delete(kid: string, options?: CallOptions): Promise<void> {
+    const id = validateKid(kid);
+    await invoke(this.#context, KEY_DELETE, { params: { kid: id } }, options);
+    // The key is gone, so a token scoped to it is useless.
+    this.#context.tokens.forget(`keymgmt:use:${id}`);
+  }
+
+  /**
    * One page of the key repository, at most 15 keys. Labels and
    * descriptions are available here (key get does not return them).
    *
@@ -372,4 +403,4 @@ export class KeysApi {
 }
 
 /** Operations of this module. */
-export const KEYMGMT_OPERATIONS: readonly OperationSpec[] = [KEY_CREATE, KEY_GET, KEY_LIST, KEY_LIST_OFFSET, KEY_LIST_PAGE, KEY_SEARCH];
+export const KEYMGMT_OPERATIONS: readonly OperationSpec[] = [KEY_CREATE, KEY_GET, KEY_LIST, KEY_LIST_OFFSET, KEY_LIST_PAGE, KEY_SEARCH, KEY_DELETE];

@@ -55,7 +55,8 @@ The client logs in for that exact scope, caches one token per scope in memory
 (8 hours by default, `tokenLifetimeSeconds`), renews it 60 seconds before it
 expires, and repeats a call once after a `401` (tokens die when the device
 reboots). Crypto operations and `keys.get` need the per-key scope
-`keymgmt:use:<kid>`, so each key you use costs one login. The documentation of
+`keymgmt:use:<kid>`, so each key you use costs one login; `keys.delete`
+discards the token of the key it removes. The documentation of
 every operation states its scope and the milestone that introduced it.
 
 `client.auth.role` reports whether the device granted the user, master or app

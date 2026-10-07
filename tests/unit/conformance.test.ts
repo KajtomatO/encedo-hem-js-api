@@ -34,6 +34,7 @@ function device(): FakeFetch {
     .always('GET', `/api/keymgmt/get/${KID}`, { body: { updated: 5, pubkey: 'AQID' } })
     .always('GET', /^\/api\/keymgmt\/list/, { body: ENVELOPE })
     .always('POST', '/api/keymgmt/search', { body: ENVELOPE })
+    .always('DELETE', `/api/keymgmt/delete/${KID}`, { status: 200 })
     .always('POST', '/api/crypto/hmac/hash', { body: { mac: 'BQY=' } })
     .always('POST', '/api/crypto/cipher/wrap', { body: { wrapped: 'BwgJ' } })
     .always('POST', '/api/crypto/cipher/unwrap', { body: { unwrapped: 'CgsM' } });
@@ -109,6 +110,7 @@ const samples: Record<string, Sample> = {
     body: { descr: '^AQID' },
     result: PAGE_RESULT,
   },
+  'keys.delete /api/keymgmt/delete/{kid}': { run: (c) => c.keys.delete(UPPER_KID), path: `/api/keymgmt/delete/${KID}`, body: undefined, result: undefined },
   'crypto.hmac /api/crypto/hmac/hash': {
     run: (c) => c.crypto.hmac({ kid: UPPER_KID, msg: Uint8Array.from([1]) }),
     path: '/api/crypto/hmac/hash',
@@ -143,6 +145,7 @@ const ARCHITECTURE_SCOPES: Record<string, string | null> = {
   'keys.get': `keymgmt:use:${KID}`,
   'keys.search': 'keymgmt:search',
   'keys.list': 'keymgmt:list',
+  'keys.delete': 'keymgmt:del',
   'crypto.hmac': `keymgmt:use:${KID}`,
   'crypto.wrap': `keymgmt:use:${KID}`,
   'crypto.unwrap': `keymgmt:use:${KID}`,
@@ -263,6 +266,7 @@ const LIMITS: Limit[] = [
   { name: 'kid: 32 hex characters, not 33', parameter: 'kid', atLimit: (c) => c.keys.get(KID), pastLimit: (c) => c.keys.get(`${KID}0`) },
   { name: 'kid: 32 hex characters, not 31', parameter: 'kid', atLimit: (c) => c.keys.get(UPPER_KID), pastLimit: (c) => c.keys.get(KID.slice(1)) },
   { name: 'kid: hex only', parameter: 'kid', atLimit: (c) => c.crypto.hmac({ kid: KID, msg: bytes(1) }), pastLimit: (c) => c.crypto.hmac({ kid: `g${KID.slice(1)}`, msg: bytes(1) }) },
+  { name: 'delete kid: 32 hex characters, not 33', parameter: 'kid', atLimit: (c) => c.keys.delete(KID), pastLimit: (c) => c.keys.delete(`${KID}0`) },
   { name: 'label: 1 character, not 0', parameter: 'label', atLimit: (c) => c.keys.create({ label: 'k', type: 'AES256' }), pastLimit: (c) => c.keys.create({ label: '', type: 'AES256' }) },
   { name: 'label: 32 characters, not 33', parameter: 'label', atLimit: (c) => c.keys.create({ label: chars(32), type: 'AES256' }), pastLimit: (c) => c.keys.create({ label: chars(33), type: 'AES256' }) },
   { name: 'label: printable ASCII only', parameter: 'label', atLimit: (c) => c.keys.create({ label: ' ~', type: 'AES256' }), pastLimit: (c) => c.keys.create({ label: 'k\u0007', type: 'AES256' }) },

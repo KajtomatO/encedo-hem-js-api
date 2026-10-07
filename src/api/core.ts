@@ -46,6 +46,8 @@ export interface OperationSpec {
 /** Runs a request with a bearer token for a scope (supplied by the session engine). */
 export interface TokenProvider {
   withToken<T>(scope: string, options: CallOptions, send: (bearer: string) => Promise<T>): Promise<T>;
+  /** Drop the cached token for `scope`, if any; the next call for it obtains a new one. */
+  forget(scope: string): void;
 }
 
 /** What a binding needs from its client. */
@@ -70,6 +72,9 @@ export function fillTemplate(template: string, params: Readonly<Record<string, s
 export const noTokens: TokenProvider = {
   withToken() {
     return Promise.reject(new HemUnsupportedError('This client has no credentials for authenticated operations'));
+  },
+  forget() {
+    // Nothing is cached without a session.
   },
 };
 
