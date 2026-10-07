@@ -7,9 +7,9 @@ traces:
   architecture: ["ARCHITECTURE.md#6-protocol-bindings", "ARCHITECTURE.md#52-session-behaviour"]
 depends_on: []
 evidence:
-  commits: []
-  tests: []
-  notes: null
+  commits: ["d567996"]
+  tests: ["verifies: REQ-KEY-007 (tests/unit/keys-delete.test.ts, tests/unit/conformance.test.ts)", "verifies: REQ-API-005 (tests/unit/keys-delete.test.ts, tests/unit/conformance.test.ts)"]
+  notes: "npm run check: 75 files, 1277 tests passed in Node v24.21.0 and headless Chromium. Surface snapshot grew by exactly one entry (KeysApi.delete). The per-scope forget is on the internal TokenProvider/Session, not on the public surface. The (M1B) box of REQ-KEY-007 (deleted key gone from the list) is settled live in STEP-M1B-060."
 reopened: []
 cancelled: null
 ---
@@ -36,16 +36,16 @@ can delete the keys it creates.
   updated.
 
 **Definition of done**
-- [ ] `keys.delete(kid)`: method `DELETE`, path `/api/keymgmt/delete/{kid}`,
+- [x] `keys.delete(kid)`: method `DELETE`, path `/api/keymgmt/delete/{kid}`,
       scope `keymgmt:del`; a 200 with an empty body resolves the call.
-- [ ] An invalid kid raises `HemValidationError`, and an `http:` client
+- [x] An invalid kid raises `HemValidationError`, and an `http:` client
       raises `HemTlsRequiredError`, each with zero `fetch` calls.
-- [ ] A 406 raises `HemOperationFailedError`.
-- [ ] After a delete, the next call needing `keymgmt:use:<kid>` for that kid
+- [x] A 406 raises `HemOperationFailedError`.
+- [x] After a delete, the next call needing `keymgmt:use:<kid>` for that kid
       logs in again; tokens for other scopes are kept.
-- [ ] Unit tests assert method, path, headers, body and response mapping;
+- [x] Unit tests assert method, path, headers, body and response mapping;
       TSDoc states scope and milestone; the surface snapshot changes only by
       the new entries; the README lists the operation.
-- [ ] The suite passes in Node 24 and in the browser run.
-- [ ] `implements:` and `verifies:` tags exist for REQ-KEY-007; its
+- [x] The suite passes in Node 24 and in the browser run.
+- [x] `implements:` and `verifies:` tags exist for REQ-KEY-007; its
       non-`(M1B)` boxes are ticked (revision bumped).
