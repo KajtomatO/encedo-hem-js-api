@@ -1,9 +1,9 @@
 ---
 id: REQ-KEY-007
 title: Delete a key
-status: approved
+status: verified
 priority: must
-revision: 4
+revision: 5
 source: start_point §4; ref/api/hem-api-1.2.2.yaml; user decision 2026-10-06 (moved from M2A to M1B)
 depends_on: ["REQ-AUTH-005", "REQ-NET-003"]
 supersedes: null
