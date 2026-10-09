@@ -3,7 +3,7 @@ id: REQ-OPS-003
 title: AES key unwrap
 status: verified
 priority: must
-revision: 3
+revision: 4
 source: start_point §3; ref/api/hem-api-1.2.2.yaml
 depends_on: ["REQ-AUTH-005", "REQ-API-005", "REQ-NET-003"]
 supersedes: null
@@ -26,5 +26,6 @@ from the stored wrapped form. Introduced in M1.
 - [x] Input that is not a multiple of 8 bytes raises `HemValidationError`.
 - [x] A 406 (integrity check failed or wrong key) raises
       `HemOperationFailedError`.
-- [ ] (M1B) unwrapping the output of REQ-OPS-002 on the test device returns
-      the original 32 bytes; unwrapping altered input fails.
+- [x] (M1B) unwrapping the output of REQ-OPS-002 on the test device returns
+      the original 32 bytes; unwrapping altered input fails — 2026-10-09:
+      round trip exact; one flipped bit → 406, `HemOperationFailedError`.

@@ -3,7 +3,7 @@ id: REQ-OPS-001
 title: HMAC with a stored key
 status: verified
 priority: must
-revision: 3
+revision: 4
 source: start_point §3; ref/api/hem-api-1.2.2.yaml; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: ["REQ-AUTH-005", "REQ-API-005", "REQ-NET-003"]
 supersedes: null
@@ -28,5 +28,7 @@ field sent with a stored key is ignored [YAML], [C-SDK]. Introduced in M1.
       `HemValidationError`.
 - [x] A 406 (key not found or wrong key type) raises
       `HemOperationFailedError`.
-- [ ] (M1B) the HMAC returned by the test device for a `SHA2-256` key is 32
-      bytes long and is the same for the same message twice.
+- [x] (M1B) the HMAC returned by the test device for a `SHA2-256` key is 32
+      bytes long and is the same for the same message twice — 2026-10-09:
+      32 bytes, identical for the same message, different for another
+      (tests/integration/crypto.test.ts).

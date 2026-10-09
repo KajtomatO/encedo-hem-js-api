@@ -3,7 +3,7 @@ id: REQ-AUTH-005
 title: Scope chosen and token attached by the library
 status: verified
 priority: must
-revision: 5
+revision: 6
 source: start_point G9; start_point G10; ref/api/hem-api-1.2.2.yaml; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: ["REQ-AUTH-004"]
 supersedes: null
@@ -31,6 +31,10 @@ library. Introduced in M1.
       id in lower-case hex.
 - [x] The token is sent as `Authorization: Bearer <token>`.
 - [x] No device operation has a parameter for passing a token.
-- [ ] (M1B) each M1 operation is accepted by the device with the scope the
+- [x] (M1B) each M1 operation is accepted by the device with the scope the
       library chose, and one `keymgmt:use:<kid>` token serves both key get
-      and a crypto operation on that key.
+      and a crypto operation on that key — 2026-10-09, all answered 200:
+      create `keymgmt:gen`; get, wrap, unwrap, hmac `keymgmt:use:<kid>`;
+      list `keymgmt:list`; search `keymgmt:search`; delete `keymgmt:del`;
+      status, version, check-in without a token. `get` then `hmac` on one
+      key needed exactly one login (tests/integration/crypto.test.ts).
