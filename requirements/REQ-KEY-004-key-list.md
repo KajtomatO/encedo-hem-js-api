@@ -3,7 +3,7 @@ id: REQ-KEY-004
 title: Paged key listing
 status: verified
 priority: must
-revision: 3
+revision: 4
 source: start_point §3; start_point M1.4; ref/api/hem-api-1.2.2.yaml; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: ["REQ-AUTH-005", "REQ-KEY-005"]
 supersedes: null
@@ -33,5 +33,7 @@ never returns more than 15 keys per page [YAML]. Introduced in M1.
 - [x] An iteration helper walks all pages and stops when the offset reaches
       `total` or a page comes back empty — never merely because a page is
       short [C-SDK].
-- [ ] (M1B) all keys of the test device are listed across at least two
-      pages.
+- [x] (M1B) all keys of the test device are listed across at least two
+      pages — 2026-10-09: 16 keys, pages of 15 and 1; `listAll` returned all
+      16, no duplicates. The device also reported `deleted: 727` (records
+      marked deleted, skipped by the listing).

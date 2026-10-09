@@ -97,7 +97,11 @@ export interface KeyEntry {
 export interface KeyPage {
   /** Offset of the first key of this page. */
   readonly offset: number;
-  /** Valid records in the repository (list) or matching keys (search). */
+  /**
+   * List: valid records in the repository. Search: as the device reports it —
+   * firmware 1.2.2 was seen to report the repository's record count here, not
+   * the number of matches, so page until a page comes back empty.
+   */
   readonly total: number;
   /** Number of keys on this page. */
   readonly listed: number;
@@ -347,14 +351,13 @@ export class KeysApi {
   }
 
   /**
-   * Find keys by their description. The device matches the base64 text of
-   * the needle against the base64 text of each stored description: the
-   * needle is sent as base64 with a leading `^` (prefix) or a trailing `$`
-   * (suffix). Because the comparison happens on base64 text, a needle whose
-   * length is not a multiple of three bytes may not match where the bytes
-   * do; this is unverified on the device. For an exact match use
+   * Find keys by their description. The needle is sent as base64 with a
+   * leading `^` (prefix) or a trailing `$` (suffix); firmware 1.2.2 compares
+   * the decoded bytes, so a needle of any length matches at any byte offset
+   * (verified on the device in M1B). For an exact match use
    * {@link KeysApi.findByDescription}. No match gives an empty page (also
-   * for the 404 of older firmware).
+   * for the 404 of older firmware); the page's `total` is then not 0 on
+   * firmware 1.2.2 — see {@link KeyPage.total}.
    *
    * Device call: `POST /api/keymgmt/search`. HTTPS only.
    *

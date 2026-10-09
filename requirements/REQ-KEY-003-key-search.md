@@ -3,7 +3,7 @@ id: REQ-KEY-003
 title: Find keys by description
 status: verified
 priority: must
-revision: 3
+revision: 4
 source: start_point §3; ref/api/hem-api-1.2.2.yaml; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: ["REQ-AUTH-005", "REQ-API-005", "REQ-KEY-005"]
 supersedes: null
@@ -35,6 +35,14 @@ Introduced in M1.
       the 404 of older firmware [C-SDK], both map to it.
 - [x] A helper returns the keys whose description equals given bytes
       exactly, by searching with a prefix and comparing the results.
-- [ ] (M1B) a key created with a description is found again by it.
-- [ ] (M1B) prefix searches with needles of 1, 2 and 3 bytes are probed and
-      the results recorded (ARCHITECTURE.md §11, risk 10).
+- [x] (M1B) a key created with a description is found again by it —
+      2026-10-09: `findByDescription` returned exactly that key.
+- [x] (M1B) prefix searches with needles of 1, 2 and 3 bytes are probed and
+      the results recorded (ARCHITECTURE.md §11, risk 10) — 2026-10-09:
+      prefix needles of 1 to 6 bytes, a 3-byte suffix and `contains` needles
+      at aligned and unaligned byte offsets all found the key, including a
+      description built so that a base64-text comparison would miss
+      (stored `e2 ff ff fe …`, needle `e2` = `^4g==`). The device compares
+      decoded bytes; risk 10 does not hold (quirk 8 corrected). Also: a
+      search with no match answers an empty list with `total` = the
+      repository's record count (16), not 0.

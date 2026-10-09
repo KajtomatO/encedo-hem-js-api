@@ -3,7 +3,7 @@ id: REQ-KEY-001
 title: Generate a key on the device
 status: verified
 priority: must
-revision: 3
+revision: 4
 source: start_point §3; ref/api/hem-api-1.2.2.yaml; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: ["REQ-AUTH-005", "REQ-API-005"]
 supersedes: null
@@ -38,5 +38,6 @@ Introduced in M1.
       `HemValidationError`.
 - [x] Label and description limits are enforced per REQ-API-005.
 - [x] The documentation states the default mode of `SECP*` keys.
-- [ ] (M1B) an `AES256` key and a `SHA2-256` key are created on the test
-      device and appear in the list.
+- [x] (M1B) an `AES256` key and a `SHA2-256` key are created on the test
+      device and appear in the list — 2026-10-09: listed with the types
+      `ATT,AES256` and `ATT,SHA2-256` (tests/integration/keys.test.ts).

@@ -428,7 +428,7 @@ Firmware quirks the bindings normalise or document [BRIEF G16]:
 | 5 | `POST /api/keymgmt/update` rewrites the whole record: omitting `descr` clears it. `label` is always required. | [C-SDK], [YAML] | The call takes both fields explicitly. |
 | 6 | The device accepts a 65-byte description on create and silently truncates it on read. | [C-SDK] | Descriptions over 64 bytes are rejected before sending. |
 | 7 | `GET /api/keymgmt/get/{kid}` never returns the label, and on fw 1.2.2 not the description either. | [C-SDK] | Documented; label and description come from list or search. |
-| 8 | Search matches against the base64 text of the stored description; no match is 200 with an empty list (older firmware: 404). | [C-SDK] | 404 is mapped to an empty result. |
+| 8 | No match is 200 with an empty list (older firmware: 404), and the reply's `total` is then the repository's record count, not 0. [C-SDK] described the matching as on base64 text; on the device the comparison is on the decoded bytes — a 1-byte prefix and an unaligned `contains` needle both match. | [C-SDK]; device (2026-10-09) | 404 is mapped to an empty result; paging stops at an empty page. |
 | 9 | Raw ECDH output is truncated to 32 bytes even for larger curves. | [C-SDK] | Documented. |
 | 10 | In HMAC with a stored key, `alg` is ignored; the key's type decides the hash. | [YAML], [C-SDK] | `alg` is not sent in stored-key mode. |
 | 11 | SECP keys are created ECDH-only unless `mode` asks for ExDSA; signing with them fails with 406. | [C-SDK] | Documented on create and sign. |
@@ -670,7 +670,10 @@ strict sequence (D8). Scope comes from [BRIEF] §3–§5.
 10. **Description search alignment.** Matching happens on base64 text
     (quirk 8), so a byte prefix whose length is not a multiple of three may
     not match as expected. This is an inference, not a recorded fact.
-    *Resolved by:* M1B probe.
+    *Resolved by:* M1B probe. **RESOLVED (2026-10-09): not a risk.** The
+    device compares decoded bytes: prefix needles of 1, 2 and 3 bytes and a
+    `contains` needle at an unaligned offset all matched, including cases a
+    text comparison would miss (quirk 8).
 11. **Browser access to the cloud relays** depends on `api.encedo.com`
     allowing cross-origin requests; unverified. *Resolved by:* M1B.
 12. **Package name and publishing** are undecided. *Resolved by:* user

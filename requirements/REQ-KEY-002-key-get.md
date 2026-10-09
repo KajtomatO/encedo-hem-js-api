@@ -3,7 +3,7 @@ id: REQ-KEY-002
 title: Read one key
 status: verified
 priority: must
-revision: 3
+revision: 4
 source: start_point §3; ref/api/hem-api-1.2.2.yaml; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: ["REQ-AUTH-005", "REQ-API-006"]
 supersedes: null
@@ -31,5 +31,8 @@ keys, its public key. Private material is never returned [YAML]. On firmware
 - [x] The documentation states the public-key formats — compressed X9.63 for
       the `SECP*` types, raw for the others [YAML] — and that label and
       description are read through list or search.
-- [ ] (M1B) a created key is read back; which fields the test device returns
-      is recorded.
+- [x] (M1B) a created key is read back; which fields the test device returns
+      is recorded — 2026-10-09: for `AES256` and `SHA2-256` keys created
+      with a description, `get` returned only `updated` and `type`; no
+      label and no description (§6 quirk 7 confirmed), no `pubkey` for
+      these symmetric keys.
