@@ -7,9 +7,9 @@ traces:
   architecture: ["ARCHITECTURE.md#4-public-api--conventions", "ARCHITECTURE.md#2-context--constraints"]
 depends_on: ["STEP-M1B-070"]
 evidence:
-  commits: []
-  tests: []
-  notes: null
+  commits: ["10b0154"]
+  tests: ["verifies: REQ-API-002, REQ-API-003 (tests/integration/errors.test.ts, live 2026-10-09)"]
+  notes: "Live 2026-10-09 against my.ence.do: 3/3 passed in 8.8 s. 401 ×2, 403, 406 ×2 provoked; all bodies 0 bytes though labelled application/json; the 403 came from an HMAC call carrying a correctly issued keymgmt:list token, sent through the internal transport (the library never does this itself). Unwrap of an altered blob → 406 recorded in STEP-M1B-070."
 reopened: []
 cancelled: null
 ---
@@ -34,9 +34,9 @@ have empty bodies.
   empty, mapping unaffected.
 
 **Definition of done**
-- [ ] 401 → `HemUnauthenticatedError` after one re-authentication; 403 →
+- [x] 401 → `HemUnauthenticatedError` after one re-authentication; 403 →
       `HemForbiddenError`; 406 → `HemOperationFailedError`, each provoked
       live (REQ-API-002).
-- [ ] The captured error responses have empty bodies and map correctly
+- [x] The captured error responses have empty bodies and map correctly
       (REQ-API-003).
-- [ ] Integration tests tagged `verifies:`; findings next to the boxes.
+- [x] Integration tests tagged `verifies:`; findings next to the boxes.
