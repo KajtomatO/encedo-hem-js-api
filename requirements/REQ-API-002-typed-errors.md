@@ -3,7 +3,7 @@ id: REQ-API-002
 title: Typed errors that identify the cause of a failure
 status: verified
 priority: must
-revision: 3
+revision: 4
 source: start_point G14; ARCHITECTURE.md §4; ref/api/hem-api-1.2.2.yaml
 depends_on: []
 supersedes: null
@@ -36,5 +36,10 @@ Introduced in M1.
       device-error class with the raw status preserved.
 - [x] The classes are exported from the package root and work with
       `instanceof`.
-- [ ] (M1B) 401, 403 and 406 are each provoked on the real device and map as
-      specified.
+- [x] (M1B) 401, 403 and 406 are each provoked on the real device and map as
+      specified — 2026-10-09: a wrong passphrase and a present but invalid
+      bearer → 401 `HemUnauthenticatedError`; an HMAC call with a valid
+      `keymgmt:list` token → 403 `HemForbiddenError`; get and delete of a
+      missing key, and unwrap of an altered blob → 406
+      `HemOperationFailedError` (tests/integration/errors.test.ts,
+      crypto.test.ts).

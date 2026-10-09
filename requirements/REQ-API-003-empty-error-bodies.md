@@ -3,7 +3,7 @@ id: REQ-API-003
 title: Error mapping independent of the response body
 status: verified
 priority: must
-revision: 3
+revision: 4
 source: start_point G15; ref/api/hem-api-1.2.2.yaml
 depends_on: ["REQ-API-002"]
 supersedes: null
@@ -28,5 +28,7 @@ them fails with a parse error that hides the real status. Introduced in M1.
       the raw body text is available on the error.
 - [x] An error response with a JSON body exposes the parsed body on the
       error.
-- [ ] (M1B) error responses from the real device are confirmed to have empty
-      bodies and to map correctly.
+- [x] (M1B) error responses from the real device are confirmed to have empty
+      bodies and to map correctly — 2026-10-09: the 401, 401, 403, 406, 406
+      responses of the run all had 0-byte bodies, each labelled
+      `Content-Type: application/json`; all mapped by status alone.
