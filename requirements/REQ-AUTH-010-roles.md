@@ -3,7 +3,7 @@ id: REQ-AUTH-010
 title: User and master roles
 status: verified
 priority: must
-revision: 4
+revision: 5
 source: start_point G12; ref/api/hem-api-1.2.2.yaml
 depends_on: ["REQ-AUTH-001"]
 supersedes: null
@@ -28,8 +28,11 @@ through the same flow, each with its own passphrase. Introduced in M1.
       any other value the app role together with that value.
 - [x] A master-role session that calls a key-management or crypto operation
       gets the device's 403 as `HemForbiddenError`.
-- [ ] (M1B) a login with the user passphrase reports the user role.
+- [x] (M1B) a login with the user passphrase reports the user role —
+      2026-10-09: `auth.role` is `{ kind: 'user' }` after the login; the
+      token's `sub` is `U`.
 - [ ] (M1B) a login with the master passphrase reports the master role and
       an administrative scope is granted. Carried to M3B if the test
       device's master passphrase is not available (ARCHITECTURE.md §11, risk
-      9).
+      9). **Carried to M3B** — no master passphrase exists for the M1B test
+      device (user decision 2026-10-06, recorded in §11 risk 9).
