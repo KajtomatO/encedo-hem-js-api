@@ -7,9 +7,9 @@ traces:
   architecture: ["ARCHITECTURE.md#6-protocol-bindings", "ARCHITECTURE.md#11-risks--open-questions"]
 depends_on: ["STEP-M1B-050"]
 evidence:
-  commits: []
-  tests: []
-  notes: null
+  commits: ["63de1fa"]
+  tests: ["verifies: REQ-KEY-001, REQ-KEY-002, REQ-KEY-003, REQ-KEY-004, REQ-KEY-005, REQ-KEY-007, REQ-API-005 (tests/integration/keys.test.ts, live 2026-10-09)"]
+  notes: "Live 2026-10-09 against my.ence.do: 7/7 passed in 26.7 s, twice. The device had 5 keys (TLS material and phone pairings, untouched); the run created 11 EHEMTEST keys for a 16-key, two-page listing plus one probe key and one delete key, and left none. Findings: get returns only updated and type (quirk 7); search compares decoded bytes, not base64 text — quirk 8 corrected in ARCHITECTURE.md and §11 risk 10 resolved as not a risk; a no-match search reports the repository's record count as total (TSDoc of KeyPage.total and keys.search corrected); 727 deleted records in the repository; type strings on the device all within the reference."
 reopened: []
 cancelled: null
 ---
@@ -37,15 +37,15 @@ the documented limits and the two key probes are recorded.
 - Scope findings for REQ-AUTH-005 are closed in STEP-M1B-070.
 
 **Definition of done**
-- [ ] `AES256` and `SHA2-256` keys created and listed (REQ-KEY-001).
-- [ ] A created key read back; the returned fields recorded (REQ-KEY-002).
-- [ ] Found by description; 1/2/3-byte prefix probe recorded (REQ-KEY-003).
-- [ ] Listing across at least two pages (REQ-KEY-004).
-- [ ] Every key's type string parses; unknown tokens recorded (REQ-KEY-005).
-- [ ] 32-character label and 64-byte description round-trip unchanged
+- [x] `AES256` and `SHA2-256` keys created and listed (REQ-KEY-001).
+- [x] A created key read back; the returned fields recorded (REQ-KEY-002).
+- [x] Found by description; 1/2/3-byte prefix probe recorded (REQ-KEY-003).
+- [x] Listing across at least two pages (REQ-KEY-004).
+- [x] Every key's type string parses; unknown tokens recorded (REQ-KEY-005).
+- [x] 32-character label and 64-byte description round-trip unchanged
       (REQ-API-005).
-- [ ] Delete removes the key from the list; a repeat delete maps to
+- [x] Delete removes the key from the list; a repeat delete maps to
       `HemOperationFailedError` (REQ-KEY-007).
-- [ ] No `EHEMTEST` key remains after the run; the protected set is
+- [x] No `EHEMTEST` key remains after the run; the protected set is
       untouched (REQ-TEST-005/006 evidence for the gate).
-- [ ] Integration tests tagged `verifies:`; findings next to the boxes.
+- [x] Integration tests tagged `verifies:`; findings next to the boxes.
