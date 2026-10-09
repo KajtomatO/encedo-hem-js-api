@@ -7,9 +7,9 @@ traces:
   architecture: ["ARCHITECTURE.md#6-protocol-bindings", "ARCHITECTURE.md#52-session-behaviour"]
 depends_on: ["STEP-M1B-060"]
 evidence:
-  commits: []
-  tests: []
-  notes: null
+  commits: ["a508706"]
+  tests: ["verifies: REQ-OPS-001, REQ-OPS-002, REQ-OPS-003, REQ-AUTH-005 (tests/integration/crypto.test.ts, live 2026-10-09)"]
+  notes: "Live 2026-10-09 against my.ence.do: 4/4 passed in 18.7 s. HMAC 32 bytes, deterministic; wrap 32 → 40 bytes, unwrap exact; one flipped bit in the wrapped blob → 406 HemOperationFailedError (feeds REQ-API-002 in STEP-M1B-080). Scope table recorded in REQ-AUTH-005. All EHEMTEST keys deleted."
 reopened: []
 cancelled: null
 ---
@@ -33,11 +33,11 @@ a crypto operation on that key.
   which scope each operation used.
 
 **Definition of done**
-- [ ] HMAC: 32 bytes, deterministic (REQ-OPS-001).
-- [ ] Wrap: 32-byte key → 40 bytes (REQ-OPS-002).
-- [ ] Unwrap: original bytes back; altered input fails with the recorded
+- [x] HMAC: 32 bytes, deterministic (REQ-OPS-001).
+- [x] Wrap: 32-byte key → 40 bytes (REQ-OPS-002).
+- [x] Unwrap: original bytes back; altered input fails with the recorded
       status (REQ-OPS-003).
-- [ ] One per-key token serves `get` and a crypto call; every M1 operation
+- [x] One per-key token serves `get` and a crypto call; every M1 operation
       accepted with the library's scope, listed in the finding
       (REQ-AUTH-005).
-- [ ] Integration tests tagged `verifies:`; findings next to the boxes.
+- [x] Integration tests tagged `verifies:`; findings next to the boxes.
