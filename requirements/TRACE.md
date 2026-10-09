@@ -2,9 +2,9 @@
 
 # Traceability matrix
 
-Generated: 2026-10-09 (STEP-M1B-060 done; key operations verified live)
+Generated: 2026-10-09 (STEP-M1B-070 done; crypto operations and scopes verified live)
 
-Scan inputs: 120 REQ files (`requirements/`), 46 step files (`workplan/{todo,doing,done}/`: 14 in `todo/`, 0 in `doing/`, 32 in `done/`). Code tags (`implements: REQ-`) scanned across `src/`; test tags (`verifies:`/`supports: REQ-`) scanned across `tests/`. Build/CI, test-infrastructure and README requirements are realised outside `src/` per REQUIREMENTS-MANAGEMENT.md §4.2, so `implements:` tags are also scanned in `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `vitest.integration.config.ts`, `tests/support`, `.github/workflows`, `README.md`. Locations present: `src/`, `tests/`, `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `vitest.integration.config.ts`, `tests/support`, `.github/workflows`, `README.md`. Unit suite: passed (`npm run check`) at generation.
+Scan inputs: 120 REQ files (`requirements/`), 46 step files (`workplan/{todo,doing,done}/`: 13 in `todo/`, 0 in `doing/`, 33 in `done/`). Code tags (`implements: REQ-`) scanned across `src/`; test tags (`verifies:`/`supports: REQ-`) scanned across `tests/`. Build/CI, test-infrastructure and README requirements are realised outside `src/` per REQUIREMENTS-MANAGEMENT.md §4.2, so `implements:` tags are also scanned in `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `vitest.integration.config.ts`, `tests/support`, `.github/workflows`, `README.md`. Locations present: `src/`, `tests/`, `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `vitest.integration.config.ts`, `tests/support`, `.github/workflows`, `README.md`. Unit suite: passed (`npm run check`) at generation.
 
 Steps column: step ID and its folder. A REQ listed in several steps becomes `implemented` only when all of them are in `done/` (§3.2). Tests column: `verifies:` locations; `supports …` entries are test support and never count as verification.
 
@@ -28,7 +28,7 @@ Steps column: step ID and its folder. A REQ listed in several steps becomes `imp
 | REQ-AUTH-002 | Login proof encoding (eJWT) | verified | must | §5.1 | STEP-M1A-060 (done) | src/auth/ejwt.ts:75 | tests/unit/ejwt.test.ts:48, tests/unit/ejwt.test.ts:56, tests/unit/login.test.ts:29, tests/unit/webcrypto.test.ts:21, supports tests/support/vectors.ts:3 |
 | REQ-AUTH-003 | PBKDF2 as the only login key derivation | verified | must | §5.1, §1 | STEP-M1A-060 (done), STEP-M1A-120 (done) | src/auth/ejwt.ts:54, src/crypto/webcrypto.ts:33 | tests/unit/ejwt.test.ts:12, tests/unit/ejwt.test.ts:21, tests/unit/ejwt.test.ts:33, tests/unit/login.test.ts:165, tests/unit/webcrypto.test.ts:8, tests/unit/webcrypto.test.ts:34, tests/unit/webcrypto.test.ts:42, tests/unit/webcrypto.test.ts:56, supports tests/support/vectors.ts:3 |
 | REQ-AUTH-004 | One cached token per scope | verified | must | §5.2 | STEP-M1A-130 (done) | src/auth/session.ts:81 | tests/unit/crypto.test.ts:127, tests/unit/session.test.ts:48, tests/unit/session.test.ts:58, tests/unit/session.test.ts:77, tests/unit/session.test.ts:91, tests/unit/session.test.ts:217 |
-| REQ-AUTH-005 | Scope chosen and token attached by the library | verified | must | §5.2, §6 | STEP-M1A-130 (done), STEP-M1A-230 (done), STEP-M1B-070 (todo) | src/auth/session.ts:81 | tests/unit/conformance.test.ts:190, tests/unit/conformance.test.ts:199, tests/unit/crypto.test.ts:21, tests/unit/crypto.test.ts:55, tests/unit/crypto.test.ts:100, tests/unit/crypto.test.ts:127, tests/unit/keys-create-get.test.ts:86, tests/unit/no-token-parameter.node.test.ts:12, tests/unit/no-token-parameter.node.test.ts:22, tests/unit/session.test.ts:58, tests/unit/session.test.ts:272 |
+| REQ-AUTH-005 | Scope chosen and token attached by the library | verified | must | §5.2, §6 | STEP-M1A-130 (done), STEP-M1A-230 (done), STEP-M1B-070 (done) | src/auth/session.ts:81 | tests/integration/crypto.test.ts:89, tests/integration/crypto.test.ts:99, tests/unit/conformance.test.ts:190, tests/unit/conformance.test.ts:199, tests/unit/crypto.test.ts:21, tests/unit/crypto.test.ts:55, tests/unit/crypto.test.ts:100, tests/unit/crypto.test.ts:127, tests/unit/keys-create-get.test.ts:86, tests/unit/no-token-parameter.node.test.ts:12, tests/unit/no-token-parameter.node.test.ts:22, tests/unit/session.test.ts:58, tests/unit/session.test.ts:272 |
 | REQ-AUTH-006 | Requested token lifetime | verified | must | §5.2, §11 | STEP-M1A-120 (done), STEP-M1B-050 (done) | src/auth/login.ts:20 | tests/integration/login-session.test.ts:59, tests/integration/login-session.test.ts:76, tests/unit/login.test.ts:92, tests/unit/login.test.ts:101, tests/unit/login.test.ts:107, tests/unit/login.test.ts:122 |
 | REQ-AUTH-007 | Renewal before expiry | verified | must | §5.2 | STEP-M1A-130 (done), STEP-M1B-050 (done) | src/auth/session.ts:81 | tests/integration/login-session.test.ts:89, tests/unit/session.test.ts:77, tests/unit/session.test.ts:107, tests/unit/session.test.ts:123 |
 | REQ-AUTH-008 | Re-authentication after a 401 | verified | must | §5.2 | STEP-M1A-140 (done), STEP-M1A-240 (done), STEP-M1B-090 (todo) | src/auth/session.ts:125 | tests/unit/reauth.test.ts:23, tests/unit/reauth.test.ts:38, tests/unit/reauth.test.ts:49, tests/unit/reauth.test.ts:62 |
@@ -78,9 +78,9 @@ Steps column: step ID and its folder. A REQ listed in several steps becomes `imp
 | REQ-NET-011 | Browser use and the device's origin allow-list documented | verified | must | §7, §11 | STEP-M1A-220 (done), STEP-M1B-120 (todo) | README.md:128 | tests/unit/readme.node.test.ts:36 |
 | REQ-NET-012 | Custom TLS trust through the caller's fetch documented | verified | must | §7, §11 | STEP-M1A-220 (done), STEP-M1B-030 (done), STEP-M1B-035 (done) | README.md:154 | tests/integration/reach.test.ts:74, tests/integration/reach.test.ts:84, tests/unit/readme.node.test.ts:49 |
 | REQ-NET-013 | Node.js transport that spells header names as the device requires | verified | must | §7, §1 | STEP-M1B-035 (done) | src/transport/node-https.ts:43, src/transport/node-https.ts:126 | tests/unit/node-transport.node.test.ts:87, tests/unit/node-transport.node.test.ts:101, tests/unit/node-transport.node.test.ts:122, tests/unit/node-transport.node.test.ts:127, tests/unit/node-transport.node.test.ts:132, tests/unit/node-transport.node.test.ts:140, tests/unit/node-transport.node.test.ts:148, tests/unit/node-transport.node.test.ts:155, tests/unit/node-transport.node.test.ts:167, tests/unit/node-transport.node.test.ts:174, tests/unit/node-transport.node.test.ts:180, tests/unit/node-transport.node.test.ts:188, tests/unit/node-transport.node.test.ts:198, tests/unit/node-transport.test.ts:9 |
-| REQ-OPS-001 | HMAC with a stored key | verified | must | §6 | STEP-M1A-180 (done), STEP-M1B-070 (todo) | src/api/crypto.ts:108 | tests/unit/crypto.test.ts:21, tests/unit/crypto.test.ts:31, tests/unit/crypto.test.ts:40, tests/unit/crypto.test.ts:47 |
-| REQ-OPS-002 | AES key wrap | verified | must | §6 | STEP-M1A-180 (done), STEP-M1B-070 (todo) | src/api/crypto.ts:125 | tests/unit/crypto.test.ts:55, tests/unit/crypto.test.ts:65, tests/unit/crypto.test.ts:72, tests/unit/crypto.test.ts:89 |
-| REQ-OPS-003 | AES key unwrap | verified | must | §6 | STEP-M1A-180 (done), STEP-M1B-070 (todo) | src/api/crypto.ts:145 | tests/unit/crypto.test.ts:100, tests/unit/crypto.test.ts:112, tests/unit/crypto.test.ts:119 |
+| REQ-OPS-001 | HMAC with a stored key | verified | must | §6 | STEP-M1A-180 (done), STEP-M1B-070 (done) | src/api/crypto.ts:108 | tests/integration/crypto.test.ts:59, tests/unit/crypto.test.ts:21, tests/unit/crypto.test.ts:31, tests/unit/crypto.test.ts:40, tests/unit/crypto.test.ts:47 |
+| REQ-OPS-002 | AES key wrap | verified | must | §6 | STEP-M1A-180 (done), STEP-M1B-070 (done) | src/api/crypto.ts:125 | tests/integration/crypto.test.ts:73, tests/unit/crypto.test.ts:55, tests/unit/crypto.test.ts:65, tests/unit/crypto.test.ts:72, tests/unit/crypto.test.ts:89 |
+| REQ-OPS-003 | AES key unwrap | verified | must | §6 | STEP-M1A-180 (done), STEP-M1B-070 (done) | src/api/crypto.ts:145 | tests/integration/crypto.test.ts:73, tests/unit/crypto.test.ts:100, tests/unit/crypto.test.ts:112, tests/unit/crypto.test.ts:119 |
 | REQ-OPS-004 | Verify operations return valid or invalid | approved | must | §4, §6 | STEP-M2A-000 (todo) | — | — |
 | REQ-OPS-005 | Verify an HMAC | approved | must | §6 | STEP-M2A-000 (todo) | — | — |
 | REQ-OPS-006 | ECDSA and EdDSA signature | approved | must | §6 | STEP-M2A-000 (todo) | — | — |
@@ -133,7 +133,7 @@ Steps column: step ID and its folder. A REQ listed in several steps becomes `imp
 
 ## Coverage report
 
-- Totals: 120 REQs (50 approved, 70 verified), 46 steps (14 todo, 0 doing, 32 done; 1 cancelled).
+- Totals: 120 REQs (50 approved, 70 verified), 46 steps (13 todo, 0 doing, 33 done; 1 cancelled).
 - By area: API 14, AUTH 26, BUILD 6, KEY 9, NET 13, OPS 15, SYS 31, TEST 6.
 - Steps by milestone: M1A 25, M1B 17, M2A 1, M2B 1, M3A 1, M3B 1.
 - REQs with no step: none.
@@ -145,4 +145,4 @@ Steps column: step ID and its folder. A REQ listed in several steps becomes `imp
 - Steps in `done/` with empty evidence: none.
 - Broken architecture anchors: none.
 - REQs in `needs-reverify`: none.
-- Status transitions applied in this run: REQ-KEY-007: approved → verified.
+- Status transitions applied in this run: none.
