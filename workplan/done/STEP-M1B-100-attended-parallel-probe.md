@@ -7,9 +7,9 @@ traces:
   architecture: ["ARCHITECTURE.md#7-transport", "ARCHITECTURE.md#11-risks--open-questions"]
 depends_on: ["STEP-M1B-090"]
 evidence:
-  commits: []
-  tests: []
-  notes: null
+  commits: ["b7b23f5"]
+  tests: ["verifies: REQ-NET-007, REQ-NET-008 (tests/attended/parallel.test.ts, attended 2026-10-12; unpaced integration run)"]
+  notes: "Attended 2026-10-12, user standing by; no stall. Two parallel status requests ×5: both ~400 ms each round; four at once ×2: two ~400 ms, two ~1 450 ms (about one TCP connect retry later, suggesting two connection slots); two logged-in clients listing at once ×3: all ok. Full integration suite unpaced: 30/30 in 109.8 s (paced 150 ms: 104.6 s). The integration command keeps its 150 ms default as a precaution (stall observed 2026-10-07 after ~40 rapid probes; [C-SDK] records stalls under sustained load). Q5 recorded in ARCHITECTURE.md §11."
 reopened: []
 cancelled: null
 ---
@@ -32,8 +32,8 @@ and 6).
   gate (STEP-M1B-140).
 
 **Definition of done**
-- [ ] Parallel-request outcome recorded (REQ-NET-007).
-- [ ] Pacing need recorded; the integration command's default follows it
+- [x] Parallel-request outcome recorded (REQ-NET-007).
+- [x] Pacing need recorded; the integration command's default follows it
       (REQ-NET-008).
-- [ ] The attended test prints its action, skips without the opt-in, and is
+- [x] The attended test prints its action, skips without the opt-in, and is
       tagged `verifies:`; findings next to the boxes.

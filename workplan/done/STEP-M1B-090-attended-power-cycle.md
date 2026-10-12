@@ -7,9 +7,9 @@ traces:
   architecture: ["ARCHITECTURE.md#52-session-behaviour", "ARCHITECTURE.md#11-risks--open-questions"]
 depends_on: ["STEP-M1B-080"]
 evidence:
-  commits: []
-  tests: []
-  notes: null
+  commits: ["1d0e6db", "b7b23f5"]
+  tests: ["verifies: REQ-AUTH-008, REQ-AUTH-009, REQ-SYS-003, REQ-NET-006 (tests/attended/power-cycle.test.ts, attended 2026-10-12)"]
+  notes: "Attended 2026-10-12 with the user at the device. Run 1: cold boot, unplugged and replug passed; the soft-reboot test timed out because no reboot happened in its 15-minute wait. Re-run of the soft-reboot test alone: passed. Findings: a soft reboot clears the clock (risk 4 resolved); after soft reboot and cold boot alike the next call recovers by itself with one login and one automatic check-in (3.1 s and 3.75 s); unplugged, health() reports unreachable in 3.1 s with cause ENETUNREACH. REQ-NET-006 stays open only for the expired-certificate case, which is put to the user at the gate. The tests watch the device's status and write their instructions to tmp/attended.log; no key press is needed."
 reopened: []
 cancelled: null
 ---
@@ -38,10 +38,10 @@ the time limit. Resolves §11 risk 4.
 - Record every wall-clock time (feeds REQ-NET-004 at the gate).
 
 **Definition of done**
-- [ ] After a reboot the next call succeeds unaided (REQ-AUTH-008).
-- [ ] After a power cycle a call succeeds through an automatic check-in;
+- [x] After a reboot the next call succeeds unaided (REQ-AUTH-008).
+- [x] After a power cycle a call succeeds through an automatic check-in;
       whether a soft reboot clears the clock is recorded (REQ-AUTH-009).
-- [ ] Unplugged: `health()` reports unreachable within the limit
+- [x] Unplugged: `health()` reports unreachable within the limit
       (REQ-SYS-003); the powered-off `fetch` error recorded (REQ-NET-006).
-- [ ] The attended test prints each action before it, skips without the
+- [x] The attended test prints each action before it, skips without the
       opt-in, and is tagged `verifies:`; findings next to the boxes.
