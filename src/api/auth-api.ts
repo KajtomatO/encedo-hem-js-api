@@ -51,7 +51,102 @@ function checkLength(value: unknown, parameter: string, min: number, max: number
 }
 
 /** `client.auth`: role, logout, and the device calls of mobile approval. */
-export class AuthApi {
+export interface AuthApi {
+  /** The approval relay this client was configured with; `null` when approval is disabled. */
+  readonly approvalRelay: ApprovalRelay | null;
+
+  /**
+   * The role the device granted, read from the `sub` claim of the most
+   * recently issued token: user (`U`), master (`M`), or a paired app (any
+   * other value, given as `id`). `undefined` before the first login. A
+   * master session is refused by every key-management and crypto operation.
+   *
+   * @remarks Introduced in M1.
+   */
+  readonly role: Role | undefined;
+
+  /**
+   * Discard the credential and every cached token. Afterwards every
+   * authenticated call raises `HemUnauthenticatedError` without contacting
+   * the device; public calls keep working. Create a new client to log in
+   * again.
+   *
+   * @remarks Token scope: none (makes no request). Introduced in M1.
+   */
+  logout(): void;
+
+  /**
+   * Mobile approval, device step 1: ask the device for an authorization
+   * request for `scope`, addressed to the paired apps. The result is opaque
+   * and is handed to the approval relay. A 403 (device clock not set) runs
+   * one check-in and repeats the request once, like a login.
+   *
+   * Device call: `POST /api/auth/ext/request`.
+   *
+   * @remarks Token scope: none. Introduced in M1.
+   */
+  requestApproval(params: ApprovalRequestParams, options?: CallOptions): Promise<ApprovalRequest>;
+
+  /**
+   * Mobile approval, device step 2: redeem a paired app's reply for a bearer
+   * token. The token is cached under `scope` — the scope that was
+   * requested — with the expiry from its `exp` claim, and is used by every
+   * later call needing that scope. A 401 (reply invalid, expired or reused)
+   * raises `HemUnauthenticatedError`; it is final, this call is never
+   * retried through a login. A 406 (unknown pairing or undecryptable scope)
+   * raises `HemOperationFailedError`.
+   *
+   * Device call: `POST /api/auth/ext/token`.
+   *
+   * @remarks Token scope: none. Introduced in M1.
+   */
+  redeemApproval(params: RedeemApprovalParams, options?: CallOptions): Promise<string>;
+
+  /**
+   * Start a mobile approval of `scope`: obtain the relay's key, ask the
+   * device for an authorization request (`ext/request`) and submit it to
+   * the approval relay. If the broker refuses the request because the
+   * device clock has drifted, one check-in runs and the sequence is
+   * repeated once. Continue with {@link AuthApi.pollApproval} or
+   * {@link AuthApi.waitForApproval}.
+   *
+   * @throws HemUnsupportedError when the client has no approval relay.
+   * @remarks Token scope: none. Introduced in M1.
+   */
+  beginApproval(scope: string, details?: ApprovalDetails, options?: CallOptions): Promise<PendingApproval>;
+
+  /**
+   * Check once for the outcome of an approval. Approved: the reply is
+   * redeemed (`ext/token`), the token cached under the requested scope and
+   * returned. Rejected raises `HemApprovalRejectedError` (nothing is
+   * redeemed); expired raises `HemApprovalTimeoutError`.
+   *
+   * @remarks Token scope: none. Introduced in M1.
+   */
+  pollApproval(pending: PendingApproval, options?: CallOptions): Promise<{ status: 'pending' } | { status: 'approved'; token: string }>;
+
+  /**
+   * Wait for the outcome of an approval: poll every 5 seconds (`intervalMs`)
+   * for up to 60 seconds (`timeoutMs`), at least once. Approved: the token
+   * is cached under the requested scope and returned. Rejected raises
+   * `HemApprovalRejectedError`; no answer in time, or an expired request,
+   * raises `HemApprovalTimeoutError`. A network failure of one poll does not
+   * end the wait; the signal does.
+   *
+   * @remarks Token scope: none. Introduced in M1.
+   */
+  waitForApproval(pending: PendingApproval, options?: WaitOptions): Promise<string>;
+
+  /**
+   * {@link AuthApi.beginApproval} followed by {@link AuthApi.waitForApproval}.
+   *
+   * @remarks Token scope: none. Introduced in M1.
+   */
+  approve(scope: string, details?: ApprovalDetails, options?: WaitOptions): Promise<string>;
+}
+
+/** @internal Implementation of {@link AuthApi}. */
+export class AuthApiImpl implements AuthApi {
   readonly #session: Session;
   readonly #context: BindingContext;
   readonly #recovery: ClockRecovery;
@@ -76,46 +171,19 @@ export class AuthApi {
     );
   }
 
-  /** The approval relay this client was configured with; `null` when approval is disabled. */
   get approvalRelay(): ApprovalRelay | null {
     return this.#relay;
   }
 
-  /**
-   * The role the device granted, read from the `sub` claim of the most
-   * recently issued token: user (`U`), master (`M`), or a paired app (any
-   * other value, given as `id`). `undefined` before the first login. A
-   * master session is refused by every key-management and crypto operation.
-   *
-   * @remarks Introduced in M1.
-   */
   // implements: REQ-AUTH-010
   get role(): Role | undefined {
     return this.#session.role;
   }
 
-  /**
-   * Discard the credential and every cached token. Afterwards every
-   * authenticated call raises `HemUnauthenticatedError` without contacting
-   * the device; public calls keep working. Create a new client to log in
-   * again.
-   *
-   * @remarks Token scope: none (makes no request). Introduced in M1.
-   */
   logout(): void {
     this.#session.logout();
   }
 
-  /**
-   * Mobile approval, device step 1: ask the device for an authorization
-   * request for `scope`, addressed to the paired apps. The result is opaque
-   * and is handed to the approval relay. A 403 (device clock not set) runs
-   * one check-in and repeats the request once, like a login.
-   *
-   * Device call: `POST /api/auth/ext/request`.
-   *
-   * @remarks Token scope: none. Introduced in M1.
-   */
   // implements: REQ-AUTH-014
   async requestApproval(params: ApprovalRequestParams, options: CallOptions = {}): Promise<ApprovalRequest> {
     let epkBytes: Uint8Array | undefined;
@@ -139,19 +207,6 @@ export class AuthApi {
     return { authreq: readString(spec, r, 'authreq'), epk: readString(spec, r, 'epk') };
   }
 
-  /**
-   * Mobile approval, device step 2: redeem a paired app's reply for a bearer
-   * token. The token is cached under `scope` — the scope that was
-   * requested — with the expiry from its `exp` claim, and is used by every
-   * later call needing that scope. A 401 (reply invalid, expired or reused)
-   * raises `HemUnauthenticatedError`; it is final, this call is never
-   * retried through a login. A 406 (unknown pairing or undecryptable scope)
-   * raises `HemOperationFailedError`.
-   *
-   * Device call: `POST /api/auth/ext/token`.
-   *
-   * @remarks Token scope: none. Introduced in M1.
-   */
   // implements: REQ-AUTH-015
   async redeemApproval(params: RedeemApprovalParams, options?: CallOptions): Promise<string> {
     const authreply = checkLength(params?.authreply, 'authreply', 1, Number.MAX_SAFE_INTEGER);
@@ -162,46 +217,17 @@ export class AuthApi {
     return token;
   }
 
-  /**
-   * Start a mobile approval of `scope`: obtain the relay's key, ask the
-   * device for an authorization request (`ext/request`) and submit it to
-   * the approval relay. If the broker refuses the request because the
-   * device clock has drifted, one check-in runs and the sequence is
-   * repeated once. Continue with {@link AuthApi.pollApproval} or
-   * {@link AuthApi.waitForApproval}.
-   *
-   * @throws HemUnsupportedError when the client has no approval relay.
-   * @remarks Token scope: none. Introduced in M1.
-   */
   // implements: REQ-AUTH-018
   beginApproval(scope: string, details?: ApprovalDetails, options?: CallOptions): Promise<PendingApproval> {
     return this.engine.begin(scope, details, options);
   }
 
-  /**
-   * Check once for the outcome of an approval. Approved: the reply is
-   * redeemed (`ext/token`), the token cached under the requested scope and
-   * returned. Rejected raises `HemApprovalRejectedError` (nothing is
-   * redeemed); expired raises `HemApprovalTimeoutError`.
-   *
-   * @remarks Token scope: none. Introduced in M1.
-   */
   async pollApproval(pending: PendingApproval, options?: CallOptions): Promise<{ status: 'pending' } | { status: 'approved'; token: string }> {
     const result = await this.engine.poll(pending, options);
     if (result.status === 'approved') this.#session.store(pending.scope, { token: result.token, requestedExp: Number.POSITIVE_INFINITY });
     return result;
   }
 
-  /**
-   * Wait for the outcome of an approval: poll every 5 seconds (`intervalMs`)
-   * for up to 60 seconds (`timeoutMs`), at least once. Approved: the token
-   * is cached under the requested scope and returned. Rejected raises
-   * `HemApprovalRejectedError`; no answer in time, or an expired request,
-   * raises `HemApprovalTimeoutError`. A network failure of one poll does not
-   * end the wait; the signal does.
-   *
-   * @remarks Token scope: none. Introduced in M1.
-   */
   // implements: REQ-AUTH-018
   async waitForApproval(pending: PendingApproval, options?: WaitOptions): Promise<string> {
     const token = await this.engine.wait(pending, options);
@@ -209,11 +235,6 @@ export class AuthApi {
     return token;
   }
 
-  /**
-   * {@link AuthApi.beginApproval} followed by {@link AuthApi.waitForApproval}.
-   *
-   * @remarks Token scope: none. Introduced in M1.
-   */
   async approve(scope: string, details?: ApprovalDetails, options?: WaitOptions): Promise<string> {
     const pending = await this.beginApproval(scope, details, { signal: options?.signal });
     return this.waitForApproval(pending, options);

@@ -87,14 +87,7 @@ function requireMultipleOf8(msg: Uint8Array, parameter = 'msg'): void {
 }
 
 /** `client.crypto`: operations with stored keys. */
-export class CryptoApi {
-  readonly #context: BindingContext;
-
-  /** @internal */
-  constructor(context: BindingContext) {
-    this.#context = context;
-  }
-
+export interface CryptoApi {
   /**
    * HMAC of a message with a stored key. The key's type decides the hash
    * (`SHA2-256` gives 32 bytes, and so on); no algorithm is sent, because
@@ -105,13 +98,7 @@ export class CryptoApi {
    *
    * @remarks Token scope: `keymgmt:use:<kid>`. Introduced in M1.
    */
-  // implements: REQ-OPS-001
-  async hmac(params: HmacParams, options?: CallOptions): Promise<Uint8Array> {
-    const kid = validateKid(params?.kid);
-    const msg = validateMessage(params.msg);
-    const r = await invoke(this.#context, CRYPTO_HMAC, { params: { kid }, body: { kid, msg: bytesToBase64(msg) } }, options);
-    return readBase64(CRYPTO_HMAC, r, 'mac');
-  }
+  hmac(params: HmacParams, options?: CallOptions): Promise<Uint8Array>;
 
   /**
    * Wrap key material with a stored AES key (RFC 3394 key wrap). The input
@@ -122,15 +109,7 @@ export class CryptoApi {
    *
    * @remarks Token scope: `keymgmt:use:<kid>`. Introduced in M1.
    */
-  // implements: REQ-OPS-002
-  async wrap(params: WrapParams, options?: CallOptions): Promise<Uint8Array> {
-    const kid = validateKid(params?.kid);
-    const msg = validateMessage(params.msg);
-    requireMultipleOf8(msg);
-    if (msg.length < 16) throw new HemValidationError('Invalid msg: must be at least 16 bytes', { parameter: 'msg' });
-    const r = await invoke(this.#context, CRYPTO_WRAP, { params: { kid }, body: wrapBody(kid, msg, params) }, options);
-    return readBase64(CRYPTO_WRAP, r, 'wrapped');
-  }
+  wrap(params: WrapParams, options?: CallOptions): Promise<Uint8Array>;
 
   /**
    * Unwrap key material wrapped by {@link CryptoApi.wrap} (RFC 3394). The
@@ -142,6 +121,36 @@ export class CryptoApi {
    *
    * @remarks Token scope: `keymgmt:use:<kid>`. Introduced in M1.
    */
+  unwrap(params: WrapParams, options?: CallOptions): Promise<Uint8Array>;
+}
+
+/** @internal Implementation of {@link CryptoApi}. */
+export class CryptoApiImpl implements CryptoApi {
+  readonly #context: BindingContext;
+
+  /** @internal */
+  constructor(context: BindingContext) {
+    this.#context = context;
+  }
+
+  // implements: REQ-OPS-001
+  async hmac(params: HmacParams, options?: CallOptions): Promise<Uint8Array> {
+    const kid = validateKid(params?.kid);
+    const msg = validateMessage(params.msg);
+    const r = await invoke(this.#context, CRYPTO_HMAC, { params: { kid }, body: { kid, msg: bytesToBase64(msg) } }, options);
+    return readBase64(CRYPTO_HMAC, r, 'mac');
+  }
+
+  // implements: REQ-OPS-002
+  async wrap(params: WrapParams, options?: CallOptions): Promise<Uint8Array> {
+    const kid = validateKid(params?.kid);
+    const msg = validateMessage(params.msg);
+    requireMultipleOf8(msg);
+    if (msg.length < 16) throw new HemValidationError('Invalid msg: must be at least 16 bytes', { parameter: 'msg' });
+    const r = await invoke(this.#context, CRYPTO_WRAP, { params: { kid }, body: wrapBody(kid, msg, params) }, options);
+    return readBase64(CRYPTO_WRAP, r, 'wrapped');
+  }
+
   // implements: REQ-OPS-003
   async unwrap(params: WrapParams, options?: CallOptions): Promise<Uint8Array> {
     const kid = validateKid(params?.kid);

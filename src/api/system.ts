@@ -162,16 +162,7 @@ function defined<T extends object>(values: T): T {
 }
 
 /** `client.system`: device-wide calls. */
-export class SystemApi {
-  readonly #context: BindingContext;
-  readonly #relay: CheckinRelay | null;
-
-  /** @internal */
-  constructor(context: BindingContext, checkinRelay: CheckinRelay | null) {
-    this.#context = context;
-    this.#relay = checkinRelay;
-  }
-
+export interface SystemApi {
   /**
    * One-call health check for a circuit breaker: reachable, initialised, no
    * latched self-test fault, clock set. Makes exactly one request, the status
@@ -182,26 +173,7 @@ export class SystemApi {
    *
    * @remarks Token scope: none. Introduced in M1.
    */
-  // implements: REQ-SYS-003
-  async health(options?: CallOptions): Promise<HealthReport> {
-    let status: SystemStatus;
-    try {
-      status = await this.status(options);
-    } catch (error) {
-      if (error instanceof HemAbortError || !(error instanceof HemError)) throw error;
-      const reachable = !(error instanceof HemUnreachableError || error instanceof HemTimeoutError);
-      return { reachable, initialised: false, selfTestOk: false, clockSet: false, healthy: false, error };
-    }
-    const selfTestOk = status.flsState === 0;
-    return {
-      reachable: true,
-      initialised: status.initialised,
-      selfTestOk,
-      clockSet: status.clockSet,
-      healthy: status.initialised && selfTestOk && status.clockSet,
-      status,
-    };
-  }
+  health(options?: CallOptions): Promise<HealthReport>;
 
   /**
    * Check-in step 1: the device-signed check-in token (`check`), to be
@@ -211,11 +183,7 @@ export class SystemApi {
    *
    * @remarks Token scope: none. Introduced in M1.
    */
-  // implements: REQ-SYS-004
-  async getCheckin(options?: CallOptions): Promise<string> {
-    const r = await invoke(this.#context, SYSTEM_CHECKIN_GET, {}, options);
-    return readString(SYSTEM_CHECKIN_GET, r, 'check');
-  }
+  getCheckin(options?: CallOptions): Promise<string>;
 
   /**
    * Check-in step 2: hand the backend's reply (`checked`) to the device.
@@ -238,6 +206,79 @@ export class SystemApi {
    *
    * @remarks Token scope: none. Introduced in M1.
    */
+  postCheckin(checked: string, options?: CallOptions): Promise<CheckinResult>;
+
+  /**
+   * Complete check-in in one call: {@link SystemApi.getCheckin}, the client's check-in
+   * relay, then {@link SystemApi.postCheckin}, each value passed on unchanged. A
+   * failure's `operation` names its leg (`system.getCheckin`,
+   * `relay.checkin`, `system.postCheckin`). See {@link SystemApi.postCheckin} for the
+   * management actions a backend reply can trigger.
+   *
+   * @throws HemUnsupportedError when the client has no check-in relay.
+   * @remarks Token scope: none. Introduced in M1.
+   */
+  checkin(options?: CallOptions): Promise<CheckinResult>;
+
+  /**
+   * Device status: liveness, initialisation, clock and self-test fault state.
+   * Works on any device in any state.
+   *
+   * Device call: `GET /api/system/status`.
+   *
+   * @remarks Token scope: none. Introduced in M1.
+   */
+  status(options?: CallOptions): Promise<SystemStatus>;
+
+  /**
+   * Hardware, firmware and bootloader identity. Compare `fwv` with
+   * `HEM_API_VERSION` to check compatibility.
+   *
+   * Device call: `GET /api/system/version`.
+   *
+   * @remarks Token scope: none. Introduced in M1.
+   */
+  version(options?: CallOptions): Promise<SystemVersion>;
+}
+
+/** @internal Implementation of {@link SystemApi}. */
+export class SystemApiImpl implements SystemApi {
+  readonly #context: BindingContext;
+  readonly #relay: CheckinRelay | null;
+
+  /** @internal */
+  constructor(context: BindingContext, checkinRelay: CheckinRelay | null) {
+    this.#context = context;
+    this.#relay = checkinRelay;
+  }
+
+  // implements: REQ-SYS-003
+  async health(options?: CallOptions): Promise<HealthReport> {
+    let status: SystemStatus;
+    try {
+      status = await this.status(options);
+    } catch (error) {
+      if (error instanceof HemAbortError || !(error instanceof HemError)) throw error;
+      const reachable = !(error instanceof HemUnreachableError || error instanceof HemTimeoutError);
+      return { reachable, initialised: false, selfTestOk: false, clockSet: false, healthy: false, error };
+    }
+    const selfTestOk = status.flsState === 0;
+    return {
+      reachable: true,
+      initialised: status.initialised,
+      selfTestOk,
+      clockSet: status.clockSet,
+      healthy: status.initialised && selfTestOk && status.clockSet,
+      status,
+    };
+  }
+
+  // implements: REQ-SYS-004
+  async getCheckin(options?: CallOptions): Promise<string> {
+    const r = await invoke(this.#context, SYSTEM_CHECKIN_GET, {}, options);
+    return readString(SYSTEM_CHECKIN_GET, r, 'check');
+  }
+
   // implements: REQ-SYS-005
   async postCheckin(checked: string, options?: CallOptions): Promise<CheckinResult> {
     const spec = SYSTEM_CHECKIN_POST;
@@ -250,16 +291,6 @@ export class SystemApi {
     } as CheckinResult);
   }
 
-  /**
-   * Complete check-in in one call: {@link SystemApi.getCheckin}, the client's check-in
-   * relay, then {@link SystemApi.postCheckin}, each value passed on unchanged. A
-   * failure's `operation` names its leg (`system.getCheckin`,
-   * `relay.checkin`, `system.postCheckin`). See {@link SystemApi.postCheckin} for the
-   * management actions a backend reply can trigger.
-   *
-   * @throws HemUnsupportedError when the client has no check-in relay.
-   * @remarks Token scope: none. Introduced in M1.
-   */
   // implements: REQ-SYS-007
   async checkin(options?: CallOptions): Promise<CheckinResult> {
     const relay = this.#relay;
@@ -269,14 +300,6 @@ export class SystemApi {
     return this.postCheckin(checked, options);
   }
 
-  /**
-   * Device status: liveness, initialisation, clock and self-test fault state.
-   * Works on any device in any state.
-   *
-   * Device call: `GET /api/system/status`.
-   *
-   * @remarks Token scope: none. Introduced in M1.
-   */
   // implements: REQ-SYS-001
   async status(options?: CallOptions): Promise<SystemStatus> {
     const spec = SYSTEM_STATUS;
@@ -304,14 +327,6 @@ export class SystemApi {
     } as SystemStatus);
   }
 
-  /**
-   * Hardware, firmware and bootloader identity. Compare `fwv` with
-   * `HEM_API_VERSION` to check compatibility.
-   *
-   * Device call: `GET /api/system/version`.
-   *
-   * @remarks Token scope: none. Introduced in M1.
-   */
   // implements: REQ-SYS-002
   async version(options?: CallOptions): Promise<SystemVersion> {
     const spec = SYSTEM_VERSION;

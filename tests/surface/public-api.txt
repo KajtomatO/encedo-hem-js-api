@@ -18,15 +18,15 @@ ApprovalRequestParams.scope	scope:string
 ApprovalSubmission	export interface ApprovalSubmission
 ApprovalSubmission.authreq	readonly authreq:string
 ApprovalSubmission.epk	readonly epk:string
-AuthApi	export declare class AuthApi
-AuthApi.approvalRelay	get approvalRelay():ApprovalRelay|null
+AuthApi	export interface AuthApi
+AuthApi.approvalRelay	readonly approvalRelay:ApprovalRelay|null
 AuthApi.approve	approve(scope:string,details?:ApprovalDetails,options?:WaitOptions):Promise<string>
 AuthApi.beginApproval	beginApproval(scope:string,details?:ApprovalDetails,options?:CallOptions):Promise<PendingApproval>
 AuthApi.logout	logout():void
 AuthApi.pollApproval	pollApproval(pending:PendingApproval,options?:CallOptions):Promise<{status:'pending';}|{status:'approved';token:string;}>
 AuthApi.redeemApproval	redeemApproval(params:RedeemApprovalParams,options?:CallOptions):Promise<string>
 AuthApi.requestApproval	requestApproval(params:ApprovalRequestParams,options?:CallOptions):Promise<ApprovalRequest>
-AuthApi.role	get role():Role|undefined
+AuthApi.role	readonly role:Role|undefined
 AuthApi.waitForApproval	waitForApproval(pending:PendingApproval,options?:WaitOptions):Promise<string>
 CallOptions	export interface CallOptions
 CallOptions.signal	signal?:AbortSignal|undefined
@@ -44,7 +44,7 @@ CreateKeyParams.descr	descr?:Uint8Array|undefined
 CreateKeyParams.label	label:string
 CreateKeyParams.mode	mode?:KeyMode|undefined
 CreateKeyParams.type	type:KeyType
-CryptoApi	export declare class CryptoApi
+CryptoApi	export interface CryptoApi
 CryptoApi.hmac	hmac(params:HmacParams,options?:CallOptions):Promise<Uint8Array>
 CryptoApi.unwrap	unwrap(params:WrapParams,options?:CallOptions):Promise<Uint8Array>
 CryptoApi.wrap	wrap(params:WrapParams,options?:CallOptions):Promise<Uint8Array>
@@ -202,7 +202,7 @@ KeyTypeInfo.algorithm	readonly algorithm:string|undefined
 KeyTypeInfo.flags	readonly flags:readonly KeyFlag[]
 KeyTypeInfo.raw	readonly raw:string
 KeyTypeInfo.unknown	readonly unknown:readonly string[]
-KeysApi	export declare class KeysApi
+KeysApi	export interface KeysApi
 KeysApi.create	create(params:CreateKeyParams,options?:CallOptions):Promise<string>
 KeysApi.delete	delete(kid:string,options?:CallOptions):Promise<void>
 KeysApi.findByDescription	findByDescription(descr:Uint8Array,options?:CallOptions):Promise<KeyEntry[]>
@@ -236,7 +236,7 @@ SearchKeysParams.descr	descr:Uint8Array
 SearchKeysParams.limit	limit?:number|undefined
 SearchKeysParams.match	match?:DescriptionMatch|undefined
 SearchKeysParams.offset	offset?:number|undefined
-SystemApi	export declare class SystemApi
+SystemApi	export interface SystemApi
 SystemApi.checkin	checkin(options?:CallOptions):Promise<CheckinResult>
 SystemApi.getCheckin	getCheckin(options?:CallOptions):Promise<string>
 SystemApi.health	health(options?:CallOptions):Promise<HealthReport>

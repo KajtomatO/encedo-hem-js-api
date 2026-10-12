@@ -7,10 +7,10 @@ export interface DocumentedMethod {
   readonly doc: string;
 }
 
-/** Methods of exported `*Api` classes in a `.d.ts` text, each with the JSDoc block right above it ('' if none). */
+/** Methods of exported `*Api` interfaces (or classes) in a `.d.ts` text, each with the JSDoc block right above it ('' if none). */
 export function documentedMethods(declarations: string): DocumentedMethod[] {
   const found: DocumentedMethod[] = [];
-  for (const match of declarations.matchAll(/export declare class (\w+Api)\b[^{]*\{([\s\S]*?)\n\}/g)) {
+  for (const match of declarations.matchAll(/export (?:declare class|interface) (\w+Api)\b[^{]*\{([\s\S]*?)\n\}/g)) {
     const className = match[1] as string;
     const body = match[2] as string;
     for (const member of body.matchAll(/(\/\*\*[\s\S]*?\*\/\s*)?^ {4}(\w+)(?:<[^>]*>)?\(/gm)) {

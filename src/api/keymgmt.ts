@@ -218,14 +218,7 @@ export function readKid(spec: OperationSpec, object: ResponseObject, field = 'ki
 }
 
 /** `client.keys`: the device's key repository. Every call needs an `https:` device URL. */
-export class KeysApi {
-  readonly #context: BindingContext;
-
-  /** @internal */
-  constructor(context: BindingContext) {
-    this.#context = context;
-  }
-
+export interface KeysApi {
   /**
    * Generate a key on the device and return its key id (32 lower-case hex
    * characters). The key material never leaves the device.
@@ -239,6 +232,89 @@ export class KeysApi {
    *
    * @remarks Token scope: `keymgmt:gen`. Introduced in M1.
    */
+  create(params: CreateKeyParams, options?: CallOptions): Promise<string>;
+
+  /**
+   * Read one key: its type and public material. Private material is never
+   * returned. Public keys are compressed X9.63 for the `SECP*` types and raw
+   * for the others. Firmware 1.2.2 returns neither the label nor, in
+   * practice, the description here; read those through `keys.list` or
+   * `keys.search`. An unknown key id raises `HemOperationFailedError` (406).
+   *
+   * Device call: `GET /api/keymgmt/get/{kid}`. HTTPS only.
+   *
+   * @remarks Token scope: `keymgmt:use:<kid>` (the same token serves crypto
+   * operations on that key). Introduced in M1.
+   */
+  get(kid: string, options?: CallOptions): Promise<KeyDetails>;
+
+  /**
+   * Delete one key: the device marks its record as deleted. A key id that
+   * is not present raises `HemOperationFailedError` (406). A paired mobile
+   * app is stored as a key, so this is also how a pairing is removed. The
+   * cached `keymgmt:use:<kid>` token of the deleted key is discarded.
+   *
+   * Device call: `DELETE /api/keymgmt/delete/{kid}`. HTTPS only — over
+   * plain HTTP the device would answer 409 rather than 418; the client
+   * refuses before sending either way.
+   *
+   * @remarks Token scope: `keymgmt:del`. Introduced in M1.
+   */
+  delete(kid: string, options?: CallOptions): Promise<void>;
+
+  /**
+   * One page of the key repository, at most 15 keys. Labels and
+   * descriptions are available here (key get does not return them).
+   *
+   * Device calls: `GET /api/keymgmt/list`, `/list/{offset}` or
+   * `/list/{offset}/{count}`, chosen from the parameters. HTTPS only.
+   *
+   * @remarks Token scope: `keymgmt:list`. Introduced in M1.
+   */
+  list(params?: ListKeysParams, options?: CallOptions): Promise<KeyPage>;
+
+  /**
+   * Every key in the repository, page by page. Stops when the offset
+   * reaches the reported total or a page comes back empty — not when a page
+   * is merely short.
+   *
+   * @remarks Token scope: `keymgmt:list`. Introduced in M1.
+   */
+  listAll(options?: CallOptions): Promise<KeyEntry[]>;
+
+  /**
+   * Find keys by their description. The needle is sent as base64 with a
+   * leading `^` (prefix) or a trailing `$` (suffix); firmware 1.2.2 compares
+   * the decoded bytes, so a needle of any length matches at any byte offset
+   * (verified on the device in M1B). For an exact match use
+   * {@link KeysApi.findByDescription}. No match gives an empty page (also
+   * for the 404 of older firmware); the page's `total` is then not 0 on
+   * firmware 1.2.2 — see {@link KeyPage.total}.
+   *
+   * Device call: `POST /api/keymgmt/search`. HTTPS only.
+   *
+   * @remarks Token scope: `keymgmt:search`. Introduced in M1.
+   */
+  search(params: SearchKeysParams, options?: CallOptions): Promise<KeyPage>;
+
+  /**
+   * The keys whose description equals `descr` exactly: a prefix search over
+   * all result pages, filtered byte for byte.
+   *
+   * @remarks Token scope: `keymgmt:search`. Introduced in M1.
+   */
+  findByDescription(descr: Uint8Array, options?: CallOptions): Promise<KeyEntry[]>;
+}
+
+/** @internal Implementation of {@link KeysApi}. */
+export class KeysApiImpl implements KeysApi {
+  readonly #context: BindingContext;
+
+  /** @internal */
+  constructor(context: BindingContext) {
+    this.#context = context;
+  }
+
   // implements: REQ-KEY-001
   async create(params: CreateKeyParams, options?: CallOptions): Promise<string> {
     const label = validateLabel(params?.label);
@@ -257,18 +333,6 @@ export class KeysApi {
     return readKid(KEY_CREATE, r);
   }
 
-  /**
-   * Read one key: its type and public material. Private material is never
-   * returned. Public keys are compressed X9.63 for the `SECP*` types and raw
-   * for the others. Firmware 1.2.2 returns neither the label nor, in
-   * practice, the description here; read those through `keys.list` or
-   * `keys.search`. An unknown key id raises `HemOperationFailedError` (406).
-   *
-   * Device call: `GET /api/keymgmt/get/{kid}`. HTTPS only.
-   *
-   * @remarks Token scope: `keymgmt:use:<kid>` (the same token serves crypto
-   * operations on that key). Introduced in M1.
-   */
   // implements: REQ-KEY-002
   async get(kid: string, options?: CallOptions): Promise<KeyDetails> {
     const spec = KEY_GET;
@@ -285,18 +349,6 @@ export class KeysApi {
     return details;
   }
 
-  /**
-   * Delete one key: the device marks its record as deleted. A key id that
-   * is not present raises `HemOperationFailedError` (406). A paired mobile
-   * app is stored as a key, so this is also how a pairing is removed. The
-   * cached `keymgmt:use:<kid>` token of the deleted key is discarded.
-   *
-   * Device call: `DELETE /api/keymgmt/delete/{kid}`. HTTPS only — over
-   * plain HTTP the device would answer 409 rather than 418; the client
-   * refuses before sending either way.
-   *
-   * @remarks Token scope: `keymgmt:del`. Introduced in M1.
-   */
   // implements: REQ-KEY-007
   async delete(kid: string, options?: CallOptions): Promise<void> {
     const id = validateKid(kid);
@@ -305,15 +357,6 @@ export class KeysApi {
     this.#context.tokens.forget(`keymgmt:use:${id}`);
   }
 
-  /**
-   * One page of the key repository, at most 15 keys. Labels and
-   * descriptions are available here (key get does not return them).
-   *
-   * Device calls: `GET /api/keymgmt/list`, `/list/{offset}` or
-   * `/list/{offset}/{count}`, chosen from the parameters. HTTPS only.
-   *
-   * @remarks Token scope: `keymgmt:list`. Introduced in M1.
-   */
   // implements: REQ-KEY-004
   async list(params: ListKeysParams = {}, options?: CallOptions): Promise<KeyPage> {
     const offset = params.offset === undefined ? undefined : validateOffset(params.offset);
@@ -331,13 +374,6 @@ export class KeysApi {
     return readPage(spec, await invoke(this.#context, spec, { params: values }, options));
   }
 
-  /**
-   * Every key in the repository, page by page. Stops when the offset
-   * reaches the reported total or a page comes back empty — not when a page
-   * is merely short.
-   *
-   * @remarks Token scope: `keymgmt:list`. Introduced in M1.
-   */
   // implements: REQ-KEY-004
   async listAll(options?: CallOptions): Promise<KeyEntry[]> {
     const keys: KeyEntry[] = [];
@@ -350,19 +386,6 @@ export class KeysApi {
     }
   }
 
-  /**
-   * Find keys by their description. The needle is sent as base64 with a
-   * leading `^` (prefix) or a trailing `$` (suffix); firmware 1.2.2 compares
-   * the decoded bytes, so a needle of any length matches at any byte offset
-   * (verified on the device in M1B). For an exact match use
-   * {@link KeysApi.findByDescription}. No match gives an empty page (also
-   * for the 404 of older firmware); the page's `total` is then not 0 on
-   * firmware 1.2.2 — see {@link KeyPage.total}.
-   *
-   * Device call: `POST /api/keymgmt/search`. HTTPS only.
-   *
-   * @remarks Token scope: `keymgmt:search`. Introduced in M1.
-   */
   // implements: REQ-KEY-003
   async search(params: SearchKeysParams, options?: CallOptions): Promise<KeyPage> {
     const needle = validateDescription(params?.descr, 'descr');
@@ -386,12 +409,6 @@ export class KeysApi {
     }
   }
 
-  /**
-   * The keys whose description equals `descr` exactly: a prefix search over
-   * all result pages, filtered byte for byte.
-   *
-   * @remarks Token scope: `keymgmt:search`. Introduced in M1.
-   */
   // implements: REQ-KEY-003
   async findByDescription(descr: Uint8Array, options?: CallOptions): Promise<KeyEntry[]> {
     const found: KeyEntry[] = [];

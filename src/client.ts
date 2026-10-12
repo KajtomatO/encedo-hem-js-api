@@ -3,15 +3,15 @@
  *
  * @packageDocumentation
  */
-import { AuthApi } from './api/auth-api.js';
+import { type AuthApi, AuthApiImpl } from './api/auth-api.js';
 import { type BindingContext, noTokens } from './api/core.js';
 import { ClockRecovery } from './auth/recovery.js';
 import { Session, type TokenSource } from './auth/session.js';
 import { type Clock, DEFAULT_TOKEN_LIFETIME_SECONDS, PassphraseLogin, validateLifetime } from './auth/login.js';
 import { HemValidationError } from './errors.js';
-import { CryptoApi } from './api/crypto.js';
-import { KeysApi } from './api/keymgmt.js';
-import { SystemApi } from './api/system.js';
+import { type CryptoApi, CryptoApiImpl } from './api/crypto.js';
+import { type KeysApi, KeysApiImpl } from './api/keymgmt.js';
+import { type SystemApi, SystemApiImpl } from './api/system.js';
 import { type ApprovalRelay, EncedoApprovalRelay } from './relay/approval.js';
 import { type CheckinRelay, EncedoCheckinRelay } from './relay/checkin.js';
 import { type FetchFunction, Transport } from './transport/transport.js';
@@ -168,6 +168,8 @@ export class HemClient {
     if (options.passphrase !== undefined && options.mobileApproval !== undefined) {
       throw new HemValidationError('Invalid options: give either a passphrase or mobileApproval, not both', { parameter: 'mobileApproval' });
     }
+    // Assigned below; the mobile token source only uses it once a call needs a token.
+    let auth!: AuthApiImpl;
     let source: TokenSource | null = null;
     if (options.passphrase !== undefined) {
       source = new PassphraseLogin(publicContext, options.passphrase, lifetime, now, recovery);
@@ -176,7 +178,7 @@ export class HemClient {
       const mobile: MobileApprovalOptions = options.mobileApproval === true ? {} : options.mobileApproval;
       source = {
         acquire: async (scope) => ({
-          token: await this.auth.engine.approve(scope, { note: mobile.note, ctx: mobile.ctx }, { timeoutMs: mobile.timeoutMs, intervalMs: mobile.intervalMs }),
+          token: await auth.engine.approve(scope, { note: mobile.note, ctx: mobile.ctx }, { timeoutMs: mobile.timeoutMs, intervalMs: mobile.intervalMs }),
           requestedExp: Number.POSITIVE_INFINITY,
         }),
         discard: () => undefined,
@@ -186,10 +188,11 @@ export class HemClient {
     const context: BindingContext = { transport, tokens: session };
     const approvalRelay =
       options.approvalRelay === undefined ? new EncedoApprovalRelay() : checkRelay(options.approvalRelay, 'approvalRelay', ['getKey', 'submit', 'check']);
-    this.auth = new AuthApi(session, publicContext, recovery, approvalRelay, now);
-    this.system = new SystemApi(context, checkinRelay);
-    this.keys = new KeysApi(context);
-    this.crypto = new CryptoApi(context);
+    auth = new AuthApiImpl(session, publicContext, recovery, approvalRelay, now);
+    this.auth = auth;
+    this.system = new SystemApiImpl(context, checkinRelay);
+    this.keys = new KeysApiImpl(context);
+    this.crypto = new CryptoApiImpl(context);
     contexts.set(this, context);
   }
 }
