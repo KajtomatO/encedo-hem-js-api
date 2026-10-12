@@ -1,9 +1,9 @@
 ---
 id: REQ-AUTH-015
 title: Mobile approval step 2 — redeem the reply
-status: verified
+status: draft
 priority: must
-revision: 3
+revision: 4
 source: start_point M1.2; ref/api/hem-api-1.2.2.yaml; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: ["REQ-AUTH-004", "REQ-API-002"]
 supersedes: null
@@ -21,8 +21,10 @@ a mobile app's reply for a bearer token.
 first it needs no token [YAML]. Introduced in M1.
 
 **Acceptance criteria:**
-- [x] The body is `{authreply}`; no `Authorization` header is sent; the
-      result is the token.
+- [ ] The body is `{authreply}`; no `Authorization` header is sent; the
+      token is cached under the requested scope, and the call resolves with
+      `{ scope, role, expiresAt }` — the token itself is never returned
+      (reworded 2026-10-12, STEP-M1B-130; was "the result is the token").
 - [x] The token is cached under the scope that was originally requested,
       with the expiry taken from its `exp` claim.
 - [x] A 401 (reply invalid, expired or already used) raises
