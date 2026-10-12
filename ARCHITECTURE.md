@@ -483,7 +483,11 @@ Firmware quirks the bindings normalise or document [BRIEF G16]:
   412 unless that origin is on its allow-list — the `origin` setting,
   given at provisioning and changeable through config write [YAML].
   Putting the calling origin on that list is the caller's job; the library
-  documents this and reports 412 as `HemOriginRejectedError`.
+  documents this and reports 412 as `HemOriginRejectedError`. Chromium's
+  Local Network Access also applies: a page from another origin reaches the
+  device's local address only after the user allows it; until then the
+  browser fails the request with no response [device and Chromium 153,
+  2026-10-12].
 
 ## 8. Testing policy
 
@@ -680,6 +684,10 @@ strict sequence (D8). Scope comes from [BRIEF] §3–§5.
     text comparison would miss (quirk 8).
 11. **Browser access to the cloud relays** depends on `api.encedo.com`
     allowing cross-origin requests; unverified. *Resolved by:* M1B.
+    **RESOLVED (2026-10-12):** both relays accept browser origins (check-in
+    and broker session from headless Chromium). The real obstacle in a
+    browser is Local Network Access: the user must allow the page to reach
+    the device's local address (§7).
 12. **Package name and publishing** are undecided. *Resolved by:* user
     decision before the 0.1.0 release.
 13. **Node 24 on the development machine.** RESOLVED (2026-10-05): Node.js

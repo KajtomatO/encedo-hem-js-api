@@ -3,7 +3,7 @@ id: REQ-AUTH-017
 title: Default approval relay for the Encedo broker
 status: verified
 priority: must
-revision: 3
+revision: 4
 source: user decision 2026-10-02; start_point §6 Q2; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: ["REQ-AUTH-016"]
 supersedes: null
@@ -42,5 +42,8 @@ interface of REQ-AUTH-016. Introduced in M1.
 - [ ] (M1B) attended: against the real broker, the session call succeeds, a
       submitted request produces a push on the paired phone, and the check
       call is seen pending and then final.
-- [ ] (M1B) whether the broker accepts requests from a browser origin is
-      recorded (ARCHITECTURE.md §11, risk 11).
+- [x] (M1B) whether the broker accepts requests from a browser origin is
+      recorded (ARCHITECTURE.md §11, risk 11) — 2026-10-12: yes. The session
+      call (`GET /notify/session`) succeeded from pages at
+      `https://app.example` and `http://localhost:8080` in headless Chromium,
+      with no local-network permission needed (public address).

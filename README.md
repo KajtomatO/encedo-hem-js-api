@@ -146,8 +146,18 @@ responsibility.**
   `Cache-Control`, `Pragma`, `Expires`, `Authorization` and
   `Content-Disposition`. The library sends nothing else.
 
-All of this comes from the API reference. Whether the cloud relays
-(`api.encedo.com`) accept requests from a browser origin is unverified.
+- **The browser asks the user first.** The device sits on a local address
+  (`192.168.7.1`, also behind `my.ence.do`). Chromium-based browsers let a
+  page from any other origin reach a local address only after the user
+  allows "local network access" for that site; until then every device call
+  fails with `HemUnreachableError` before anything is sent. A page served
+  by the device itself is not affected.
+
+Verified on a device (firmware 1.2.2) from headless Chromium 153: with
+local network access allowed, pages at `https://app.example` and
+`http://localhost:8080` logged in, listed keys and ran a check-in; the
+device's preflight allowed the request, and both cloud relays
+(`api.encedo.com/checkin` and `/notify`) accept browser origins.
 
 ## Trusting the device's TLS certificate
 

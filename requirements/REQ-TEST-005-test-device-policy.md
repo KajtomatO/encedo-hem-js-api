@@ -3,7 +3,7 @@ id: REQ-TEST-005
 title: The test device and what tests may do to it
 status: verified
 priority: must
-revision: 3
+revision: 4
 source: user decision 2026-10-06 (M1B decomposition); ARCHITECTURE.md §1 D10, §8; https://github.com/KajtomatO/encedo-hem-c-api (device record and test policy)
 depends_on: ["REQ-TEST-003", "REQ-TEST-004"]
 supersedes: null
@@ -62,3 +62,9 @@ disposable-except-protected policy carry over, and both projects share one
 - [ ] No test sends a request that modifies a key of the protected set
       (review criterion at the B gate).
 - [ ] (M1B) after the full M1B run the protected set is unchanged.
+
+**Configuration observed (2026-10-12, read-only `system:config`):**
+`origin` `*`, `trusted_backend` true, `allow_keysearch` true, hostname
+`my.ence.do`. With `trusted_backend` on, a check-in reply may carry a
+management action (lock, wipe, soft-brick, forced upgrade); every reply in
+M1B was `OK`.
