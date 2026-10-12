@@ -7,9 +7,9 @@ traces:
   architecture: ["ARCHITECTURE.md#7-transport", "ARCHITECTURE.md#11-risks--open-questions"]
 depends_on: ["STEP-M1B-040"]
 evidence:
-  commits: []
-  tests: []
-  notes: null
+  commits: ["80d588b"]
+  tests: ["verifies: REQ-NET-009, REQ-NET-011, REQ-AUTH-017, REQ-SYS-006 (tests/attended/browser.test.ts, 2026-10-12)"]
+  notes: "Run 2026-10-12, no physical action needed. Device configuration read (read-only system:config): origin '*', trusted_backend true. Headless Chromium 153 with pages served by request interception at https://app.example and http://localhost:8080: with the local-network-access permission granted, status, login + keys.list (preflighted), check-in through api.encedo.com and the broker session all succeeded; without it every device call failed in the browser (Local Network Access), the broker still worked. Device CORS correct (origin echoed, preflight 204 allowing Authorization). Open: REQ-NET-011's disallowed-origin case is not observable under '*' without a configuration write (not permitted in M1B) — needs the user's decision at the gate; the step stays in doing/ until then."
 reopened: []
 cancelled: null
 ---
@@ -40,9 +40,9 @@ accept a browser origin are recorded. Settles Q6 and §11 risk 11.
 **Definition of done**
 - [ ] Device allow-list recorded; a disallowed origin gives
       `HemOriginRejectedError` (REQ-NET-011).
-- [ ] An allowed origin passes preflight and succeeds, or the box is carried
+- [x] An allowed origin passes preflight and succeeds, or the box is carried
       to M3B by recorded decision (REQ-NET-009).
-- [ ] Whether the broker and the check-in backend accept a browser origin is
+- [x] Whether the broker and the check-in backend accept a browser origin is
       recorded (REQ-AUTH-017, REQ-SYS-006; §11 risk 11).
-- [ ] The browser test skips without the opt-in and is tagged `verifies:`;
+- [x] The browser test skips without the opt-in and is tagged `verifies:`;
       findings next to the boxes.
