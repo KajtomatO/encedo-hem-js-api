@@ -1,0 +1,132 @@
+// Attended: mobile approval with the real Encedo app on the paired phone. Five
+// pushes; each note says what to do: approve, reject, ignore, approve, approve.
+// Run by file with EHEM_ALLOW_DISRUPTIVE=1; the person follows tmp/attended.log.
+import { afterAll, beforeAll, expect, it } from 'vitest';
+import { type HemClient, HemApprovalRejectedError, HemApprovalTimeoutError, createNodeFetch } from '../../src/index.js';
+import type { FetchFunction } from '../../src/transport/transport.js';
+import { describeAttended, say, yourTurn } from '../support/attended-env.js';
+import { customTrust, deviceClient, deviceFetch, requireDevice } from '../support/device-env.js';
+import { claimsOf } from '../support/login.js';
+import { TestKeys } from '../support/test-keys.js';
+
+const MINUTE = 60_000;
+
+/** Counts the approval requests (one push each) and check-ins the client sends to the device. */
+class PushCounter {
+  pushes = 0;
+  checkins = 0;
+  readonly fetch: FetchFunction;
+  constructor() {
+    const env = requireDevice();
+    const inner = customTrust(env) ? deviceFetch(env) : createNodeFetch();
+    this.fetch = async (input, init) => {
+      const path = new URL(input).pathname;
+      if (init.method === 'POST' && path === '/api/auth/ext/request') this.pushes += 1;
+      if (init.method === 'POST' && path === '/api/system/checkin') this.checkins += 1;
+      return inner(input, init);
+    };
+  }
+}
+
+/** Seconds until expiry, from whatever an approval resolved with (a token today, a session description later). */
+function secondsLeft(result: unknown): number | undefined {
+  const now = Date.now() / 1000;
+  if (typeof result === 'string') return Math.round((claimsOf(result)['exp'] as number) - now);
+  const expiresAt = (result as { expiresAt?: number } | undefined)?.expiresAt;
+  return expiresAt === undefined ? undefined : Math.round(expiresAt - now);
+}
+
+describeAttended('mobile approval on the paired phone', () => {
+  let counter: PushCounter;
+  let client: HemClient;
+
+  beforeAll(() => {
+    counter = new PushCounter();
+    // No passphrase: every token this client holds came through the phone.
+    client = deviceClient({ passphrase: undefined, fetch: counter.fetch });
+    say('plan: 5 pushes on the phone — (1) APPROVE, (2) REJECT, (3) IGNORE, (4) APPROVE, (5) APPROVE. Each note says which.');
+  });
+
+  // verifies: REQ-AUTH-014
+  it('gets an authorization request from the device for keymgmt:list (no push)', async () => {
+    const relay = client.auth.approvalRelay;
+    expect(relay).not.toBeNull();
+    const epk = await relay?.getKey();
+    const request = await client.auth.requestApproval({ epk: epk as string, scope: 'keymgmt:list' });
+    say(`(0) authorization request: authreq ${request.authreq.length} characters, epk echoed ${request.epk === epk}`);
+    expect(request.authreq.split('.')).toHaveLength(3);
+  });
+
+  // verifies: REQ-AUTH-017, REQ-AUTH-015, REQ-AUTH-018
+  it('push 1 — approved: the broker reports pending then approved, and the token works on the device', async () => {
+    yourTurn('(1) a push arrives on the phone — APPROVE it');
+    const pending = await client.auth.beginApproval('keymgmt:list', { note: 'EHEMTEST (1): APPROVE this one' });
+    const started = Date.now();
+    let pendingPolls = 0;
+    let outcome: unknown;
+    while (Date.now() - started < 3 * MINUTE) {
+      const poll = await client.auth.pollApproval(pending);
+      if (poll.status !== 'pending') {
+        outcome = poll;
+        break;
+      }
+      pendingPolls += 1;
+      await new Promise((resolve) => setTimeout(resolve, 3_000));
+    }
+    const approved = outcome as { status: string; token?: string; session?: unknown } | undefined;
+    const left = secondsLeft(approved?.token ?? approved?.session);
+    say(`(1) broker: ${pendingPolls} pending poll(s), then ${approved?.status ?? 'no answer'} after ${Math.round((Date.now() - started) / 1000)} s; token good for ${left} s`);
+    expect(approved?.status).toBe('approved');
+
+    const page = await client.keys.list();
+    say(`(1) keys.list with the approved token: ok, ${page.total} keys; role ${JSON.stringify(client.auth.role)}`);
+    expect(page.total).toBeGreaterThan(0);
+  });
+
+  // verifies: REQ-AUTH-018
+  it('push 2 — rejected: HemApprovalRejectedError', async () => {
+    yourTurn('(2) a push arrives — REJECT it');
+    const error = await client.auth.approve('keymgmt:search', { note: 'EHEMTEST (2): REJECT this one' }, { timeoutMs: 3 * MINUTE }).catch((e: unknown) => e);
+    say(`(2) outcome: ${error instanceof Error ? error.name : 'approved (unexpected)'}`);
+    expect(error).toBeInstanceOf(HemApprovalRejectedError);
+  });
+
+  // verifies: REQ-AUTH-018
+  it('push 3 — ignored: HemApprovalTimeoutError', async () => {
+    yourTurn('(3) a push arrives — IGNORE it, do not touch it (about 60 s)');
+    const started = Date.now();
+    const error = await client.auth.approve('keymgmt:search', { note: 'EHEMTEST (3): IGNORE this one' }, { timeoutMs: MINUTE }).catch((e: unknown) => e);
+    say(`(3) outcome after ${Math.round((Date.now() - started) / 1000)} s: ${error instanceof Error ? error.name : 'approved (unexpected)'}`);
+    expect(error).toBeInstanceOf(HemApprovalTimeoutError);
+  });
+
+  // verifies: REQ-AUTH-019, REQ-AUTH-020
+  it('pushes 4 and 5 — mobile login mode: an HMAC on each of two keys, one push per key', async () => {
+    const keys = new TestKeys(deviceClient()); // created with the passphrase, so no push
+    try {
+      const k1 = await keys.create({ type: 'SHA2-256' });
+      const k2 = await keys.create({ type: 'SHA2-256' });
+      const mobileCounter = new PushCounter();
+      const mobile = deviceClient({ passphrase: undefined, fetch: mobileCounter.fetch, mobileApproval: { note: 'EHEMTEST (4/5): APPROVE', timeoutMs: 3 * MINUTE } });
+      const msg = Uint8Array.from([1, 2, 3]);
+
+      yourTurn('(4) a push arrives — APPROVE it (HMAC with key 1)');
+      const mac1 = await mobile.crypto.hmac({ kid: k1, msg });
+      say(`(4) HMAC with key 1: ${mac1.length} bytes after approval; pushes so far ${mobileCounter.pushes}`);
+
+      yourTurn('(5) one more push — APPROVE it (HMAC with key 2)');
+      const mac2 = await mobile.crypto.hmac({ kid: k2, msg });
+      await mobile.crypto.hmac({ kid: k1, msg }); // cached token for key 1: no push
+      say(`(5) HMAC with key 2: ${mac2.length} bytes; pushes for two keys and three calls: ${mobileCounter.pushes}; drift check-ins: ${mobileCounter.checkins + counter.checkins}`);
+      expect(mac1).toHaveLength(32);
+      expect(mac2).toHaveLength(32);
+      expect(mobileCounter.pushes).toBe(2);
+    } finally {
+      await keys.cleanup();
+    }
+  });
+
+  afterAll(() => {
+    say(`session done; pushes by the first client: ${counter?.pushes}, check-ins: ${counter?.checkins}`);
+  });
+});
