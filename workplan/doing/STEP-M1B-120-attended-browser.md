@@ -9,7 +9,7 @@ depends_on: ["STEP-M1B-040"]
 evidence:
   commits: ["80d588b"]
   tests: ["verifies: REQ-NET-009, REQ-NET-011, REQ-AUTH-017, REQ-SYS-006 (tests/attended/browser.test.ts, 2026-10-12)"]
-  notes: "Run 2026-10-12, no physical action needed. Device configuration read (read-only system:config): origin '*', trusted_backend true. Headless Chromium 153 with pages served by request interception at https://app.example and http://localhost:8080: with the local-network-access permission granted, status, login + keys.list (preflighted), check-in through api.encedo.com and the broker session all succeeded; without it every device call failed in the browser (Local Network Access), the broker still worked. Device CORS correct (origin echoed, preflight 204 allowing Authorization). Open: REQ-NET-011's disallowed-origin case is not observable under '*' without a configuration write (not permitted in M1B) — needs the user's decision at the gate; the step stays in doing/ until then."
+  notes: "Run 2026-10-12, no physical action needed. Device configuration read (read-only system:config): origin '*', trusted_backend true. Headless Chromium 153 with pages served by request interception at https://app.example and http://localhost:8080: with the local-network-access permission granted, status, login + keys.list (preflighted), check-in through api.encedo.com and the broker session all succeeded; without it every device call failed in the browser (Local Network Access), the broker still worked. Device CORS correct (origin echoed, preflight 204 allowing Authorization). Open: REQ-NET-011's disallowed-origin case is not observable under '*' without a configuration write (not permitted in M1B) — carried to M3B by user decision 2026-10-12 (REQ-NET-011 box re-prefixed (M3B))."
 reopened: []
 cancelled: null
 ---
@@ -38,7 +38,7 @@ accept a browser origin are recorded. Settles Q6 and §11 risk 11.
   halves; risk 11).
 
 **Definition of done**
-- [ ] Device allow-list recorded; a disallowed origin gives
+- [x] Device allow-list recorded; a disallowed origin gives
       `HemOriginRejectedError` (REQ-NET-011).
 - [x] An allowed origin passes preflight and succeeds, or the box is carried
       to M3B by recorded decision (REQ-NET-009).

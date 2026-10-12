@@ -1,10 +1,10 @@
 ---
 id: REQ-AUTH-027
 title: Explicit login reporting the session
-status: draft
+status: approved
 priority: should
-revision: 1
-source: user decision 2026-10-12 (STEP-M1B-130, surface changes before 0.1.0); https://github.com/KajtomatO/encedo-hem-c-api (its session engine exposes no token either)
+revision: 2
+source: user decision 2026-10-12 (STEP-M1B-130, surface changes before 0.1.0); https://github.com/KajtomatO/encedo-hem-c-api (its session engine exposes no token either); approved by the user 2026-10-12
 depends_on: ["REQ-AUTH-001", "REQ-AUTH-004", "REQ-AUTH-010"]
 supersedes: null
 superseded_by: null
