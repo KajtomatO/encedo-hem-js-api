@@ -3,7 +3,7 @@ id: REQ-SYS-003
 title: Single health operation
 status: verified
 priority: must
-revision: 4
+revision: 5
 source: start_point M1.5
 depends_on: ["REQ-SYS-001", "REQ-NET-006"]
 supersedes: null
@@ -29,9 +29,11 @@ call saves every consumer from re-deriving them. Introduced in M1.
 - [x] A caller abort still raises `HemAbortError`.
 - [x] The four facts map from the status result: initialised, `fls_state`
       equal to 0, clock set; a summary flag is true only when all four are.
-- [ ] (M1B) a healthy device reports all four true; with the device
+- [x] (M1B) a healthy device reports all four true; with the device
       unplugged the call reports unreachable within the time limit.
       Healthy half, 2026-10-07: `{reachable, initialised, selfTestOk,
       clockSet, healthy}` all true on the test device
-      (tests/integration/checkin-health.test.ts). The unplugged half is
-      STEP-M1B-090.
+      (tests/integration/checkin-health.test.ts). Unplugged half,
+      2026-10-12: `health()` resolved with reachable false, healthy false
+      after 3.1 s, without throwing; cause `ENETUNREACH`
+      (tests/attended/power-cycle.test.ts).

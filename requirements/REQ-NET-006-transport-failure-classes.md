@@ -3,7 +3,7 @@ id: REQ-NET-006
 title: Transport failures classified
 status: verified
 priority: must
-revision: 4
+revision: 5
 source: start_point G14
 depends_on: ["REQ-API-002", "REQ-NET-004", "REQ-NET-005"]
 supersedes: null
@@ -36,4 +36,8 @@ classes. Introduced in M1.
       trust anchors cannot validate → cause
       `UNABLE_TO_GET_ISSUER_CERT_LOCALLY`. An expired certificate was not
       observable: the device's certificate was renewed that day (valid to
-      2027-01-05). The powered-off case is STEP-M1B-090.
+      2027-01-05). Powered off, 2026-10-12: `HemUnreachableError` with
+      cause `ENETUNREACH` (`connect ENETUNREACH 192.168.7.1:443`) — the
+      device is the USB network adapter, so unplugging it removes the route.
+      Open only for the expired-certificate case, which needs an expired
+      device certificate: decision at the gate (STEP-M1B-140).

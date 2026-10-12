@@ -620,7 +620,7 @@ strict sequence (D8). Scope comes from [BRIEF] §3–§5.
 | Q2 | How a mobile-approval request reaches the app and returns | RESOLVED (2026-10-02) | Through the cloud broker at `api.encedo.com/notify`, relayed by the client (§5.3) [C-SDK]. Default relay ships (D7). |
 | Q3 | Check-in backend and its interface | RESOLVED (2026-10-02) | `https://api.encedo.com/checkin`; the device's reply is posted to it and its reply is posted back to the device (§6) [C-SDK]. Default relay ships (D7). |
 | Q4 | How the device's TLS certificate is trusted | RESOLVED for the dev device (2026-10-02) | Public-CA certificate for `my.ence.do` [C-SDK]; no TLS setting in the library; other cases through the caller's `fetch` (§7). |
-| Q5 | Throughput, concurrent connections, token limits | PARTIALLY RESOLVED (2026-10-02) | No limit is documented in any source. Known: TCP closed per response, stalls under sustained load, up to 8 paired apps [C-SDK]. Parallel requests are untested, so the client serialises (§7). Open for M1B. |
+| Q5 | Throughput, concurrent connections, token limits | RESOLVED for M1 (2026-10-12) | No limit is documented in any source. Known: TCP closed per response, stalls under sustained load, up to 8 paired apps [C-SDK]. Measured by this library: two parallel requests are served at once (~400 ms each); with four, the third and fourth are answered about one TCP connect retry later (~1.4 s); the M1 suite needs no pacing (30/30 unpaced); tokens up to 7 days are issued as requested (REQ-AUTH-006). The client still serialises (§7). |
 | Q6 | Who is responsible for the CORS allow-list | RESOLVED (2026-10-02) | The caller configures the device; the library documents it and reports 412 distinctly (§7). Fixed by the approval of REQ-NET-011. |
 | Q7 | Which endpoints diagnostic firmware adds | RESOLVED (2026-10-02) | Everything under `/api/diag/`, present only on firmware whose version ends in `-DIAG`. [DOC] names seven endpoints; [C-SDK] counts nine. The exclusion is stated by path prefix, so the difference does not matter. |
 
@@ -647,7 +647,11 @@ strict sequence (D8). Scope comes from [BRIEF] §3–§5.
    clock is unset and login needs a check-in, which needs
    `api.encedo.com` reachable from the client. Whether a soft reboot also
    clears the clock is unknown. *Resolved by:* M1B; the consumer needs to
-   allow that outbound connection.
+   allow that outbound connection. **RESOLVED (2026-10-12):** a soft reboot
+   clears the clock as well. After any restart the first login needs one
+   check-in, which the library runs by itself (3–4 s in total); so does a
+   clock drifted by the ~8 % fast rate. The consumer must allow outbound
+   HTTPS to `api.encedo.com`.
 5. **Undocumented broker.** The mobile-approval broker API was
    reconstructed and can change server-side [C-SDK]. Containment: it is
    isolated behind the approval relay interface.

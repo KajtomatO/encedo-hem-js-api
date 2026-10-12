@@ -3,7 +3,7 @@ id: REQ-AUTH-008
 title: Re-authentication after a 401
 status: verified
 priority: must
-revision: 3
+revision: 4
 source: start_point G11; ref/api/hem-api-1.2.2.yaml
 depends_on: ["REQ-AUTH-004", "REQ-API-002"]
 supersedes: null
@@ -27,5 +27,9 @@ when the device reboots [YAML]. The client cannot see a reboot coming; the
 - [x] A second 401 raises `HemUnauthenticatedError`; there is no third
       attempt.
 - [x] Only the token of the affected scope is discarded.
-- [ ] (M1B) attended: after the device is rebooted, the next call succeeds
-      with no action by the caller.
+- [x] (M1B) attended: after the device is rebooted, the next call succeeds
+      with no action by the caller — 2026-10-12: soft reboot by the user
+      (C client `reboot`), device back after ~2 min; the next `keys.list` on
+      the same client succeeded in 3.1 s with exactly one new login (the
+      old token's 401, then one check-in because the reboot had cleared the
+      clock) (tests/attended/power-cycle.test.ts).

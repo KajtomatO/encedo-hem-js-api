@@ -3,7 +3,7 @@ id: REQ-NET-007
 title: One device request at a time
 status: verified
 priority: must
-revision: 4
+revision: 5
 source: ARCHITECTURE.md §7; start_point §6 Q5; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: []
 supersedes: null
@@ -28,5 +28,10 @@ calls easily (`Promise.all`), so the client queues them. Introduced in M1.
 - [x] Requests leave in the order the calls were made.
 - [x] A failed request does not block the ones behind it.
 - [x] Requests to the cloud relays are not part of this queue.
-- [ ] (M1B) whether the device handles two parallel requests is probed and
-      the finding recorded in ARCHITECTURE.md §11 (Q5).
+- [x] (M1B) whether the device handles two parallel requests is probed and
+      the finding recorded in ARCHITECTURE.md §11 (Q5) — 2026-10-12: two
+      status requests at once, 5 rounds: both answered in ~400 ms every
+      time; four at once, 2 rounds: two answered in ~400 ms, the other two
+      in ~1 450 ms (about one TCP connect retry later); two logged-in
+      clients listing at once, 3 rounds: all ok; no stall
+      (tests/attended/parallel.test.ts).
