@@ -4,12 +4,12 @@ TypeScript client for the REST API of the **Encedo HEM** hardware security
 module. One package runs in Node.js and in browsers. It needs no runtime
 dependencies and uses only `fetch` and Web Crypto.
 
-> **Status:** milestone M1, implemented and unit-tested, **not yet verified
-> against a device** and not yet published to npm. Device behaviour that the
-> library relies on comes from the API reference (`ref/api/hem-api-1.2.2.yaml`)
-> and from the device-verified C client,
-> https://github.com/KajtomatO/encedo-hem-c-api. This library confirms it on
-> hardware in milestone M1B.
+> **Status:** version 0.1.0 — milestone M1 implemented, unit-tested and
+> **verified against a development device** (firmware 1.2.2) in October 2026;
+> not yet published to npm. Device behaviour that the library relies on comes
+> from the API reference (`ref/api/hem-api-1.2.2.yaml`), from the
+> device-verified C client, https://github.com/KajtomatO/encedo-hem-c-api,
+> and from this library's own device runs. See `CHANGELOG.md`.
 
 ## Requirements
 
@@ -22,8 +22,12 @@ dependencies and uses only `fetch` and Web Crypto.
 
 ## Quick start
 
+```sh
+npm install @kajtomato/encedo-hem-sdk
+```
+
 ```ts
-import { HemClient } from 'encedo-hem-js-api';
+import { HemClient } from '@kajtomato/encedo-hem-sdk';
 
 const hem = new HemClient({ url: 'https://my.ence.do', passphrase: process.env.HEM_PASSPHRASE });
 
@@ -88,7 +92,7 @@ The package exports the API version it was written for, `HEM_API_VERSION`
 (`'1.2.2'`). The device reports its firmware through `system.version()`:
 
 ```ts
-import { HEM_API_VERSION } from 'encedo-hem-js-api';
+import { HEM_API_VERSION } from '@kajtomato/encedo-hem-sdk';
 
 const { fwv } = await hem.system.version(); // the firmware name from the signed image
 if (!fwv.includes(HEM_API_VERSION)) {
@@ -189,7 +193,7 @@ CA for device requests only.
 
 ```ts
 import { readFileSync } from 'node:fs';
-import { HemClient, createNodeFetch } from 'encedo-hem-js-api';
+import { HemClient, createNodeFetch } from '@kajtomato/encedo-hem-sdk';
 
 const hem = new HemClient({
   url: 'https://my.ence.do',

@@ -601,6 +601,10 @@ strict sequence (D8). Scope comes from [BRIEF] §3–§5.
   REQs: REQ-TEST-003…006, REQ-BUILD-006, REQ-KEY-007, and the `(M1B)`
   criteria of the M1A REQs.
   **Gate:** B gate (§8); findings for Q1–Q6 recorded in §11; version 0.1.0.
+  **Passed 2026-10-20** (STEP-M1B-140): integration suite green on the
+  device, attended checks performed, the expired-certificate case of
+  REQ-NET-006 and the master role of REQ-AUTH-010 carried to M3B; 0.1.0
+  cut as `@kajtomato/encedo-hem-sdk` (STEP-M1B-150).
 - **M2A — daily usage and audit logs: implementation and unit tests.**
   Key update, import, derive; every remaining crypto operation with all
   key modes; config read; audit-log key, listing and download;
@@ -710,6 +714,9 @@ strict sequence (D8). Scope comes from [BRIEF] §3–§5.
     the device's local address (§7).
 12. **Package name and publishing** are undecided. *Resolved by:* user
     decision before the 0.1.0 release.
+    **RESOLVED (2026-10-20):** the package is `@kajtomato/encedo-hem-sdk`
+    (user decision at STEP-M1B-150). Tagging and publishing stay with the
+    user; the library never pushes or publishes by itself.
 13. **Node 24 on the development machine.** RESOLVED (2026-10-05): Node.js
     v24.21.0 is installed (npm 11.19.0), and M1A was built and tested with it
     (TypeScript 7.0.2, Vitest 5.0.3, headless Chromium through Playwright

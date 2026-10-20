@@ -105,7 +105,8 @@ describe('published package', () => {
   beforeAll(() => {
     // A throwaway consumer project that resolves the package by name through node_modules.
     consumer = mkdtempSync(join(tmpdir(), 'hem-consumer-'));
-    mkdirSync(join(consumer, 'node_modules'));
+    // A scoped name lives one directory down (`node_modules/@scope/name`).
+    mkdirSync(dirname(join(consumer, 'node_modules', pkg['name'] as string)), { recursive: true });
     symlinkSync(root, join(consumer, 'node_modules', pkg['name'] as string), 'dir');
   });
 
