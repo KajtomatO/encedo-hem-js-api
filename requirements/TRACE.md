@@ -2,9 +2,9 @@
 
 # Traceability matrix
 
-Generated: 2026-10-20 (STEP-M1B-140 done; STEP-M1B-150 release next)
+Generated: 2026-10-20 (M1B complete; 0.1.0 cut, tag and publish left to the user)
 
-Scan inputs: 121 REQ files (`requirements/`), 46 step files (`workplan/{todo,doing,done}/`: 6 in `todo/`, 0 in `doing/`, 40 in `done/`). Code tags (`implements: REQ-`) scanned across `src/`; test tags (`verifies:`/`supports: REQ-`) scanned across `tests/`. Build/CI, test-infrastructure and README requirements are realised outside `src/` per REQUIREMENTS-MANAGEMENT.md §4.2, so `implements:` tags are also scanned in `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `vitest.integration.config.ts`, `tests/support`, `.github/workflows`, `README.md`. Locations present: `src/`, `tests/`, `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `vitest.integration.config.ts`, `tests/support`, `.github/workflows`, `README.md`. Unit suite: passed (`npm run check`) at generation.
+Scan inputs: 121 REQ files (`requirements/`), 46 step files (`workplan/{todo,doing,done}/`: 5 in `todo/`, 0 in `doing/`, 41 in `done/`). Code tags (`implements: REQ-`) scanned across `src/`; test tags (`verifies:`/`supports: REQ-`) scanned across `tests/`. Build/CI, test-infrastructure and README requirements are realised outside `src/` per REQUIREMENTS-MANAGEMENT.md §4.2, so `implements:` tags are also scanned in `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `vitest.integration.config.ts`, `tests/support`, `.github/workflows`, `README.md`. Locations present: `src/`, `tests/`, `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `vitest.integration.config.ts`, `tests/support`, `.github/workflows`, `README.md`. Unit suite: passed (`npm run check`) at generation.
 
 Steps column: step ID and its folder. A REQ listed in several steps becomes `implemented` only when all of them are in `done/` (§3.2). Tests column: `verifies:` locations; `supports …` entries are test support and never count as verification.
 
@@ -19,7 +19,7 @@ Steps column: step ID and its folder. A REQ listed in several steps becomes `imp
 | REQ-API-007 | Every public operation documents its scope and milestone | verified | must | §4 | STEP-M1A-220 (done), STEP-M1B-130 (done) | src/api/core.ts:23 | tests/unit/doc-check.test.ts:28, tests/unit/operation-docs.node.test.ts:26, tests/unit/operation-docs.node.test.ts:33, tests/unit/operation-docs.node.test.ts:39, supports tests/support/doc-check.ts:2 |
 | REQ-API-008 | Public API only grows between releases | verified | must | §4, §1 | STEP-M1A-230 (done), STEP-M1A-250 (done), STEP-M1B-130 (done) | src/index.ts:7 | tests/unit/surface.node.test.ts:24, tests/unit/surface.node.test.ts:39, tests/unit/surface.test.ts:30, tests/unit/surface.test.ts:46, tests/unit/surface.test.ts:54, supports tests/support/surface.ts:3 |
 | REQ-API-009 | Secrets never logged, stored or put into error messages | verified | must | §1, §5.2 | STEP-M1A-030 (done), STEP-M1A-120 (done), STEP-M1A-130 (done) | src/api/core.ts:170, src/auth/session.ts:176 | tests/unit/login.test.ts:197, tests/unit/session.test.ts:254, tests/unit/source-check.test.ts:33, tests/unit/source-check.test.ts:61, tests/unit/source-check.test.ts:89, tests/unit/source-check.test.ts:95, tests/unit/source-tree.node.test.ts:27, supports tests/support/source-check.ts:3 |
-| REQ-API-010 | Targeted API version exported | verified | must | §1, §4 | STEP-M1A-010 (done), STEP-M1A-220 (done) | src/index.ts:18, README.md:85 | tests/unit/index.test.ts:5, tests/unit/package.node.test.ts:116, tests/unit/readme.node.test.ts:27 |
+| REQ-API-010 | Targeted API version exported | verified | must | §1, §4 | STEP-M1A-010 (done), STEP-M1A-220 (done) | src/index.ts:18, README.md:89 | tests/unit/index.test.ts:5, tests/unit/package.node.test.ts:117, tests/unit/readme.node.test.ts:27 |
 | REQ-API-011 | Clear error for operations the hardware does not provide | approved | must | §6, §2 | STEP-M2A-000 (todo) | — | — |
 | REQ-API-012 | Destructive actions reachable only through dedicated calls | approved | must | §4 | STEP-M3A-000 (todo) | — | — |
 | REQ-API-013 | Dropped connection after a restart request is not an error | approved | must | §6 | STEP-M3A-000 (todo) | — | — |
@@ -51,12 +51,12 @@ Steps column: step ID and its folder. A REQ listed in several steps becomes `imp
 | REQ-AUTH-025 | Proof that the device holds its identity key | approved | must | §5.3, §6 | STEP-M3A-000 (todo) | — | — |
 | REQ-AUTH-026 | Pairing through a replaceable relay | approved | must | §5.3, §6 | STEP-M3A-000 (todo) | — | — |
 | REQ-AUTH-027 | Explicit login reporting the session | verified | should | §5.2, §4 | STEP-M1B-130 (done) | src/api/auth-api.ts:200, src/auth/session.ts:143 | tests/integration/login-session.test.ts:59, tests/unit/auth-login.test.ts:14, tests/unit/auth-login.test.ts:24, tests/unit/auth-login.test.ts:35, tests/unit/auth-login.test.ts:41, tests/unit/auth-login.test.ts:47, tests/unit/mobile-login.test.ts:73 |
-| REQ-BUILD-001 | TypeScript source published as ESM with type declarations | verified | must | §1, §9 | STEP-M1A-010 (done) | package.json:41, tsconfig.json:3, tsconfig.base.json:2, tsconfig.build.json:3 | tests/unit/package.node.test.ts:57, tests/unit/package.node.test.ts:72, tests/unit/package.node.test.ts:116, tests/unit/package.node.test.ts:127 |
+| REQ-BUILD-001 | TypeScript source published as ESM with type declarations | verified | must | §1, §9 | STEP-M1A-010 (done) | package.json:41, tsconfig.json:3, tsconfig.base.json:2, tsconfig.build.json:3 | tests/unit/package.node.test.ts:57, tests/unit/package.node.test.ts:72, tests/unit/package.node.test.ts:117, tests/unit/package.node.test.ts:128 |
 | REQ-BUILD-002 | No runtime dependencies | verified | must | §1 | STEP-M1A-010 (done) | package.json:41 | tests/unit/package.node.test.ts:38, tests/unit/package.node.test.ts:47, tests/unit/package.node.test.ts:87 |
 | REQ-BUILD-003 | Only APIs present in both Node.js and browsers | verified | must | §1, §3 | STEP-M1A-030 (done), STEP-M1B-035 (done) | tsconfig.build.json:4 | tests/unit/node-transport.test.ts:19, tests/unit/package.node.test.ts:87, tests/unit/source-check.test.ts:9, tests/unit/source-check.test.ts:61, tests/unit/source-check.test.ts:89, tests/unit/source-check.test.ts:95, tests/unit/source-tree.node.test.ts:21, tests/unit/source-tree.node.test.ts:27, tests/unit/source-tree.node.test.ts:33, supports tests/support/source-check.ts:3 |
 | REQ-BUILD-004 | Node.js 24 as the minimum version | verified | must | §1 | STEP-M1A-010 (done), STEP-M1A-030 (done), STEP-M1A-220 (done) | package.json:41, .github/workflows/ci.yml:2, README.md:16 | tests/unit/ci.node.test.ts:30, tests/unit/package.node.test.ts:65, tests/unit/readme.node.test.ts:19 |
 | REQ-BUILD-005 | Continuous integration for build and unit tests | verified | must | §8, §9 | STEP-M1A-030 (done) | .github/workflows/ci.yml:2 | tests/unit/ci.node.test.ts:15, tests/unit/ci.node.test.ts:24, tests/unit/ci.node.test.ts:35 |
-| REQ-BUILD-006 | A versioned release at the end of each milestone | approved | must | §4, §10 | STEP-M1B-150 (todo) | — | — |
+| REQ-BUILD-006 | A versioned release at the end of each milestone | verified | must | §4, §10 | STEP-M1B-150 (done) | package.json:41 | tests/unit/pack-install.node.test.ts:20 |
 | REQ-KEY-001 | Generate a key on the device | verified | must | §6 | STEP-M1A-160 (done), STEP-M1B-060 (done) | src/api/keymgmt.ts:318 | tests/integration/keys.test.ts:66, tests/unit/keys-create-get.test.ts:19, tests/unit/keys-create-get.test.ts:34, tests/unit/keys-create-get.test.ts:47, tests/unit/keys-create-get.test.ts:54 |
 | REQ-KEY-002 | Read one key | verified | must | §6 | STEP-M1A-160 (done), STEP-M1B-060 (done) | src/api/keymgmt.ts:336 | tests/integration/keys.test.ts:81, tests/unit/keys-create-get.test.ts:86, tests/unit/keys-create-get.test.ts:100, tests/unit/keys-create-get.test.ts:115 |
 | REQ-KEY-003 | Find keys by description | verified | must | §6, §11 | STEP-M1A-170 (done), STEP-M1B-060 (done) | src/api/keymgmt.ts:389, src/api/keymgmt.ts:412 | tests/integration/keys.test.ts:91, tests/integration/keys.test.ts:111, tests/unit/keys-list-search.test.ts:115, tests/unit/keys-list-search.test.ts:129, tests/unit/keys-list-search.test.ts:144, tests/unit/keys-list-search.test.ts:159, tests/unit/keys-list-search.test.ts:166, tests/unit/keys-list-search.test.ts:182 |
@@ -76,8 +76,8 @@ Steps column: step ID and its folder. A REQ listed in several steps becomes `imp
 | REQ-NET-008 | Optional minimum interval between requests | verified | should | §7 | STEP-M1A-090 (done), STEP-M1A-140 (done), STEP-M1A-240 (done), STEP-M1B-100 (done) | src/transport/transport.ts:345 | tests/unit/reauth.test.ts:89, tests/unit/transport-queue.test.ts:144, tests/unit/transport-queue.test.ts:160, tests/unit/transport-queue.test.ts:179, tests/unit/transport-queue.test.ts:212, tests/unit/transport-queue.test.ts:217 |
 | REQ-NET-009 | Only headers the device's CORS policy allows | verified | must | §7 | STEP-M1A-070 (done), STEP-M1A-230 (done), STEP-M1B-120 (done) | src/transport/transport.ts:206 | tests/attended/browser.test.ts:20, tests/unit/conformance.test.ts:171, tests/unit/node-transport.node.test.ts:87, tests/unit/transport.test.ts:148, tests/unit/transport.test.ts:155, tests/unit/transport.test.ts:168 |
 | REQ-NET-010 | Redirects not followed | verified | should | §7 | STEP-M1A-070 (done) | src/transport/transport.ts:217 | tests/unit/node-transport.node.test.ts:140, tests/unit/transport.test.ts:185, tests/unit/transport.test.ts:192, tests/unit/transport.test.ts:201 |
-| REQ-NET-011 | Browser use and the device's origin allow-list documented | verified | must | §7, §11 | STEP-M1A-220 (done), STEP-M1B-120 (done) | README.md:132 | tests/attended/browser.test.ts:20, tests/unit/readme.node.test.ts:36 |
-| REQ-NET-012 | Custom TLS trust through the caller's fetch documented | verified | must | §7, §11 | STEP-M1A-220 (done), STEP-M1B-030 (done), STEP-M1B-035 (done) | README.md:168 | tests/integration/reach.test.ts:74, tests/integration/reach.test.ts:84, tests/unit/readme.node.test.ts:49 |
+| REQ-NET-011 | Browser use and the device's origin allow-list documented | verified | must | §7, §11 | STEP-M1A-220 (done), STEP-M1B-120 (done) | README.md:136 | tests/attended/browser.test.ts:20, tests/unit/readme.node.test.ts:36 |
+| REQ-NET-012 | Custom TLS trust through the caller's fetch documented | verified | must | §7, §11 | STEP-M1A-220 (done), STEP-M1B-030 (done), STEP-M1B-035 (done) | README.md:172 | tests/integration/reach.test.ts:74, tests/integration/reach.test.ts:84, tests/unit/readme.node.test.ts:49 |
 | REQ-NET-013 | Node.js transport that spells header names as the device requires | verified | must | §7, §1 | STEP-M1B-035 (done) | src/transport/node-https.ts:43, src/transport/node-https.ts:126 | tests/unit/node-transport.node.test.ts:87, tests/unit/node-transport.node.test.ts:101, tests/unit/node-transport.node.test.ts:122, tests/unit/node-transport.node.test.ts:127, tests/unit/node-transport.node.test.ts:132, tests/unit/node-transport.node.test.ts:140, tests/unit/node-transport.node.test.ts:148, tests/unit/node-transport.node.test.ts:155, tests/unit/node-transport.node.test.ts:167, tests/unit/node-transport.node.test.ts:174, tests/unit/node-transport.node.test.ts:180, tests/unit/node-transport.node.test.ts:188, tests/unit/node-transport.node.test.ts:198, tests/unit/node-transport.test.ts:9 |
 | REQ-OPS-001 | HMAC with a stored key | verified | must | §6 | STEP-M1A-180 (done), STEP-M1B-070 (done) | src/api/crypto.ts:136 | tests/integration/crypto.test.ts:59, tests/unit/crypto.test.ts:21, tests/unit/crypto.test.ts:31, tests/unit/crypto.test.ts:40, tests/unit/crypto.test.ts:47 |
 | REQ-OPS-002 | AES key wrap | verified | must | §6 | STEP-M1A-180 (done), STEP-M1B-070 (done) | src/api/crypto.ts:144 | tests/integration/crypto.test.ts:73, tests/unit/crypto.test.ts:55, tests/unit/crypto.test.ts:65, tests/unit/crypto.test.ts:72, tests/unit/crypto.test.ts:89 |
@@ -134,16 +134,16 @@ Steps column: step ID and its folder. A REQ listed in several steps becomes `imp
 
 ## Coverage report
 
-- Totals: 121 REQs (50 approved, 71 verified), 46 steps (6 todo, 0 doing, 40 done; 1 cancelled).
+- Totals: 121 REQs (49 approved, 72 verified), 46 steps (5 todo, 0 doing, 41 done; 1 cancelled).
 - By area: API 14, AUTH 27, BUILD 6, KEY 9, NET 13, OPS 15, SYS 31, TEST 6.
 - Steps by milestone: M1A 25, M1B 17, M2A 1, M2B 1, M3A 1, M3B 1.
 - REQs with no step: none.
 - REQs listed in more than one step: 57 (criteria that close in a later step; see the Notes of the steps).
-- Approved REQs with no code tag (unimplemented): 50.
+- Approved REQs with no code tag (unimplemented): 49.
 - Approved REQs with code tags whose steps are not all in `done/` (in progress): none.
 - Implemented REQs with no passing tagged test (unverified): none.
 - Orphan tags: none.
 - Steps in `done/` with empty evidence: none.
 - Broken architecture anchors: none.
 - REQs in `needs-reverify`: none.
-- Status transitions applied in this run: none.
+- Status transitions applied in this run: REQ-BUILD-006: approved → verified.
