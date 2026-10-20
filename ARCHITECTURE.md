@@ -362,7 +362,8 @@ Recorded behaviour that callers must know [C-SDK]:
 - The broker rejects a request whose `iat` is ahead of its own clock, so
   device clock drift breaks mobile approval within minutes; the remedy is
   one check-in and a fresh request. Seen three times in one attended
-  session on 2026-10-20; each recovery succeeded.
+  session on 2026-10-20; each recovery succeeded, and the refused
+  request is not visible on the phone.
 - Tokens approved by the real Encedo app lived 15 minutes when [C-SDK]
   looked; on 2026-10-20 the device gave them 1 hour. A `keymgmt:use:<kid>`
   scope means one push notification per key.

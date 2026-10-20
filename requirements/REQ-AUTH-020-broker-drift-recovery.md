@@ -32,12 +32,13 @@ approval break minutes after a clock sync. Introduced in M1.
 - [x] A 401 without drift evidence is reported as an error with zero
       check-in requests.
 - [x] This happens at most once per approval attempt.
-- [ ] (M1B) attended: whether the drift rejection occurs on the test device,
+- [x] (M1B) attended: whether the drift rejection occurs on the test device,
       and whether the recovery clears it, is recorded — 2026-10-20 [device]:
       it occurs within minutes of every check-in (the clock runs about 8 %
       fast; 17 s ahead was measured 4 minutes after a check-in); three
       recoveries ran in one session (one check-in each) and every retried
-      request was accepted, so the operations completed. Still to record
-      (attended test `broker-drift`): the broker's exact answer to a drifted
-      request, and whether a refused submit still produces a push (the
-      person saw two notifications for one recovered request).
+      request was accepted, so the operations completed. A submit the broker
+      refuses shows nothing on the phone (user, 2026-10-20); the broker's
+      answer is 401 `{"err":"Cannot handle token prior to (iat …)"}` [C-SDK].
+      The attended test `broker-drift` can record the answer directly; it has
+      not been run to completion yet.

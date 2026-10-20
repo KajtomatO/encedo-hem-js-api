@@ -36,5 +36,5 @@ the rest of the API works unchanged. Introduced in M1.
       a third call on the first key reused its token with no new request.
       The client sent 4 authorization requests for the two keys: one
       approval per key plus one resubmit per key after the broker refused
-      the first request for clock drift (REQ-AUTH-020). The person at the
-      phone saw two notifications for the first key.
+      the first request for clock drift (REQ-AUTH-020); the refused
+      requests are not visible on the phone.

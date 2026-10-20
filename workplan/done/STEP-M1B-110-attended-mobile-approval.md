@@ -7,9 +7,9 @@ traces:
   architecture: ["ARCHITECTURE.md#53-mobile-approval", "ARCHITECTURE.md#11-risks--open-questions"]
 depends_on: ["STEP-M1B-070"]
 evidence:
-  commits: []
-  tests: []
-  notes: null
+  commits: ["ea3f0c8", "76fb19a", "bf375c1", "b111008"]
+  tests: ["tests/attended/mobile-approval.test.ts", "tests/attended/broker-drift.test.ts"]
+  notes: "Attended session 2026-10-20 (log tmp/attended-110d.out, not tracked): five pushes, each sent only after the person said go. Approved in 9 s, rejected in 5 s, ignored to a 61 s timeout; two HMACs in mobile mode. Token lifetime 1 h (C SDK saw 15 min); role kind app; the app shows unknown scopes with no reject (quirk 20); broker drift recovery fired three times and worked, refused submits are not visible on the phone. broker-drift.test.ts records the broker's answer directly and has not been run to completion."
 reopened: []
 cancelled: null
 ---
@@ -41,13 +41,13 @@ mode completes an HMAC. Re-verifies Q2 (§11) with this library.
      it (REQ-AUTH-020). Opportunistic — "not observed" is a valid finding.
 
 **Definition of done**
-- [ ] Authorization request returned for `keymgmt:list` (REQ-AUTH-014).
-- [ ] Real broker: session, push, pending then final (REQ-AUTH-017).
-- [ ] Approved token accepted; lifetime recorded (REQ-AUTH-015).
-- [ ] Approve, reject and ignore produce the three outcomes (REQ-AUTH-018).
-- [ ] HMAC completes in mobile-login mode; pushes for two keys counted
+- [x] Authorization request returned for `keymgmt:list` (REQ-AUTH-014).
+- [x] Real broker: session, push, pending then final (REQ-AUTH-017).
+- [x] Approved token accepted; lifetime recorded (REQ-AUTH-015).
+- [x] Approve, reject and ignore produce the three outcomes (REQ-AUTH-018).
+- [x] HMAC completes in mobile-login mode; pushes for two keys counted
       (REQ-AUTH-019).
-- [ ] Drift rejection and recovery observed or recorded as not observed
+- [x] Drift rejection and recovery observed or recorded as not observed
       (REQ-AUTH-020).
-- [ ] The attended test prints each action, skips without the opt-in, and
+- [x] The attended test prints each action, skips without the opt-in, and
       is tagged `verifies:`; findings next to the boxes.
