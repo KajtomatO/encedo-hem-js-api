@@ -21,6 +21,19 @@ export const RENEWAL_MARGIN_SECONDS = 60;
  */
 export type Role = { readonly kind: 'user' } | { readonly kind: 'master' } | { readonly kind: 'app'; readonly id: string };
 
+/**
+ * A session for one scope as reported to the caller: the scope, the role the
+ * device granted and the expiry — never the token itself.
+ */
+export interface SessionInfo {
+  /** The scope the token was obtained for. */
+  readonly scope: string;
+  /** The role from the token's `sub` claim; `undefined` when the token carries none. */
+  readonly role: Role | undefined;
+  /** Expiry in Unix seconds: the token's `exp` claim, else the expiry that was requested. */
+  readonly expiresAt: number;
+}
+
 /** Something that can obtain a token for a scope: passphrase login or mobile approval. */
 export interface TokenSource {
   acquire(scope: string, options: CallOptions): Promise<IssuedToken>;
@@ -45,6 +58,11 @@ function decodeClaims(token: string): Record<string, unknown> | undefined {
   } catch {
     return undefined;
   }
+}
+
+/** The caller-facing description of a cached token. */
+function describe(scope: string, entry: CachedToken): SessionInfo {
+  return { scope, role: entry.sub === undefined ? undefined : roleOf(entry.sub), expiresAt: entry.exp };
 }
 
 /** Map a `sub` claim to a role. */
@@ -119,6 +137,15 @@ export class Session implements TokenProvider {
   }
 
   /**
+   * A usable token for `scope` — the cached one, else a fresh login — described
+   * without the token.
+   */
+  // implements: REQ-AUTH-027
+  async login(scope: string, options: CallOptions = {}): Promise<SessionInfo> {
+    return describe(scope, await this.#token(scope, options));
+  }
+
+  /**
    * Run `send` with a token for `scope`. After a 401, the token of that scope
    * is discarded, a new one obtained, and `send` repeated exactly once.
    */
@@ -190,8 +217,8 @@ export class Session implements TokenProvider {
    * Cache a token obtained outside the session's own acquisition (a redeemed
    * mobile approval) under the scope it was requested for.
    */
-  store(scope: string, issued: IssuedToken): void {
-    this.#remember(scope, issued);
+  store(scope: string, issued: IssuedToken): SessionInfo {
+    return describe(scope, this.#remember(scope, issued));
   }
 
   #remember(scope: string, issued: IssuedToken): CachedToken {

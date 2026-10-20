@@ -63,7 +63,7 @@ const samples: Record<string, Sample> = {
     run: (c) => c.auth.redeemApproval({ authreply: 'reply', scope: 'keymgmt:list' }),
     path: '/api/auth/ext/token',
     body: { authreply: 'reply' },
-    result: APP_TOKEN,
+    result: { scope: 'keymgmt:list', role: { kind: 'app', id: 'YXBw' }, expiresAt: v.iat + 900 },
   },
   'system.status /api/system/status': {
     run: (c) => c.system.status(),

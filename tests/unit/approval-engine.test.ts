@@ -91,8 +91,8 @@ describe('outcomes', () => {
     const fake = device();
     const relay = new MemoryRelay([{ status: 'pending' }, { status: 'approved', authreply: 'reply.jws' }]);
     const client = newClient(fake, relay);
-    const token = await client.auth.approve('keymgmt:list', {}, { intervalMs: 1 });
-    expect(token).toBe(TOKEN);
+    const session = await client.auth.approve('keymgmt:list', {}, { intervalMs: 1 });
+    expect(session).toEqual({ scope: 'keymgmt:list', role: { kind: 'app', id: 'YXBw' }, expiresAt: NOW_S + 900 });
     expect(fake.requestsTo('POST', '/api/auth/ext/token')[0]?.json()).toEqual({ authreply: 'reply.jws' });
     await invoke(contextOf(client), op, {});
     expect(fake.last.headers['authorization']).toBe(`Bearer ${TOKEN}`);
@@ -119,7 +119,7 @@ describe('outcomes', () => {
     const client = newClient(fake, relay);
     const pending = await client.auth.beginApproval('keymgmt:list');
     expect(await client.auth.pollApproval(pending)).toEqual({ status: 'pending' });
-    expect(await client.auth.pollApproval(pending)).toEqual({ status: 'approved', token: TOKEN });
+    expect(await client.auth.pollApproval(pending)).toEqual({ status: 'approved', session: { scope: 'keymgmt:list', role: { kind: 'app', id: 'YXBw' }, expiresAt: NOW_S + 900 } });
     await invoke(contextOf(client), op, {});
     expect(fake.last.headers['authorization']).toBe(`Bearer ${TOKEN}`);
   });
@@ -150,7 +150,7 @@ describe('wait timing', () => {
     const relay = new MemoryRelay([{ status: 'approved', authreply: 'r' }]);
     const client = newClient(device(), relay);
     const pending = await client.auth.beginApproval('keymgmt:list');
-    await expect(client.auth.waitForApproval(pending, { timeoutMs: 1, intervalMs: 1 })).resolves.toBe(TOKEN);
+    await expect(client.auth.waitForApproval(pending, { timeoutMs: 1, intervalMs: 1 })).resolves.toMatchObject({ scope: 'keymgmt:list', expiresAt: NOW_S + 900 });
     expect(relay.log.filter((entry) => entry.startsWith('check'))).toHaveLength(1);
   });
 
@@ -164,7 +164,7 @@ describe('wait timing', () => {
     ]);
     const client = newClient(device(), relay);
     const pending = await client.auth.beginApproval('keymgmt:list');
-    await expect(client.auth.waitForApproval(pending, { intervalMs: 1 })).resolves.toBe(TOKEN);
+    await expect(client.auth.waitForApproval(pending, { intervalMs: 1 })).resolves.toMatchObject({ scope: 'keymgmt:list', expiresAt: NOW_S + 900 });
   });
 
   it('ends the wait on a relay error that is not transient', async () => {
@@ -199,7 +199,7 @@ describe('without a relay', () => {
     await expect(client.auth.pollApproval({ scope: 'keymgmt:list', handle: 'h' })).rejects.toThrow(HemUnsupportedError);
     expect(fake.requests).toHaveLength(0);
     await expect(client.auth.requestApproval({ epk: EPK, scope: 'keymgmt:list' })).resolves.toMatchObject({ epk: EPK });
-    await expect(client.auth.redeemApproval({ authreply: 'r', scope: 'keymgmt:list' })).resolves.toBe(TOKEN);
+    await expect(client.auth.redeemApproval({ authreply: 'r', scope: 'keymgmt:list' })).resolves.toMatchObject({ scope: 'keymgmt:list', expiresAt: NOW_S + 900 });
   });
 });
 
@@ -268,7 +268,7 @@ describe('wait options', () => {
   it('accepts the largest delay setTimeout honours for both', async () => {
     const client = newClient(device(), new MemoryRelay([{ status: 'approved', authreply: 'r' }]));
     const pending = await client.auth.beginApproval('keymgmt:list');
-    await expect(client.auth.waitForApproval(pending, { timeoutMs: 2_147_483_647, intervalMs: 2_147_483_647 })).resolves.toBe(TOKEN);
+    await expect(client.auth.waitForApproval(pending, { timeoutMs: 2_147_483_647, intervalMs: 2_147_483_647 })).resolves.toMatchObject({ scope: 'keymgmt:list', expiresAt: NOW_S + 900 });
   });
 });
 

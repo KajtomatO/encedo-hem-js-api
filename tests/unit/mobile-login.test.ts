@@ -70,6 +70,16 @@ describe('mobile login mode', () => {
     expect(client.auth.role).toEqual({ kind: 'app', id: 'YXBwLWlk' });
   });
 
+  // verifies: REQ-AUTH-027, REQ-AUTH-019
+  it('auth.login obtains the scope through one approval and reports the session', async () => {
+    const fake = device();
+    const relay = new ApprovingRelay();
+    const session = await mobileClient(fake, relay).auth.login('keymgmt:list');
+
+    expect(relay.scopes).toEqual(['keymgmt:list']);
+    expect(session).toEqual({ scope: 'keymgmt:list', role: { kind: 'app', id: 'YXBwLWlk' }, expiresAt: NOW_S + 900 });
+  });
+
   // verifies: REQ-AUTH-019
   it('causes no new approval while the token is valid, and one per distinct scope', async () => {
     const fake = device();
@@ -126,7 +136,7 @@ describe('mobile login mode', () => {
     await expect(client.crypto.hmac({ kid: KID_A, msg: Uint8Array.from([1]) })).rejects.toThrow(HemUnsupportedError);
     expect(fake.requests).toHaveLength(0);
     await expect(client.auth.requestApproval({ epk: EPK, scope: 'keymgmt:list' })).resolves.toMatchObject({ epk: EPK });
-    await expect(client.auth.redeemApproval({ authreply: 'reply-for:keymgmt:list', scope: 'keymgmt:list' })).resolves.toMatch(/\./);
+    await expect(client.auth.redeemApproval({ authreply: 'reply-for:keymgmt:list', scope: 'keymgmt:list' })).resolves.toMatchObject({ scope: 'keymgmt:list' });
   });
 
   it('accepts true for the default settings', () => {

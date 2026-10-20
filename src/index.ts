@@ -45,7 +45,7 @@ export { HemClient } from './client.js';
 export type { ApprovalRequest, ApprovalRequestParams, AuthApi, RedeemApprovalParams } from './api/auth-api.js';
 export { EncedoApprovalRelay, ENCEDO_NOTIFY_URL } from './relay/approval.js';
 export type { ApprovalCheck, ApprovalRelay, ApprovalSubmission, EncedoApprovalRelayOptions } from './relay/approval.js';
-export type { Role } from './auth/session.js';
+export type { Role, SessionInfo } from './auth/session.js';
 export type { Clock } from './auth/login.js';
 export type { ApprovalDetails, ApprovalPoll, PendingApproval, WaitOptions } from './auth/approval.js';
 export type { HemClientOptions, MobileApprovalOptions } from './client.js';

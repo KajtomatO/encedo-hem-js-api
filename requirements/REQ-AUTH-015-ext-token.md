@@ -21,7 +21,7 @@ a mobile app's reply for a bearer token.
 first it needs no token [YAML]. Introduced in M1.
 
 **Acceptance criteria:**
-- [ ] The body is `{authreply}`; no `Authorization` header is sent; the
+- [x] The body is `{authreply}`; no `Authorization` header is sent; the
       token is cached under the requested scope, and the call resolves with
       `{ scope, role, expiresAt }` — the token itself is never returned
       (reworded 2026-10-12, STEP-M1B-130; was "the result is the token").

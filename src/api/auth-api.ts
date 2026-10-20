@@ -8,7 +8,7 @@ import { ApprovalEngine, type ApprovalDetails, type PendingApproval, type WaitOp
 import type { Clock } from '../auth/login.js';
 import type { ClockRecovery } from '../auth/recovery.js';
 import type { ApprovalRelay } from '../relay/approval.js';
-import type { Role, Session } from '../auth/session.js';
+import type { Role, Session, SessionInfo } from '../auth/session.js';
 import { base64ToBytes } from '../codec/base64.js';
 import { HemForbiddenError, HemValidationError } from '../errors.js';
 import type { CallOptions } from '../transport/transport.js';
@@ -66,6 +66,20 @@ export interface AuthApi {
   readonly role: Role | undefined;
 
   /**
+   * Log in for `scope` now, or reuse its valid cached token, and report the
+   * session: the scope, the role the device granted and the expiry — never
+   * the token. Logins otherwise happen at the first operation that needs
+   * them; this call lets a server confirm its credentials before it serves
+   * traffic. In mobile login mode the token is obtained through approval.
+   * Failures are those of the login itself: `HemUnauthenticatedError` for a
+   * wrong passphrase, `HemUnsupportedError` for a client without
+   * credentials.
+   *
+   * @remarks Token scope: none (obtains the token for `scope`). Introduced in M1.
+   */
+  login(scope: string, options?: CallOptions): Promise<SessionInfo>;
+
+  /**
    * Discard the credential and every cached token. Afterwards every
    * authenticated call raises `HemUnauthenticatedError` without contacting
    * the device; public calls keep working. Create a new client to log in
@@ -91,7 +105,8 @@ export interface AuthApi {
    * Mobile approval, device step 2: redeem a paired app's reply for a bearer
    * token. The token is cached under `scope` — the scope that was
    * requested — with the expiry from its `exp` claim, and is used by every
-   * later call needing that scope. A 401 (reply invalid, expired or reused)
+   * later call needing that scope; the result describes the session (scope,
+   * role, expiry) and never holds the token. A 401 (reply invalid, expired or reused)
    * raises `HemUnauthenticatedError`; it is final, this call is never
    * retried through a login. A 406 (unknown pairing or undecryptable scope)
    * raises `HemOperationFailedError`.
@@ -100,7 +115,7 @@ export interface AuthApi {
    *
    * @remarks Token scope: none. Introduced in M1.
    */
-  redeemApproval(params: RedeemApprovalParams, options?: CallOptions): Promise<string>;
+  redeemApproval(params: RedeemApprovalParams, options?: CallOptions): Promise<SessionInfo>;
 
   /**
    * Start a mobile approval of `scope`: obtain the relay's key, ask the
@@ -118,31 +133,33 @@ export interface AuthApi {
   /**
    * Check once for the outcome of an approval. Approved: the reply is
    * redeemed (`ext/token`), the token cached under the requested scope and
-   * returned. Rejected raises `HemApprovalRejectedError` (nothing is
+   * the session (scope, role, expiry) returned — never the token. Rejected
+   * raises `HemApprovalRejectedError` (nothing is
    * redeemed); expired raises `HemApprovalTimeoutError`.
    *
    * @remarks Token scope: none. Introduced in M1.
    */
-  pollApproval(pending: PendingApproval, options?: CallOptions): Promise<{ status: 'pending' } | { status: 'approved'; token: string }>;
+  pollApproval(pending: PendingApproval, options?: CallOptions): Promise<{ status: 'pending' } | { status: 'approved'; session: SessionInfo }>;
 
   /**
    * Wait for the outcome of an approval: poll every 5 seconds (`intervalMs`)
    * for up to 60 seconds (`timeoutMs`), at least once. Approved: the token
-   * is cached under the requested scope and returned. Rejected raises
+   * is cached under the requested scope and the session (scope, role,
+   * expiry) returned — never the token. Rejected raises
    * `HemApprovalRejectedError`; no answer in time, or an expired request,
    * raises `HemApprovalTimeoutError`. A network failure of one poll does not
    * end the wait; the signal does.
    *
    * @remarks Token scope: none. Introduced in M1.
    */
-  waitForApproval(pending: PendingApproval, options?: WaitOptions): Promise<string>;
+  waitForApproval(pending: PendingApproval, options?: WaitOptions): Promise<SessionInfo>;
 
   /**
    * {@link AuthApi.beginApproval} followed by {@link AuthApi.waitForApproval}.
    *
    * @remarks Token scope: none. Introduced in M1.
    */
-  approve(scope: string, details?: ApprovalDetails, options?: WaitOptions): Promise<string>;
+  approve(scope: string, details?: ApprovalDetails, options?: WaitOptions): Promise<SessionInfo>;
 }
 
 /** @internal Implementation of {@link AuthApi}. */
@@ -180,6 +197,11 @@ export class AuthApiImpl implements AuthApi {
     return this.#session.role;
   }
 
+  // implements: REQ-AUTH-027
+  login(scope: string, options?: CallOptions): Promise<SessionInfo> {
+    return this.#session.login(checkLength(scope, 'scope', 1, 1023), options);
+  }
+
   logout(): void {
     this.#session.logout();
   }
@@ -208,13 +230,12 @@ export class AuthApiImpl implements AuthApi {
   }
 
   // implements: REQ-AUTH-015
-  async redeemApproval(params: RedeemApprovalParams, options?: CallOptions): Promise<string> {
+  async redeemApproval(params: RedeemApprovalParams, options?: CallOptions): Promise<SessionInfo> {
     const authreply = checkLength(params?.authreply, 'authreply', 1, Number.MAX_SAFE_INTEGER);
     const scope = checkLength(params.scope, 'scope', 1, 1023);
     const token = await redeemReply(this.#context, authreply, options);
     // Without an exp claim the token is kept until the device rejects it (the 401 retry handles that).
-    this.#session.store(scope, { token, requestedExp: Number.POSITIVE_INFINITY });
-    return token;
+    return this.#session.store(scope, { token, requestedExp: Number.POSITIVE_INFINITY });
   }
 
   // implements: REQ-AUTH-018
@@ -222,20 +243,19 @@ export class AuthApiImpl implements AuthApi {
     return this.engine.begin(scope, details, options);
   }
 
-  async pollApproval(pending: PendingApproval, options?: CallOptions): Promise<{ status: 'pending' } | { status: 'approved'; token: string }> {
+  async pollApproval(pending: PendingApproval, options?: CallOptions): Promise<{ status: 'pending' } | { status: 'approved'; session: SessionInfo }> {
     const result = await this.engine.poll(pending, options);
-    if (result.status === 'approved') this.#session.store(pending.scope, { token: result.token, requestedExp: Number.POSITIVE_INFINITY });
-    return result;
+    if (result.status !== 'approved') return result;
+    return { status: 'approved', session: this.#session.store(pending.scope, { token: result.token, requestedExp: Number.POSITIVE_INFINITY }) };
   }
 
   // implements: REQ-AUTH-018
-  async waitForApproval(pending: PendingApproval, options?: WaitOptions): Promise<string> {
+  async waitForApproval(pending: PendingApproval, options?: WaitOptions): Promise<SessionInfo> {
     const token = await this.engine.wait(pending, options);
-    this.#session.store(pending.scope, { token, requestedExp: Number.POSITIVE_INFINITY });
-    return token;
+    return this.#session.store(pending.scope, { token, requestedExp: Number.POSITIVE_INFINITY });
   }
 
-  async approve(scope: string, details?: ApprovalDetails, options?: WaitOptions): Promise<string> {
+  async approve(scope: string, details?: ApprovalDetails, options?: WaitOptions): Promise<SessionInfo> {
     const pending = await this.beginApproval(scope, details, { signal: options?.signal });
     return this.waitForApproval(pending, options);
   }

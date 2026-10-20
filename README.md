@@ -59,8 +59,11 @@ reboots). Crypto operations and `keys.get` need the per-key scope
 discards the token of the key it removes. The documentation of
 every operation states its scope and the milestone that introduced it.
 
-`client.auth.role` reports whether the device granted the user, master or app
-role. `client.auth.logout()` discards the credential and every token.
+`client.auth.login(scope)` logs in now (or reuses the cached token) and
+reports `{ scope, role, expiresAt }`, never the token: a server can confirm
+its credentials before it serves traffic. `client.auth.role` reports whether
+the device granted the user, master or app role. `client.auth.logout()`
+discards the credential and every token.
 
 ### Errors
 
@@ -120,7 +123,8 @@ A paired Encedo mobile app can approve access instead of a passphrase:
 from the phone through the Encedo notification broker
 (`https://api.encedo.com/notify`). The broker learns your IP address. The
 lower-level steps are `client.auth.beginApproval`, `pollApproval`,
-`waitForApproval`, `requestApproval` and `redeemApproval`.
+`waitForApproval`, `requestApproval` and `redeemApproval`; an approved
+request yields `{ scope, role, expiresAt }`, never the token.
 `approvalRelay` replaces the broker.
 
 ## Using the library in a browser

@@ -56,6 +56,21 @@ describeDevice('passphrase login and session', () => {
     expect(Math.abs(driftAfter)).toBeLessThan(60);
   });
 
+  // verifies: REQ-AUTH-027
+  it('auth.login reports the user role and an expiry about 8 hours ahead, and a second call makes no request', async () => {
+    const recorder = new Recorder();
+    const client = deviceClient({ fetch: recorder.fetch });
+    const session = await client.auth.login('keymgmt:list');
+    const again = await client.auth.login('keymgmt:list');
+    log('auth.login', { ...session, expiresInS: session.expiresAt - nowSeconds() });
+    expect(session.scope).toBe('keymgmt:list');
+    expect(session.role).toEqual({ kind: 'user' });
+    expect(session.expiresAt - nowSeconds()).toBeGreaterThan(7.5 * 3600);
+    expect(session.expiresAt - nowSeconds()).toBeLessThan(8.5 * 3600);
+    expect(again).toEqual(session);
+    expect(recorder.logins).toHaveLength(1);
+  });
+
   // verifies: REQ-AUTH-001, REQ-AUTH-010, REQ-AUTH-006
   it('logs in unattended: the token carries sub U and the requested scope, the role is user, the default lifetime is about 8 hours', async () => {
     const recorder = new Recorder();

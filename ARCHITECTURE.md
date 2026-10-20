@@ -327,6 +327,10 @@ All of the following is [C-SDK], live-proven there against firmware 1.2.2:
   `eid` it was derived for; the passphrase is not retained after
   derivation. `logout()` discards the credential and every cached token.
   Nothing is written to disk, storage or logs [BRIEF G13].
+- **Explicit login.** `auth.login(scope)` obtains (or reuses) the token for
+  a scope and reports `{ scope, role, expiresAt }`; the approval calls
+  report the same. The token itself never crosses the API (D12,
+  REQ-AUTH-027, REQ-AUTH-015).
 
 ### 5.3 Mobile approval
 

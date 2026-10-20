@@ -26,13 +26,15 @@ authenticated call). The token itself stays out of reach (D12,
 REQ-API-009). Introduced in M1B.
 
 **Acceptance criteria:**
-- [ ] The result is `{ scope, role, expiresAt }` (`expiresAt` in Unix
+- [x] The result is `{ scope, role, expiresAt }` (`expiresAt` in Unix
       seconds, from the token's `exp` claim) and has no field holding the
       token.
-- [ ] A valid cached token for the scope is reused without a request.
-- [ ] In mobile-login mode the token is obtained through approval
+- [x] A valid cached token for the scope is reused without a request.
+- [x] In mobile-login mode the token is obtained through approval
       (REQ-AUTH-019).
-- [ ] Failures are those of the login itself (for example
+- [x] Failures are those of the login itself (for example
       `HemUnauthenticatedError` for a wrong passphrase).
-- [ ] (M1B) on the test device, `auth.login('keymgmt:list')` reports the
-      user role and an expiry about 8 hours ahead.
+- [x] (M1B) on the test device, `auth.login('keymgmt:list')` reports the
+      user role and an expiry about 8 hours ahead — 2026-10-20 [device]:
+      `{ kind: "user" }`, expiry 28 799 s ahead; a second call made no
+      request.

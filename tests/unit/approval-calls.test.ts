@@ -95,9 +95,11 @@ describe('auth.redeemApproval (ext/token)', () => {
   const appToken = fakeToken({ sub: 'YXBwLWtleS1pZA==', scope: 'keymgmt:list', exp: NOW_S + 900 });
 
   // verifies: REQ-AUTH-015
-  it('posts {authreply} without Authorization and returns the token', async () => {
+  it('posts {authreply} without Authorization and reports the session, never the token', async () => {
     const fake = new FakeFetch().on('POST', '/api/auth/ext/token', { body: { token: appToken } });
-    expect(await newClient(fake).auth.redeemApproval({ authreply: 'reply.jws.sig', scope: 'keymgmt:list' })).toBe(appToken);
+    const session = await newClient(fake).auth.redeemApproval({ authreply: 'reply.jws.sig', scope: 'keymgmt:list' });
+    expect(session).toEqual({ scope: 'keymgmt:list', role: { kind: 'app', id: 'YXBwLWtleS1pZA==' }, expiresAt: NOW_S + 900 });
+    expect(JSON.stringify(session)).not.toContain(appToken);
     expect(fake.last.url.href).toBe('https://my.ence.do/api/auth/ext/token');
     expect(fake.last.headers).toEqual({ 'content-type': 'application/json' });
     expect(fake.last.text()).toBe('{"authreply":"reply.jws.sig"}');

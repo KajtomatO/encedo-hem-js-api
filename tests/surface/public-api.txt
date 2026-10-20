@@ -20,14 +20,15 @@ ApprovalSubmission.authreq	readonly authreq:string
 ApprovalSubmission.epk	readonly epk:string
 AuthApi	export interface AuthApi
 AuthApi.approvalRelay	readonly approvalRelay:ApprovalRelay|null
-AuthApi.approve	approve(scope:string,details?:ApprovalDetails,options?:WaitOptions):Promise<string>
+AuthApi.approve	approve(scope:string,details?:ApprovalDetails,options?:WaitOptions):Promise<SessionInfo>
 AuthApi.beginApproval	beginApproval(scope:string,details?:ApprovalDetails,options?:CallOptions):Promise<PendingApproval>
+AuthApi.login	login(scope:string,options?:CallOptions):Promise<SessionInfo>
 AuthApi.logout	logout():void
-AuthApi.pollApproval	pollApproval(pending:PendingApproval,options?:CallOptions):Promise<{status:'pending';}|{status:'approved';token:string;}>
-AuthApi.redeemApproval	redeemApproval(params:RedeemApprovalParams,options?:CallOptions):Promise<string>
+AuthApi.pollApproval	pollApproval(pending:PendingApproval,options?:CallOptions):Promise<{status:'pending';}|{status:'approved';session:SessionInfo;}>
+AuthApi.redeemApproval	redeemApproval(params:RedeemApprovalParams,options?:CallOptions):Promise<SessionInfo>
 AuthApi.requestApproval	requestApproval(params:ApprovalRequestParams,options?:CallOptions):Promise<ApprovalRequest>
 AuthApi.role	readonly role:Role|undefined
-AuthApi.waitForApproval	waitForApproval(pending:PendingApproval,options?:WaitOptions):Promise<string>
+AuthApi.waitForApproval	waitForApproval(pending:PendingApproval,options?:WaitOptions):Promise<SessionInfo>
 CallOptions	export interface CallOptions
 CallOptions.signal	signal?:AbortSignal|undefined
 CallOptions.timeoutMs	timeoutMs?:number|undefined
@@ -236,6 +237,10 @@ SearchKeysParams.descr	descr:Uint8Array
 SearchKeysParams.limit	limit?:number|undefined
 SearchKeysParams.match	match?:DescriptionMatch|undefined
 SearchKeysParams.offset	offset?:number|undefined
+SessionInfo	export interface SessionInfo
+SessionInfo.expiresAt	readonly expiresAt:number
+SessionInfo.role	readonly role:Role|undefined
+SessionInfo.scope	readonly scope:string
 SystemApi	export interface SystemApi
 SystemApi.checkin	checkin(options?:CallOptions):Promise<CheckinResult>
 SystemApi.getCheckin	getCheckin(options?:CallOptions):Promise<string>
