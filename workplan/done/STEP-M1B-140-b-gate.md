@@ -9,7 +9,7 @@ depends_on: ["STEP-M1B-080", "STEP-M1B-090", "STEP-M1B-100", "STEP-M1B-110", "ST
 evidence:
   commits: ["b88036f"]
   tests: ["tests/integration/device-policy.test.ts", "tests/integration/login-session.test.ts", "tests/integration/reach.test.ts", "tests/integration/checkin-health.test.ts"]
-  notes: "Gate run 2026-10-20 (`npm run test:integration`, 150 ms pacing): 7 files, 31 tests passed, 112 s; then the device-policy listing: 5 keys, no EHEMTEST key, protected set present (TLS PrivateKey, TLS Certificate, one Android phone). Slowest call: login proof about 750 ms. REQ-NET-006 expired-certificate case awaits the user's decision."
+  notes: "Gate run 2026-10-20 (`npm run test:integration`, 150 ms pacing): 7 files, 31 tests passed, 112 s; then the device-policy listing: 5 keys, no EHEMTEST key, protected set present (TLS PrivateKey, TLS Certificate, one Android phone). Slowest call: login proof about 750 ms. REQ-NET-006 expired-certificate case carried to M3B (user decision 2026-10-20); REQ-AUTH-010 master role carried to M3B (2026-10-06)."
 reopened: []
 cancelled: null
 ---
