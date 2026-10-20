@@ -1,7 +1,7 @@
 ---
 id: REQ-AUTH-019
 title: Mobile approval as the client's login mode
-status: needs-reverify
+status: verified
 priority: must
 revision: 4
 source: start_point §3; https://github.com/KajtomatO/encedo-hem-c-api

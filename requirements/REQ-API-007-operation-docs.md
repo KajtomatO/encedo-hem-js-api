@@ -1,7 +1,7 @@
 ---
 id: REQ-API-007
 title: Every public operation documents its scope and milestone
-status: needs-reverify
+status: verified
 priority: must
 revision: 4
 source: start_point G23

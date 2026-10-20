@@ -7,9 +7,9 @@ traces:
   architecture: ["ARCHITECTURE.md#4-public-api--conventions"]
 depends_on: ["STEP-M1B-010"]
 evidence:
-  commits: []
-  tests: []
-  notes: null
+  commits: ["5e79b4c", "5c6e811", "9730a86", "190113a"]
+  tests: ["tests/unit/auth-login.test.ts", "tests/unit/approval-engine.test.ts", "tests/unit/approval-calls.test.ts", "tests/unit/mobile-login.test.ts", "tests/unit/surface.node.test.ts", "tests/unit/doc-check.test.ts", "tests/integration/login-session.test.ts"]
+  notes: "Change 1 (interfaces) 2026-10-12; changes 2 and 3 2026-10-20 after REQ-AUTH-027 and the reworded REQ-AUTH-015 were approved. SessionInfo { scope, role, expiresAt } is exported; the surface snapshot gained AuthApi.login and SessionInfo and the four approval signatures were edited by hand. Device: auth.login(keymgmt:list) reported the user role and an expiry 28 799 s ahead (login-session integration test, 2026-10-20). Full check: 83 files, 1328 tests, Node 24 and Chromium."
 reopened: []
 cancelled: null
 ---
@@ -51,9 +51,9 @@ land before 0.1.0 freezes the public API (D13):
 - [x] Impact analysis presented and approved; affected REQs updated with
       revision bumps.
 - [x] Namespaces are interfaces; the classes are no longer exported.
-- [ ] `auth.login(scope)` returns `SessionInfo`.
-- [ ] Approval calls return `SessionInfo`.
+- [x] `auth.login(scope)` returns `SessionInfo`.
+- [x] Approval calls return `SessionInfo`.
 - [x] ~~`ApprovalRelay.getKey` returns the key with its `exp`~~ — dropped
       (user decision 2026-10-12).
-- [ ] Surface snapshot diff contains only these changes; unit tests, TSDoc
+- [x] Surface snapshot diff contains only these changes; unit tests, TSDoc
       and README updated; the suite passes in Node 24 and the browser run.
