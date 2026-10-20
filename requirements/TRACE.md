@@ -2,9 +2,9 @@
 
 # Traceability matrix
 
-Generated: 2026-10-20 (STEP-M1B-130 done; M1B gate next)
+Generated: 2026-10-20 (STEP-M1B-140 in progress; REQ-NET-006 expired-certificate case awaits a decision)
 
-Scan inputs: 121 REQ files (`requirements/`), 46 step files (`workplan/{todo,doing,done}/`: 7 in `todo/`, 0 in `doing/`, 39 in `done/`). Code tags (`implements: REQ-`) scanned across `src/`; test tags (`verifies:`/`supports: REQ-`) scanned across `tests/`. Build/CI, test-infrastructure and README requirements are realised outside `src/` per REQUIREMENTS-MANAGEMENT.md §4.2, so `implements:` tags are also scanned in `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `vitest.integration.config.ts`, `tests/support`, `.github/workflows`, `README.md`. Locations present: `src/`, `tests/`, `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `vitest.integration.config.ts`, `tests/support`, `.github/workflows`, `README.md`. Unit suite: passed (`npm run check`) at generation.
+Scan inputs: 121 REQ files (`requirements/`), 46 step files (`workplan/{todo,doing,done}/`: 6 in `todo/`, 1 in `doing/`, 39 in `done/`). Code tags (`implements: REQ-`) scanned across `src/`; test tags (`verifies:`/`supports: REQ-`) scanned across `tests/`. Build/CI, test-infrastructure and README requirements are realised outside `src/` per REQUIREMENTS-MANAGEMENT.md §4.2, so `implements:` tags are also scanned in `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `vitest.integration.config.ts`, `tests/support`, `.github/workflows`, `README.md`. Locations present: `src/`, `tests/`, `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `vitest.integration.config.ts`, `tests/support`, `.github/workflows`, `README.md`. Unit suite: passed (`npm run check`) at generation.
 
 Steps column: step ID and its folder. A REQ listed in several steps becomes `implemented` only when all of them are in `done/` (§3.2). Tests column: `verifies:` locations; `supports …` entries are test support and never count as verification.
 
@@ -129,12 +129,12 @@ Steps column: step ID and its folder. A REQ listed in several steps becomes `imp
 | REQ-TEST-002 | Unit tests pass in Node.js and in a browser | verified | must | §8 | STEP-M1A-020 (done), STEP-M1A-030 (done), STEP-M1A-060 (done) | vitest.config.ts:2, .github/workflows/ci.yml:2 | tests/unit/ci.node.test.ts:24, tests/unit/ejwt.test.ts:48, tests/unit/test-projects.node.test.ts:11, tests/unit/test-projects.node.test.ts:25, tests/unit/webcrypto.test.ts:8, tests/unit/webcrypto.test.ts:21, tests/unit/webcrypto.test.ts:42, supports tests/support/timers.ts:3 |
 | REQ-TEST-003 | Device tests run only when explicitly configured | verified | must | §8, §1 | STEP-M1B-020 (done) | package.json:41, vitest.integration.config.ts:4, tests/support/device-env.ts:14, tests/support/integration-env.ts:3 | tests/integration/harness.test.ts:6, tests/integration/harness.test.ts:12, tests/unit/harness.node.test.ts:35, tests/unit/harness.node.test.ts:45, tests/unit/harness.node.test.ts:54, tests/unit/harness.node.test.ts:61, tests/unit/harness.node.test.ts:72, tests/unit/harness.node.test.ts:108, supports tests/support/integration-setup.ts:4 |
 | REQ-TEST-004 | Disruptive tests never run automatically | verified | must | §8, §1 | STEP-M1B-020 (done) | vitest.integration.config.ts:5, tests/support/attended-env.ts:3 | tests/unit/harness.node.test.ts:81, tests/unit/harness.node.test.ts:91, supports tests/support/device-watch.ts:3 |
-| REQ-TEST-005 | The test device and what tests may do to it | verified | must | §8, §1 | STEP-M1B-020 (done) | tests/support/device-env.ts:15, tests/support/test-keys.ts:7 | tests/unit/test-keys.test.ts:79 |
-| REQ-TEST-006 | Test keys carry the EHEMTEST label prefix and are cleaned up | verified | must | §8 | STEP-M1B-020 (done) | tests/support/integration-global-setup.ts:3, tests/support/test-keys.ts:6 | tests/unit/harness.node.test.ts:135, tests/unit/harness.node.test.ts:143, tests/unit/test-keys.test.ts:17, tests/unit/test-keys.test.ts:31, tests/unit/test-keys.test.ts:42, tests/unit/test-keys.test.ts:58, tests/unit/test-keys.test.ts:79, tests/unit/test-keys.test.ts:107 |
+| REQ-TEST-005 | The test device and what tests may do to it | verified | must | §8, §1 | STEP-M1B-020 (done) | tests/support/device-env.ts:15, tests/support/test-keys.ts:7 | tests/integration/device-policy.test.ts:18, tests/unit/test-keys.test.ts:79 |
+| REQ-TEST-006 | Test keys carry the EHEMTEST label prefix and are cleaned up | verified | must | §8 | STEP-M1B-020 (done) | tests/support/integration-global-setup.ts:3, tests/support/test-keys.ts:6 | tests/integration/device-policy.test.ts:18, tests/unit/harness.node.test.ts:135, tests/unit/harness.node.test.ts:143, tests/unit/test-keys.test.ts:17, tests/unit/test-keys.test.ts:31, tests/unit/test-keys.test.ts:42, tests/unit/test-keys.test.ts:58, tests/unit/test-keys.test.ts:79, tests/unit/test-keys.test.ts:107 |
 
 ## Coverage report
 
-- Totals: 121 REQs (50 approved, 71 verified), 46 steps (7 todo, 0 doing, 39 done; 1 cancelled).
+- Totals: 121 REQs (50 approved, 71 verified), 46 steps (6 todo, 1 doing, 39 done; 1 cancelled).
 - By area: API 14, AUTH 27, BUILD 6, KEY 9, NET 13, OPS 15, SYS 31, TEST 6.
 - Steps by milestone: M1A 25, M1B 17, M2A 1, M2B 1, M3A 1, M3B 1.
 - REQs with no step: none.
@@ -146,4 +146,4 @@ Steps column: step ID and its folder. A REQ listed in several steps becomes `imp
 - Steps in `done/` with empty evidence: none.
 - Broken architecture anchors: none.
 - REQs in `needs-reverify`: none.
-- Status transitions applied in this run: REQ-API-007: needs-reverify → verified, REQ-API-008: needs-reverify → verified, REQ-AUTH-015: approved → verified, REQ-AUTH-018: needs-reverify → verified, REQ-AUTH-019: needs-reverify → verified, REQ-AUTH-027: approved → verified.
+- Status transitions applied in this run: none.

@@ -31,7 +31,7 @@ through the same flow, each with its own passphrase. Introduced in M1.
 - [x] (M1B) a login with the user passphrase reports the user role —
       2026-10-09: `auth.role` is `{ kind: 'user' }` after the login; the
       token's `sub` is `U`.
-- [ ] (M1B) a login with the master passphrase reports the master role and
+- [x] (M1B) a login with the master passphrase reports the master role and
       an administrative scope is granted. Carried to M3B if the test
       device's master passphrase is not available (ARCHITECTURE.md §11, risk
       9). **Carried to M3B** — no master passphrase exists for the M1B test

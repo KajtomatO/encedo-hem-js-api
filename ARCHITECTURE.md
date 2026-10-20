@@ -18,9 +18,12 @@ Source tags used for device and API facts (REQUIREMENTS-MANAGEMENT.md §8):
 | **[MGR]** | https://github.com/encedo/encedo-manager — Encedo's own web client |
 | **[BRIEF]** | `requirements/start_point/high-level-requirements.md` (items G1–G23, M1.1–M3.6, Q1–Q7) |
 
-Nothing in this document has been verified by this library against a device
-yet. Facts tagged [C-SDK] were verified by the C client; they are re-verified
-here in the B part of each milestone (§8, §10).
+M1 is verified by this library against the development device (M1B,
+2026-10-07 to 2026-10-20): every M1 operation, login and session, check-in,
+mobile approval with the paired phone, power cycle, parallel requests and a
+browser run. Facts tagged [C-SDK] were verified by the C client first; the
+B part of each milestone re-verifies the ones it covers (§8, §10), and a
+finding that differs is recorded next to the fact.
 
 ## [TLDR]
 
@@ -631,10 +634,10 @@ strict sequence (D8). Scope comes from [BRIEF] §3–§5.
 
 | # | Question | State | Resolution |
 |---|---|---|---|
-| Q1 | Login secret and session key derivation | RESOLVED (2026-10-02) | §5.1, from [C-SDK]; PBKDF2 only (D6). Re-verified by this library at M1B. |
+| Q1 | Login secret and session key derivation | RESOLVED (2026-10-02) | §5.1, from [C-SDK]; PBKDF2 only (D6). Re-verified by this library at M1B (2026-10-07: the first live login succeeded with the vector derivation). |
 | Q2 | How a mobile-approval request reaches the app and returns | RESOLVED (2026-10-02) | Through the cloud broker at `api.encedo.com/notify`, relayed by the client (§5.3) [C-SDK]. Default relay ships (D7). |
 | Q3 | Check-in backend and its interface | RESOLVED (2026-10-02) | `https://api.encedo.com/checkin`; the device's reply is posted to it and its reply is posted back to the device (§6) [C-SDK]. Default relay ships (D7). |
-| Q4 | How the device's TLS certificate is trusted | RESOLVED for the dev device (2026-10-02) | Public-CA certificate for `my.ence.do` [C-SDK]; no TLS setting in the library; other cases through the caller's `fetch` (§7). |
+| Q4 | How the device's TLS certificate is trusted | RESOLVED for the dev device (2026-10-02) | Public-CA certificate for `my.ence.do` [C-SDK]; no TLS setting in the library; other cases through the caller's `fetch` (§7). M1B (2026-10-07): the public certificate validated with Node's default trust; custom trust goes through `createNodeFetch` (REQ-NET-013, D3 exception). |
 | Q5 | Throughput, concurrent connections, token limits | RESOLVED for M1 (2026-10-12) | No limit is documented in any source. Known: TCP closed per response, stalls under sustained load, up to 8 paired apps [C-SDK]. Measured by this library: two parallel requests are served at once (~400 ms each); with four, the third and fourth are answered about one TCP connect retry later (~1.4 s); the M1 suite needs no pacing (30/30 unpaced); tokens up to 7 days are issued as requested (REQ-AUTH-006). The client still serialises (§7). |
 | Q6 | Who is responsible for the CORS allow-list | RESOLVED (2026-10-02) | The caller configures the device; the library documents it and reports 412 distinctly (§7). Fixed by the approval of REQ-NET-011. |
 | Q7 | Which endpoints diagnostic firmware adds | RESOLVED (2026-10-02) | Everything under `/api/diag/`, present only on firmware whose version ends in `-DIAG`. [DOC] names seven endpoints; [C-SDK] counts nine. The exclusion is stated by path prefix, so the difference does not matter. |
@@ -677,9 +680,15 @@ strict sequence (D8). Scope comes from [BRIEF] §3–§5.
    delivered by check-in (quirk 16), and TLS import arrives only in M3.
    Until then an expired device certificate needs a relaxed-trust `fetch`
    or an external tool. The last certificate recorded by [C-SDK] for the
-   dev device is valid until 2026-10-06.
+   dev device was valid until 2026-10-06; the user renewed it outside this
+   library on 2026-10-07 (valid to 2027-01-05). The risk stays until TLS
+   import lands in M3; custom trust is available through `createNodeFetch`
+   (REQ-NET-013).
 8. **Largest token lifetime unknown.** 8 hours works [C-SDK]; nothing
    above was tested and no maximum is documented. *Resolved by:* M1B probe.
+   **RESOLVED (2026-10-09):** the device copies whatever lifetime is
+   requested: 24 hours and 7 days were issued as asked, with no cap found
+   up to 7 days (REQ-AUTH-006).
 9. **Master login unverified.** [YAML] defines the master role; no source
    has exercised a master login, and how a device's master key was derived
    depends on how it was provisioned. *Resolved by:* M1B if the device's

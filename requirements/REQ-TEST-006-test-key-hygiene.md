@@ -31,6 +31,8 @@ Introduced in M1B.
       the device configuration).
 - [x] No integration or attended test creates a key with a label outside
       the helper (grep-checkable; enforced by a unit test).
-- [ ] No test deletes a key it did not create or sweep by prefix (review
-      criterion at the B gate).
-- [ ] (M1B) after the full M1B run the device lists no `EHEMTEST` key.
+- [x] No test deletes a key it did not create or sweep by prefix (review
+      criterion at the B gate) — reviewed 2026-10-20 (see REQ-TEST-005).
+- [x] (M1B) after the full M1B run the device lists no `EHEMTEST` key —
+      2026-10-20 [device]: the sweep before the gate run found none, and
+      the `device-policy` listing after it found none.

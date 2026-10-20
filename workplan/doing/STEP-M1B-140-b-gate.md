@@ -8,8 +8,8 @@ traces:
 depends_on: ["STEP-M1B-080", "STEP-M1B-090", "STEP-M1B-100", "STEP-M1B-110", "STEP-M1B-120", "STEP-M1B-130"]
 evidence:
   commits: []
-  tests: []
-  notes: null
+  tests: ["tests/integration/device-policy.test.ts", "tests/integration/login-session.test.ts", "tests/integration/reach.test.ts", "tests/integration/checkin-health.test.ts"]
+  notes: "Gate run 2026-10-20 (`npm run test:integration`, 150 ms pacing): 7 files, 31 tests passed, 112 s; then the device-policy listing: 5 keys, no EHEMTEST key, protected set present (TLS PrivateKey, TLS Certificate, one Android phone). Slowest call: login proof about 750 ms. REQ-NET-006 expired-certificate case awaits the user's decision."
 reopened: []
 cancelled: null
 ---
@@ -43,10 +43,10 @@ findings.
 - Then regenerate the trace matrix (§4.3).
 
 **Definition of done**
-- [ ] Full integration run green against the device; summary in evidence.
+- [x] Full integration run green against the device; summary in evidence.
 - [ ] Every `(M1B)` box in `requirements/` is ticked with its finding or
       carried forward by a recorded human decision.
-- [ ] REQ-NET-004, REQ-NET-008, REQ-TEST-005 and REQ-TEST-006 closed as
+- [x] REQ-NET-004, REQ-NET-008, REQ-TEST-005 and REQ-TEST-006 closed as
       listed above.
-- [ ] §11 updated for Q1–Q6 and risks 3, 4, 8, 9, 10, 11.
+- [x] §11 updated for Q1–Q6 and risks 3, 4, 8, 9, 10, 11.
 - [ ] Trace matrix regenerated; coverage report clean.

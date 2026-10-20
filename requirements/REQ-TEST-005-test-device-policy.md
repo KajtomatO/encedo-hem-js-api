@@ -57,11 +57,24 @@ disposable-except-protected policy carry over, and both projects share one
       reached as `my.ence.do` and `192.168.7.1`; the clock was unset after
       the day's power cycle and set again by the first login's automatic
       check-in. Full records in REQ-SYS-001 and REQ-SYS-002.
-- [ ] Integration tests use only operations permitted unattended; every
-      other device test lives under `tests/attended/` (REQ-TEST-004).
-- [ ] No test sends a request that modifies a key of the protected set
-      (review criterion at the B gate).
-- [ ] (M1B) after the full M1B run the protected set is unchanged.
+- [x] Integration tests use only operations permitted unattended; every
+      other device test lives under `tests/attended/` (REQ-TEST-004) —
+      reviewed at the gate, 2026-10-20: the integration files call status,
+      version, health, check-in, list, get, search, create, delete, HMAC,
+      wrap and unwrap only; pushes, power cycling and the parallel probe are
+      under `tests/attended/`.
+- [x] No test sends a request that modifies a key of the protected set
+      (review criterion at the B gate) — reviewed 2026-10-20: every delete
+      goes through the `TestKeys` helper (keys it created), the `EHEMTEST`
+      sweep, or a random absent kid in the error tests; crypto operations
+      use keys the helper created.
+- [x] (M1B) after the full M1B run the protected set is unchanged —
+      2026-10-20 [device], after the gate run (`device-policy` integration
+      test): 5 keys in all; protected: `TLS PrivateKey` (PKEY,GENERIC_DER),
+      `TLS Certificate` (CERT,GENERIC_DER), one paired phone
+      `… (Android)` (ECDH,CURVE25519); two other user keys; no `EHEMTEST`
+      key. The same three protected keys were present at the first M1B
+      listing (STEP-M1B-060).
 
 **Configuration observed (2026-10-12, read-only `system:config`):**
 `origin` `*`, `trusted_backend` true, `allow_keysearch` true, hostname

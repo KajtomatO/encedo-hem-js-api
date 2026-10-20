@@ -29,5 +29,10 @@ login delay of 0.5 to 1.5 seconds [YAML]. Introduced in M1.
 - [x] The limit also covers reading the response body.
 - [x] A call that needs a login first applies the limit to each request, not
       to the sum.
-- [ ] (M1B) the default limit is enough for login and for every M1
-      operation; the slowest observed time is recorded.
+- [x] (M1B) the default limit is enough for login and for every M1
+      operation; the slowest observed time is recorded — 2026-10-20
+      [device], gate run with 150 ms pacing: the slowest single call is the
+      login proof `POST /api/auth/token` at about 750 ms (719–749 ms over
+      the M1B runs); a check-in round trip (device, backend, device) takes
+      about 550–870 ms; a status call about 220 ms; everything else is
+      faster. The 30 s default was never approached.
