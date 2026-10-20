@@ -28,7 +28,7 @@ classes. Introduced in M1.
       `HemAbortError`.
 - [x] When the time limit and a caller abort race, the one that fired first
       decides the error.
-- [ ] (M1B) what Node's `fetch` reports for a powered-off device, a name
+- [x] (M1B) what Node's `fetch` reports for a powered-off device, a name
       that does not resolve and an expired certificate is recorded.
       2026-10-07, through the Node transport (REQ-NET-013): a name that does
       not resolve → `HemUnreachableError` with cause `ENOTFOUND`
@@ -39,5 +39,6 @@ classes. Introduced in M1.
       2027-01-05). Powered off, 2026-10-12: `HemUnreachableError` with
       cause `ENETUNREACH` (`connect ENETUNREACH 192.168.7.1:443`) — the
       device is the USB network adapter, so unplugging it removes the route.
-      Open only for the expired-certificate case, which needs an expired
-      device certificate: decision at the gate (STEP-M1B-140).
+      The expired-certificate case needs an expired device certificate
+      and is **carried to M3B** (user decision 2026-10-20, at the gate):
+      TLS import lands in M3, where the case can be observed.
