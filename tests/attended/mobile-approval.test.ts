@@ -85,11 +85,15 @@ describeAttended('mobile approval on the paired phone', () => {
     expect(page.total).toBeGreaterThan(0);
   });
 
+  // The Encedo app accepts only the scopes it knows: a push for `keymgmt:search` is shown as
+  // "Unknown scope" and can be neither approved nor rejected (observed 2026-10-20), so pushes
+  // 2 and 3 ask for `keymgmt:list`. `approve` always sends a new request; the cached token
+  // from push 1 plays no part.
   // verifies: REQ-AUTH-018
   it('push 2 — rejected: HemApprovalRejectedError', async () => {
     await waitForGo('2', 'push 2 — you will REJECT it');
     say('(2) push being sent — REJECT it');
-    const error = await client.auth.approve('keymgmt:search', { note: 'EHEMTEST (2): REJECT this one' }, { timeoutMs: 3 * MINUTE }).catch((e: unknown) => e);
+    const error = await client.auth.approve('keymgmt:list', { note: 'EHEMTEST (2): REJECT this one' }, { timeoutMs: 3 * MINUTE }).catch((e: unknown) => e);
     say(`(2) outcome: ${error instanceof Error ? `${error.name}: ${error.message}` : 'approved (unexpected)'}`);
     expect(error).toBeInstanceOf(HemApprovalRejectedError);
   });
@@ -99,7 +103,7 @@ describeAttended('mobile approval on the paired phone', () => {
     await waitForGo('3', 'push 3 — you will IGNORE it (do not touch it for about 60 s)');
     say('(3) push being sent — IGNORE it');
     const started = Date.now();
-    const error = await client.auth.approve('keymgmt:search', { note: 'EHEMTEST (3): IGNORE this one' }, { timeoutMs: MINUTE }).catch((e: unknown) => e);
+    const error = await client.auth.approve('keymgmt:list', { note: 'EHEMTEST (3): IGNORE this one' }, { timeoutMs: MINUTE }).catch((e: unknown) => e);
     say(`(3) outcome after ${Math.round((Date.now() - started) / 1000)} s: ${error instanceof Error ? `${error.name}: ${error.message}` : 'approved (unexpected)'}`);
     expect(error).toBeInstanceOf(HemApprovalTimeoutError);
   });
