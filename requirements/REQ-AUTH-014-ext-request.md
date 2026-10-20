@@ -32,5 +32,6 @@ meant for the paired apps. Introduced in M1.
       out-of-range values [C-SDK]).
 - [x] A 403 (clock not set) leads to the same single check-in recovery as a
       login (REQ-AUTH-009).
-- [ ] (M1B) the device returns an authorization request for the scope
-      `keymgmt:list`.
+- [x] (M1B) the device returns an authorization request for the scope
+      `keymgmt:list` — 2026-10-20 [device]: `authreq` of 529 characters
+      (a three-part JWS), `epk` echoed unchanged.

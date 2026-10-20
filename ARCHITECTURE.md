@@ -361,9 +361,14 @@ Recorded behaviour that callers must know [C-SDK]:
   without notice (§11).
 - The broker rejects a request whose `iat` is ahead of its own clock, so
   device clock drift breaks mobile approval within minutes; the remedy is
-  one check-in and a fresh request.
-- Tokens approved by the real Encedo app live 15 minutes. A
-  `keymgmt:use:<kid>` scope means one push notification per key.
+  one check-in and a fresh request. Seen three times in one attended
+  session on 2026-10-20; each recovery succeeded.
+- Tokens approved by the real Encedo app lived 15 minutes when [C-SDK]
+  looked; on 2026-10-20 the device gave them 1 hour. A `keymgmt:use:<kid>`
+  scope means one push notification per key.
+- The app shows a push for a scope it does not know (observed with
+  `keymgmt:search`) as unknown, with nothing to reject: the wait times out
+  (quirk 20).
 - If no phone is paired, the request still succeeds and the wait simply
   times out.
 - The broker learns the caller's IP address and forwards its geolocation
@@ -440,6 +445,7 @@ Firmware quirks the bindings normalise or document [BRIEF G16]:
 | 17 | The device clock runs about 8% fast and is unset after a cold boot. | [C-SDK] | Clock recovery (§5.2). |
 | 18 | Header names are matched case-sensitively: a lowercase `content-length` gets 411, `content-type` 413, `authorization` is ignored. Node's `fetch` cannot spell `content-length` any other way. | device (2026-10-07) | On Node.js the device transport is `node:https` with the names spelled as required (REQ-NET-013); browsers and libcurl spell them so already. |
 | 19 | Responses say `connection: keep-alive` but the socket is closed after each response. | device (2026-10-07) | One connection per request on the Node transport; undici copes by itself. |
+| 20 | The Encedo app accepts only the scopes it knows: a push for `keymgmt:search` is shown as unknown and cannot be rejected, so the wait times out. | device (2026-10-12) | Nothing; callers in mobile mode should ask for scopes the app knows (`keymgmt:list`, `keymgmt:use:<kid>`). |
 
 ## 7. Transport
 

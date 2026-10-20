@@ -30,6 +30,9 @@ first it needs no token [YAML]. Introduced in M1.
 - [x] A 401 (reply invalid, expired or already used) raises
       `HemUnauthenticatedError`; a 406 (unknown pairing or undecryptable
       scope) raises `HemOperationFailedError`.
-- [ ] (M1B) attended: a token obtained through approval on the real phone is
+- [x] (M1B) attended: a token obtained through approval on the real phone is
       accepted by the device; its lifetime is recorded ([C-SDK] observed 15
-      minutes with the Encedo app).
+      minutes with the Encedo app) — 2026-10-20 [device]: `keys.list` with
+      the approved token succeeded; the token's `exp` was 3597 s ahead
+      (about 1 hour, not 15 minutes); the role reported is
+      `{kind: "app", id: …}`.

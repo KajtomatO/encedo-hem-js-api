@@ -67,11 +67,12 @@ export interface HemClientOptions {
    * wait up to 60 s). A client has either a passphrase or mobile mode, not
    * both.
    *
-   * Observed with the real Encedo app by
-   * https://github.com/KajtomatO/encedo-hem-c-api, to be confirmed in M1B:
-   * approved tokens live 15 minutes, and since crypto operations need a
-   * per-key scope (`keymgmt:use:<kid>`), each key used means one push
-   * notification to approve.
+   * Observed with the real Encedo app: approved tokens lived 15 minutes
+   * when https://github.com/KajtomatO/encedo-hem-c-api looked and 1 hour
+   * on 2026-10-20; since crypto operations need a per-key scope
+   * (`keymgmt:use:<kid>`), each key used means one push notification to
+   * approve. The app shows a scope it does not know as unknown, with
+   * nothing to reject, so such a wait always times out.
    */
   mobileApproval?: true | MobileApprovalOptions | undefined;
   /**

@@ -36,5 +36,10 @@ again. Introduced in M1.
       expired: `HemApprovalTimeoutError`.
 - [x] A transport error during one poll does not end the wait.
 - [x] An `AbortSignal` cancels the wait.
-- [ ] (M1B) attended: approving, rejecting and ignoring the request on the
-      real phone produce the three outcomes.
+- [x] (M1B) attended: approving, rejecting and ignoring the request on the
+      real phone produce the three outcomes — 2026-10-20 [device]: approved
+      after 9 s, `HemApprovalRejectedError` after 5 s, `HemApprovalTimeoutError`
+      61 s after the submit with a 60 s limit. Observed 2026-10-12: the Encedo
+      app shows a push for a scope it does not know (`keymgmt:search`) as
+      unknown and offers no reject, so such a wait always times out; the
+      attended test uses `keymgmt:list` for all three outcomes.

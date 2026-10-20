@@ -39,9 +39,11 @@ interface of REQ-AUTH-016. Introduced in M1.
       body.
 - [x] The relay uses its own `fetch` (the global one by default), never the
       device `fetch`; the base URL is configurable.
-- [ ] (M1B) attended: against the real broker, the session call succeeds, a
+- [x] (M1B) attended: against the real broker, the session call succeeds, a
       submitted request produces a push on the paired phone, and the check
-      call is seen pending and then final.
+      call is seen pending and then final — 2026-10-20 [device]: 3 pending
+      polls (3 s apart), then approved 9 s after the submit; rejected seen
+      5 s after the submit.
 - [x] (M1B) whether the broker accepts requests from a browser origin is
       recorded (ARCHITECTURE.md §11, risk 11) — 2026-10-12: yes. The session
       call (`GET /notify/session`) succeeded from pages at
