@@ -612,6 +612,11 @@ strict sequence (D8). Scope comes from [BRIEF] §3–§5.
   REQs: REQ-API-011, REQ-KEY-006, REQ-KEY-008…009, REQ-OPS-004…015,
   REQ-SYS-008…011.
   **Gate:** A gate.
+  **Passed 2026-10-27** (STEP-M2A-090): every M2A REQ implemented and
+  unit-verified in Node 24 and Chromium; the public surface of 0.1.0
+  unchanged, 159 entries added. The release workflow (REQ-BUILD-007,
+  STEP-M2A-080) waits for the requirement's approval and is not part of
+  the gate.
 - **M2B — daily usage and audit logs: hardware verification.** Live run
   of every M2 operation on the device, including the firmware-quirk probes
   (ML-DSA verify status through `fetch`, ML-KEM `alg`, derive echo).

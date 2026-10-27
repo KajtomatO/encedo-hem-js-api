@@ -4,6 +4,44 @@ All notable changes to `@kajtomato/encedo-hem-sdk`. Releases are cut at the
 B gate of each milestone (ARCHITECTURE.md §10); versions follow semantic
 versioning and the public surface only grows between releases.
 
+## Unreleased — 0.2.0
+
+Milestone M2, daily usage and audit logs: implemented and unit-tested
+(M2A); the release follows its hardware verification (M2B).
+
+### Operations
+
+- **Keys:** `keys.update` (label and description, both stated; an empty
+  description clears it), `keys.import` (an external public key; returns
+  its key id), `keys.derive` (ECDH + HKDF on the device from a stored key
+  and a peer, `peer: { extKid } | { pubkey }`; returns the new key id).
+- **Signatures and MACs:** `crypto.sign` and `crypto.verify` (ECDSA with
+  SHA-256/384/512, Ed25519, Ed25519ph, Ed25519ctx, Ed448, Ed448ph),
+  `crypto.hmacVerify`. Verify operations return `true` or `false`; `false`
+  also covers a missing or unsuitable key.
+- **AES:** `crypto.encrypt` and `crypto.decrypt` in ECB, CBC and GCM mode
+  with AES-128/192/256; the device generates the IV and returns it with the
+  GCM tag.
+- **Key exchange:** `crypto.ecdh` (raw secret, reported as 32 bytes, or its
+  digest), `crypto.mlkemEncaps` and `crypto.mlkemDecaps` (ML-KEM-512/768/
+  1024; decapsulation hides the firmware's unreliable `alg` field),
+  `crypto.mldsaSign` and `crypto.mldsaVerify` (ML-DSA-44/65/87; a failed
+  verification arrives as a raw status code and is reported as `false`).
+- **Agreed-key mode:** HMAC, HMAC verify, encrypt, decrypt, wrap and unwrap
+  accept a `peer` (and, for the cipher and wrap operations, a `ctx` of up to
+  64 bytes); the device derives the working key by ECDH and HKDF-SHA256.
+- **System:** `system.config()` — the device configuration and identity keys
+  (read-only; scope `system:config`).
+- **Audit log:** `logger.key()`, `logger.list({ offset })`,
+  `logger.download(id)` (the file byte for byte, with a `text()` view;
+  scope `logger:get`). Listing and download need mass-storage hardware and
+  raise `HemUnsupportedError` where the device answers 404.
+- **Constants and types:** `IMPORTABLE_KEY_TYPES`, `DERIVABLE_KEY_TYPES`,
+  `SIGNATURE_ALGORITHMS`, `CIPHER_ALGORITHMS`, `HASH_ALGORITHMS`,
+  `MLKEM_CIPHERTEXT_BYTES`, `MLDSA_SIGNATURE_BYTES`, the size limits, and
+  the parameter and result types of every new call. The public surface of
+  0.1.0 is unchanged.
+
 ## 0.1.0 — 2026-10-20
 
 First release: milestone M1, implemented in M1A and verified against a

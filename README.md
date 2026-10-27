@@ -6,10 +6,13 @@ dependencies and uses only `fetch` and Web Crypto.
 
 > **Status:** version 0.1.0 — milestone M1 implemented, unit-tested and
 > **verified against a development device** (firmware 1.2.2) in October 2026;
-> published to npm as `@kajtomato/encedo-hem-sdk`. Device behaviour that the
-> library relies on comes from the API reference (`ref/api/hem-api-1.2.2.yaml`),
-> from the device-verified C client, https://github.com/KajtomatO/encedo-hem-c-api,
-> and from this library's own device runs. See `CHANGELOG.md`.
+> published to npm as `@kajtomato/encedo-hem-sdk`. Milestone M2 (daily
+> usage and audit logs, see below) is implemented and unit-tested in this
+> repository and awaits its hardware verification before 0.2.0. Device
+> behaviour that the library relies on comes from the API reference
+> (`ref/api/hem-api-1.2.2.yaml`), from the device-verified C client,
+> https://github.com/KajtomatO/encedo-hem-c-api, and from this library's own
+> device runs. See `CHANGELOG.md`.
 
 ## Requirements
 
@@ -83,6 +86,59 @@ unexpected), `HemTimeoutError`, `HemUnreachableError`, `HemAbortError`,
 `HemUnsupportedError`, `HemApprovalRejectedError`, `HemApprovalTimeoutError`
 and `HemRelayError` (a cloud relay failed). Errors never contain the
 passphrase, a login proof or a token.
+
+## Daily usage: signatures, encryption, key exchange, audit logs
+
+Milestone M2 adds the remaining key-management and crypto operations, the
+configuration read and the audit log. Every call below needs the per-key
+scope `keymgmt:use:<kid>` unless stated otherwise, and is refused over
+plain HTTP. Not yet verified on hardware; see the status above.
+
+```ts
+// Keys: rename, import a peer's public key, derive a shared key on the device.
+await hem.keys.update({ kid, label: 'tenant-42', descr: tag });      // descr is always stated; an empty array clears it
+const peerKid = await hem.keys.import({ label: 'peer', pubkey: peerPublicKey, type: 'CURVE25519' });
+const shared = await hem.keys.derive({ kid: myX25519Kid, label: 'shared', type: 'AES256', peer: { extKid: peerKid } });
+
+// Signatures (ECDSA / EdDSA) and MACs: verification happens on the device.
+const signature = await hem.crypto.sign({ kid: edKid, msg, alg: 'Ed25519' });
+const ok = await hem.crypto.verify({ kid: edKid, msg, sign: signature, alg: 'Ed25519' }); // true | false
+const macOk = await hem.crypto.hmacVerify({ kid, msg, mac });
+
+// AES: the device generates the IV; the result carries what decryption needs.
+const { ciphertext, iv, tag: gcmTag } = await hem.crypto.encrypt({ kid, msg, alg: 'AES256-GCM', aad });
+const plaintext = await hem.crypto.decrypt({ kid, msg: ciphertext, alg: 'AES256-GCM', iv, tag: gcmTag, aad });
+
+// Key exchange: ECDH, and post-quantum ML-KEM / ML-DSA.
+const secret = await hem.crypto.ecdh({ kid: myX25519Kid, peer: { pubkey: peerPublicKey } });
+const { sharedSecret, ciphertext: kemCt } = await hem.crypto.mlkemEncaps({ kid: kemKid });
+const sameSecret = await hem.crypto.mlkemDecaps({ kid: kemKid, ct: kemCt });
+const { signature: pq } = await hem.crypto.mldsaSign({ kid: dsaKid, msg });
+const pqOk = await hem.crypto.mldsaVerify({ kid: dsaKid, msg, sign: pq });
+```
+
+- **Verify operations return `true` or `false`** and raise only for other
+  failures. The device answers an invalid signature or MAC with the same
+  status it uses for a missing or unsuitable key, so `false` covers those
+  too. ML-DSA verify is special: firmware 1.2.2 reports a failed check with
+  a raw internal code in the HTTP status line, so every completed response
+  other than a success or an authentication failure counts as `false`.
+- **Agreed-key mode.** HMAC, HMAC verify, encrypt, decrypt, wrap and unwrap
+  accept `peer: { extKid } | { pubkey }`: the device runs ECDH between your
+  stored key and the peer and derives the working key itself (through
+  HKDF-SHA256 with an optional `ctx` of up to 64 bytes for the cipher and
+  wrap operations; HMAC then needs `alg`). The token scope stays that of
+  your key.
+- **Configuration read:** `hem.system.config()` (scope `system:config`)
+  returns the owner, hostname and address, origin allow-list, option flags
+  and identity keys. Configuration write comes with M3.
+- **Audit log** (scope `logger:get`): `hem.logger.key()` gives the
+  verification key and a signed nonce; `hem.logger.list({ offset })` pages
+  the file ids; `hem.logger.download(id)` returns one file **byte for byte**
+  with a `text()` view — the library never parses log lines, because the
+  integrity chain is computed over the exact bytes. Listing and download
+  exist only on hardware with mass storage; elsewhere they raise
+  `HemUnsupportedError`.
 
 ## Checking compatibility with the device firmware
 
