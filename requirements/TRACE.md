@@ -2,9 +2,9 @@
 
 # Traceability matrix
 
-Generated: 2026-10-27 (STEP-M2B-060 done)
+Generated: 2026-10-27 (M2B gate passed; release 0.2.0 and the SECP default-mode change pending)
 
-Scan inputs: 122 REQ files (`requirements/`), 63 step files (`workplan/{todo,doing,done}/`: 7 in `todo/`, 0 in `doing/`, 56 in `done/`). Code tags (`implements: REQ-`) scanned across `src/`; test tags (`verifies:`/`supports: REQ-`) scanned across `tests/`. Build/CI, test-infrastructure and README requirements are realised outside `src/` per REQUIREMENTS-MANAGEMENT.md §4.2, so `implements:` tags are also scanned in `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `vitest.integration.config.ts`, `tests/support`, `.github/workflows`, `README.md`. Locations present: `src/`, `tests/`, `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `vitest.integration.config.ts`, `tests/support`, `.github/workflows`, `README.md`. Unit suite: passed (`npm run check`) at generation.
+Scan inputs: 122 REQ files (`requirements/`), 63 step files (`workplan/{todo,doing,done}/`: 6 in `todo/`, 0 in `doing/`, 57 in `done/`). Code tags (`implements: REQ-`) scanned across `src/`; test tags (`verifies:`/`supports: REQ-`) scanned across `tests/`. Build/CI, test-infrastructure and README requirements are realised outside `src/` per REQUIREMENTS-MANAGEMENT.md §4.2, so `implements:` tags are also scanned in `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `vitest.integration.config.ts`, `tests/support`, `.github/workflows`, `README.md`. Locations present: `src/`, `tests/`, `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `vitest.integration.config.ts`, `tests/support`, `.github/workflows`, `README.md`. Unit suite: passed (`npm run check`) at generation.
 
 Steps column: step ID and its folder. A REQ listed in several steps becomes `implemented` only when all of them are in `done/` (§3.2). Tests column: `verifies:` locations; `supports …` entries are test support and never count as verification.
 
@@ -135,7 +135,7 @@ Steps column: step ID and its folder. A REQ listed in several steps becomes `imp
 
 ## Coverage report
 
-- Totals: 122 REQs (29 approved, 93 verified), 63 steps (7 todo, 0 doing, 56 done; 3 cancelled).
+- Totals: 122 REQs (29 approved, 93 verified), 63 steps (6 todo, 0 doing, 57 done; 3 cancelled).
 - By area: API 14, AUTH 27, BUILD 7, KEY 9, NET 13, OPS 15, SYS 31, TEST 6.
 - Steps by milestone: M1A 25, M1B 17, M2A 10, M2B 9, M3A 1, M3B 1.
 - REQs with no step: none.
