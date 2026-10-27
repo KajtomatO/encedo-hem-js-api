@@ -174,6 +174,7 @@ HemClient.auth	readonly auth:AuthApi
 HemClient.constructor	constructor(options:HemClientOptions)
 HemClient.crypto	readonly crypto:CryptoApi
 HemClient.keys	readonly keys:KeysApi
+HemClient.logger	readonly logger:LoggerApi
 HemClient.system	readonly system:SystemApi
 HemClientOptions	export interface HemClientOptions
 HemClientOptions.approvalRelay	approvalRelay?:ApprovalRelay|null|undefined
@@ -313,8 +314,27 @@ KeysApi.update	update(params:UpdateKeyParams,options?:CallOptions):Promise<void>
 ListKeysParams	export interface ListKeysParams
 ListKeysParams.count	count?:number|undefined
 ListKeysParams.offset	offset?:number|undefined
+ListLogsParams	export interface ListLogsParams
+ListLogsParams.offset	offset?:number|undefined
+LogFile	export interface LogFile
+LogFile.bytes	readonly bytes:Uint8Array
+LogFile.contentType	readonly contentType?:string
+LogFile.id	readonly id:string
+LogFile.text	text():string
+LogFileList	export interface LogFileList
+LogFileList.ids	readonly ids:readonly string[]
+LogFileList.total	readonly total:number
+LoggerApi	export interface LoggerApi
+LoggerApi.download	download(fileId:string,options?:CallOptions):Promise<LogFile>
+LoggerApi.key	key(options?:CallOptions):Promise<LoggerKey>
+LoggerApi.list	list(params?:ListLogsParams,options?:CallOptions):Promise<LogFileList>
+LoggerKey	export interface LoggerKey
+LoggerKey.key	readonly key:Uint8Array
+LoggerKey.nonce	readonly nonce:Uint8Array
+LoggerKey.nonceSigned	readonly nonceSigned:Uint8Array
 MAX_CONTEXT_BYTES	export declare const MAX_CONTEXT_BYTES=255
 MAX_HKDF_CONTEXT_BYTES	export declare const MAX_HKDF_CONTEXT_BYTES=64
+MAX_LOG_IDS_PER_PAGE	export declare const MAX_LOG_IDS_PER_PAGE=128
 MAX_MAC_BYTES	export declare const MAX_MAC_BYTES=64
 MLDSA_SIGNATURE_BYTES	export declare const MLDSA_SIGNATURE_BYTES:Readonly<{readonly MLDSA44:2420;readonly MLDSA65:3309;readonly MLDSA87:4627;}>
 MLKEM_CIPHERTEXT_BYTES	export declare const MLKEM_CIPHERTEXT_BYTES:Readonly<{readonly MLKEM512:768;readonly MLKEM768:1088;readonly MLKEM1024:1568;}>

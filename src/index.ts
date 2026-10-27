@@ -70,6 +70,8 @@ export type {
   UpdateKeyParams,
 } from './api/keymgmt.js';
 export type { KeyPeer } from './api/peer.js';
+export type { ListLogsParams, LogFile, LogFileList, LoggerApi, LoggerKey } from './api/logger.js';
+export { MAX_LOG_IDS_PER_PAGE } from './api/logger.js';
 export { DERIVABLE_KEY_TYPES, IMPORTABLE_KEY_TYPES, KEY_ALGORITHMS, KEY_FLAGS, KEY_MODES, KEY_TYPES } from './api/key-type.js';
 export type { DerivableKeyType, ImportableKeyType, KeyFlag, KeyMode, KeyType, KeyTypeInfo } from './api/key-type.js';
 export type {

@@ -20,7 +20,7 @@ function declarationFiles(dir: string): string[] {
 const methods: DocumentedMethod[] = existsSync(dist)
   ? declarationFiles(dist).flatMap((file) => documentedMethods(readFileSync(file, 'utf8')))
   : [];
-const namespaceClass: Record<string, string> = { system: 'SystemApi', keys: 'KeysApi', crypto: 'CryptoApi', auth: 'AuthApi' };
+const namespaceClass: Record<string, string> = { system: 'SystemApi', keys: 'KeysApi', crypto: 'CryptoApi', auth: 'AuthApi', logger: 'LoggerApi' };
 
 describe('operation documentation in the emitted declarations', () => {
   // verifies: REQ-API-007
@@ -45,6 +45,8 @@ describe('operation documentation in the emitted declarations', () => {
       if (!documented) continue; // internal device calls (the login challenge and proof) have no public method
       const expected = spec.scope === null ? 'Token scope: none' : `Token scope: \`${spec.scope.replace('{kid}', '<kid>')}\``;
       expect(documented.doc, spec.name).toContain(expected);
+      // verifies: REQ-API-011 — operations that exist only on mass-storage hardware say so.
+      expect(docProblems(documented.doc, { mscOnly: spec.mscOnly === true }), spec.name).toEqual([]);
       checked.push(spec.name);
     }
     expect(checked.length).toBeGreaterThanOrEqual(ALL_OPERATIONS.length - 4);

@@ -41,6 +41,12 @@ export interface OperationSpec {
    * this operation never carry the response body or an underlying cause.
    */
   readonly sensitive?: boolean;
+  /**
+   * Exists only on hardware with mass storage ("MSC build" in the
+   * reference); other builds answer 404, which becomes `HemUnsupportedError`.
+   * The public method's TSDoc says so.
+   */
+  readonly mscOnly?: boolean;
 }
 
 /** Runs a request with a bearer token for a scope (supplied by the session engine). */
@@ -126,11 +132,37 @@ export interface Invocation {
 }
 
 /**
+ * Run one operation and parse its JSON response: see {@link invokeRaw}.
+ */
+export async function invoke(context: BindingContext, spec: OperationSpec, invocation: Invocation, options: CallOptions = {}): Promise<ResponseObject> {
+  const response = await invokeRaw(context, spec, invocation, options);
+  try {
+    return parseResponse(spec, response);
+  } catch (error) {
+    throw spec.sensitive ? redact(error) : error;
+  }
+}
+
+/**
+ * A 404 from an operation that exists only on mass-storage hardware means
+ * the device does not provide it (REQ-API-011); `alsoMeans` names any other
+ * reading of the 404 for this operation.
+ */
+// implements: REQ-API-011
+export function unsupportedOn404(spec: OperationSpec, error: unknown, alsoMeans?: string): unknown {
+  if (!spec.mscOnly || !(error instanceof HemError) || error.status !== 404) return error;
+  const reason = alsoMeans === undefined ? 'this operation needs mass-storage hardware' : `either this operation needs mass-storage hardware, or ${alsoMeans}`;
+  return new HemUnsupportedError(`${spec.name}: the device answered 404 — ${reason}`, { status: 404, operation: spec.name, cause: error });
+}
+
+/**
  * Run one operation: serialise and size-check the body, obtain a token when
- * the operation has a scope, send, and parse the response.
+ * the operation has a scope, send, and return the raw success response
+ * (body bytes unparsed). Bindings whose response is not JSON use this
+ * directly; the others go through {@link invoke}.
  */
 // implements: REQ-API-005
-export async function invoke(context: BindingContext, spec: OperationSpec, invocation: Invocation, options: CallOptions = {}): Promise<ResponseObject> {
+export async function invokeRaw(context: BindingContext, spec: OperationSpec, invocation: Invocation, options: CallOptions = {}): Promise<TransportResponse> {
   // implements: REQ-NET-003 — refused before any request, including the login a token would need.
   if (spec.tlsOnly && !context.transport.secure) {
     throw new HemTlsRequiredError(`${spec.name}: refused to send over plain HTTP; the device URL must use https:`, { operation: spec.name });
@@ -152,13 +184,11 @@ export async function invoke(context: BindingContext, spec: OperationSpec, invoc
 
   try {
     // implements: REQ-AUTH-012 — an operation without a scope never gets a token, even when tokens are cached.
-    const response =
-      spec.scope === null
-        ? await send(undefined)
-        : await context.tokens.withToken(fillTemplate(spec.scope, params, false), options, (bearer) => send(bearer));
-    return parseResponse(spec, response);
+    return spec.scope === null
+      ? await send(undefined)
+      : await context.tokens.withToken(fillTemplate(spec.scope, params, false), options, (bearer) => send(bearer));
   } catch (error) {
-    throw spec.sensitive ? redact(error) : error;
+    throw spec.sensitive ? redact(unsupportedOn404(spec, error)) : unsupportedOn404(spec, error);
   }
 }
 

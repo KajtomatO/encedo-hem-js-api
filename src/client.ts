@@ -11,6 +11,7 @@ import { type Clock, DEFAULT_TOKEN_LIFETIME_SECONDS, PassphraseLogin, validateLi
 import { HemValidationError } from './errors.js';
 import { type CryptoApi, CryptoApiImpl } from './api/crypto.js';
 import { type KeysApi, KeysApiImpl } from './api/keymgmt.js';
+import { type LoggerApi, LoggerApiImpl } from './api/logger.js';
 import { type SystemApi, SystemApiImpl } from './api/system.js';
 import { type ApprovalRelay, EncedoApprovalRelay } from './relay/approval.js';
 import { type CheckinRelay, EncedoCheckinRelay } from './relay/checkin.js';
@@ -147,6 +148,8 @@ export class HemClient {
   readonly keys: KeysApi;
   /** Operations with stored keys: HMAC, wrap, unwrap, sign, verify, encrypt, decrypt, ECDH, ML-KEM, ML-DSA. */
   readonly crypto: CryptoApi;
+  /** Audit log: verification key, file listing, file download. */
+  readonly logger: LoggerApi;
 
   constructor(options: HemClientOptions) {
     const transport = new Transport({
@@ -194,6 +197,7 @@ export class HemClient {
     this.system = new SystemApiImpl(context, checkinRelay);
     this.keys = new KeysApiImpl(context);
     this.crypto = new CryptoApiImpl(context);
+    this.logger = new LoggerApiImpl(context);
     contexts.set(this, context);
   }
 }

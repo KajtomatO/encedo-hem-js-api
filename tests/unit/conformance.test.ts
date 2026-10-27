@@ -62,7 +62,10 @@ function device(): FakeFetch {
     .always('POST', '/api/crypto/pqc/mlkem/encaps', { body: { alg: 'MLKEM768', ss: 'Ew==', ct: 'FA==' } })
     .always('POST', '/api/crypto/pqc/mlkem/decaps', { body: { alg: 'garbage', ss: 'Ew==' } })
     .always('POST', '/api/crypto/pqc/mldsa/sign', { body: { alg: 'MLDSA65', sign: 'FQ==' } })
-    .always('POST', '/api/crypto/pqc/mldsa/verify', { status: 200 });
+    .always('POST', '/api/crypto/pqc/mldsa/verify', { status: 200 })
+    .always('GET', '/api/logger/key', { body: { key: 'AQ==', nonce: 'Ag==', nonce_signed: 'Aw==' } })
+    .always('GET', /^\/api\/logger\/list/, { body: { total: 2, id: ['0000a1b2'] } })
+    .always('GET', '/api/logger/0000a1b2', { body: new TextEncoder().encode('a|b\n'), headers: { 'content-type': 'text/plain' } });
 }
 
 interface Sample {
@@ -227,6 +230,23 @@ const samples: Record<string, Sample> = {
     body: { kid: KID, msg: 'AQ==', sign: 'FQ==' },
     result: true,
   },
+  'logger.key /api/logger/key': {
+    run: (c) => c.logger.key(),
+    path: '/api/logger/key',
+    body: undefined,
+    result: { key: Uint8Array.from([1]), nonce: Uint8Array.from([2]), nonceSigned: Uint8Array.from([3]) },
+  },
+  'logger.list /api/logger/list': { run: (c) => c.logger.list(), path: '/api/logger/list', body: undefined, result: { total: 2, ids: ['0000a1b2'] } },
+  'logger.list /api/logger/list/{offset}': { run: (c) => c.logger.list({ offset: 1 }), path: '/api/logger/list/1', body: undefined, result: { total: 2, ids: ['0000a1b2'] } },
+  'logger.download /api/logger/{file}': {
+    run: async (c) => {
+      const file = await c.logger.download('0000A1B2');
+      return { id: file.id, bytes: file.bytes, contentType: file.contentType, text: file.text() };
+    },
+    path: '/api/logger/0000a1b2',
+    body: undefined,
+    result: { id: '0000a1b2', bytes: new TextEncoder().encode('a|b\n'), contentType: 'text/plain', text: 'a|b\n' },
+  },
   'crypto.verify /api/crypto/exdsa/verify': {
     run: (c) => c.crypto.verify({ kid: UPPER_KID, msg: Uint8Array.from([1]), sign: Uint8Array.from([13, 14]), alg: 'Ed25519' }),
     path: '/api/crypto/exdsa/verify',
@@ -267,6 +287,9 @@ const ARCHITECTURE_SCOPES: Record<string, string | null> = {
   'crypto.mlkemDecaps': `keymgmt:use:${KID}`,
   'crypto.mldsaSign': `keymgmt:use:${KID}`,
   'crypto.mldsaVerify': `keymgmt:use:${KID}`,
+  'logger.key': 'logger:get',
+  'logger.list': 'logger:get',
+  'logger.download': 'logger:get',
 };
 
 const operations = ALL_OPERATIONS.map((spec) => ({ spec, key: `${spec.name} ${spec.path}` }));
@@ -432,6 +455,9 @@ const LIMITS: Limit[] = [
   { name: 'mldsaSign ctx: 255 bytes, not 256', parameter: 'ctx', atLimit: (c) => c.crypto.mldsaSign({ kid: KID, msg: bytes(1), ctx: bytes(255) }), pastLimit: (c) => c.crypto.mldsaSign({ kid: KID, msg: bytes(1), ctx: bytes(256) }) },
   { name: 'mldsaVerify sign: 4627 bytes, not 4628', parameter: 'sign', atLimit: (c) => c.crypto.mldsaVerify({ kid: KID, msg: bytes(1), sign: bytes(4627) }), pastLimit: (c) => c.crypto.mldsaVerify({ kid: KID, msg: bytes(1), sign: bytes(4628) }) },
   { name: 'mldsaVerify body: 7300 bytes, not more', parameter: 'body', atLimit: (c) => c.crypto.mldsaVerify({ kid: KID, msg: bytes(798), sign: bytes(4627) }), pastLimit: (c) => c.crypto.mldsaVerify({ kid: KID, msg: bytes(2048), sign: bytes(4627) }) },
+  { name: 'log list offset: 0, not -1', parameter: 'offset', atLimit: (c) => c.logger.list({ offset: 0 }), pastLimit: (c) => c.logger.list({ offset: -1 }) },
+  { name: 'log file id: 8 hex characters, not 9', parameter: 'file', atLimit: (c) => c.logger.download('0000a1b2'), pastLimit: (c) => c.logger.download('0000a1b20') },
+  { name: 'log file id: 8 hex characters, not 7', parameter: 'file', atLimit: (c) => c.logger.download('0000A1B2'), pastLimit: (c) => c.logger.download('0000a1b') },
   { name: 'approval scope: 1023 characters, not 1024', parameter: 'scope', atLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: chars(1023) }), pastLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: chars(1024) }) },
   { name: 'approval scope: 1 character, not 0', parameter: 'scope', atLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: 'k' }), pastLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: '' }) },
   { name: 'approval ctx: 64 characters, not 65', parameter: 'ctx', atLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: 'k', ctx: chars(64) }), pastLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: 'k', ctx: chars(65) }) },
@@ -459,6 +485,6 @@ describe('documented limits', () => {
 
   it('covers every validated parameter at least once', () => {
     const parameters = new Set(LIMITS.map((limit) => limit.parameter));
-    expect([...parameters].sort()).toEqual(['authreply', 'body', 'count', 'ct', 'ctx', 'descr', 'epk', 'iv', 'kid', 'label', 'limit', 'mac', 'msg', 'note', 'offset', 'peer', 'peer.extKid', 'peer.pubkey', 'pubkey', 'scope', 'sign', 'tag']);
+    expect([...parameters].sort()).toEqual(['authreply', 'body', 'count', 'ct', 'ctx', 'descr', 'epk', 'file', 'iv', 'kid', 'label', 'limit', 'mac', 'msg', 'note', 'offset', 'peer', 'peer.extKid', 'peer.pubkey', 'pubkey', 'scope', 'sign', 'tag']);
   });
 });
