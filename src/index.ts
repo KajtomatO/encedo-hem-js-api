@@ -72,4 +72,5 @@ export type {
 export type { KeyPeer } from './api/peer.js';
 export { DERIVABLE_KEY_TYPES, IMPORTABLE_KEY_TYPES, KEY_ALGORITHMS, KEY_FLAGS, KEY_MODES, KEY_TYPES } from './api/key-type.js';
 export type { DerivableKeyType, ImportableKeyType, KeyFlag, KeyMode, KeyType, KeyTypeInfo } from './api/key-type.js';
-export type { CryptoApi, HmacParams, WrapAlgorithm, WrapParams } from './api/crypto.js';
+export type { CryptoApi, HmacParams, HmacVerifyParams, SignatureAlgorithm, SignParams, VerifyParams, WrapAlgorithm, WrapParams } from './api/crypto.js';
+export { MAX_CONTEXT_BYTES, MAX_MAC_BYTES, SIGNATURE_ALGORITHMS } from './api/crypto.js';

@@ -41,7 +41,10 @@ function device(): FakeFetch {
     .always('POST', '/api/keymgmt/derive', { body: { kid: NEW_KID } })
     .always('POST', '/api/crypto/hmac/hash', { body: { mac: 'BQY=' } })
     .always('POST', '/api/crypto/cipher/wrap', { body: { wrapped: 'BwgJ' } })
-    .always('POST', '/api/crypto/cipher/unwrap', { body: { unwrapped: 'CgsM' } });
+    .always('POST', '/api/crypto/cipher/unwrap', { body: { unwrapped: 'CgsM' } })
+    .always('POST', '/api/crypto/hmac/verify', { status: 200 })
+    .always('POST', '/api/crypto/exdsa/sign', { body: { sign: 'DQ4=' } })
+    .always('POST', '/api/crypto/exdsa/verify', { status: 200 });
 }
 
 interface Sample {
@@ -151,6 +154,24 @@ const samples: Record<string, Sample> = {
     body: { kid: KID, msg: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' },
     result: Uint8Array.from([10, 11, 12]),
   },
+  'crypto.hmacVerify /api/crypto/hmac/verify': {
+    run: (c) => c.crypto.hmacVerify({ kid: UPPER_KID, msg: Uint8Array.from([1]), mac: Uint8Array.from([5, 6]) }),
+    path: '/api/crypto/hmac/verify',
+    body: { kid: KID, msg: 'AQ==', mac: 'BQY=' },
+    result: true,
+  },
+  'crypto.sign /api/crypto/exdsa/sign': {
+    run: (c) => c.crypto.sign({ kid: UPPER_KID, msg: Uint8Array.from([1]), alg: 'Ed25519' }),
+    path: '/api/crypto/exdsa/sign',
+    body: { kid: KID, msg: 'AQ==', alg: 'Ed25519' },
+    result: Uint8Array.from([13, 14]),
+  },
+  'crypto.verify /api/crypto/exdsa/verify': {
+    run: (c) => c.crypto.verify({ kid: UPPER_KID, msg: Uint8Array.from([1]), sign: Uint8Array.from([13, 14]), alg: 'Ed25519' }),
+    path: '/api/crypto/exdsa/verify',
+    body: { kid: KID, msg: 'AQ==', alg: 'Ed25519', sign: 'DQ4=' },
+    result: true,
+  },
 };
 
 // Token scope per operation, as listed in ARCHITECTURE.md §6 ("Protocol bindings" table).
@@ -174,6 +195,9 @@ const ARCHITECTURE_SCOPES: Record<string, string | null> = {
   'crypto.hmac': `keymgmt:use:${KID}`,
   'crypto.wrap': `keymgmt:use:${KID}`,
   'crypto.unwrap': `keymgmt:use:${KID}`,
+  'crypto.hmacVerify': `keymgmt:use:${KID}`,
+  'crypto.sign': `keymgmt:use:${KID}`,
+  'crypto.verify': `keymgmt:use:${KID}`,
 };
 
 const operations = ALL_OPERATIONS.map((spec) => ({ spec, key: `${spec.name} ${spec.path}` }));
@@ -319,6 +343,13 @@ const LIMITS: Limit[] = [
   { name: 'wrap iv: 8 bytes, not 9', parameter: 'iv', atLimit: (c) => c.crypto.wrap({ kid: KID, msg: bytes(16), iv: bytes(8) }), pastLimit: (c) => c.crypto.wrap({ kid: KID, msg: bytes(16), iv: bytes(9) }) },
   { name: 'unwrap msg: a non-empty multiple of 8', parameter: 'msg', atLimit: (c) => c.crypto.unwrap({ kid: KID, msg: bytes(16) }), pastLimit: (c) => c.crypto.unwrap({ kid: KID, msg: bytes(12) }) },
   { name: 'unwrap msg: not empty', parameter: 'msg', atLimit: (c) => c.crypto.unwrap({ kid: KID, msg: bytes(8) }), pastLimit: (c) => c.crypto.unwrap({ kid: KID, msg: bytes(0) }) },
+  { name: 'hmacVerify mac: 64 bytes, not 65', parameter: 'mac', atLimit: (c) => c.crypto.hmacVerify({ kid: KID, msg: bytes(1), mac: bytes(64) }), pastLimit: (c) => c.crypto.hmacVerify({ kid: KID, msg: bytes(1), mac: bytes(65) }) },
+  { name: 'hmacVerify mac: 1 byte, not 0', parameter: 'mac', atLimit: (c) => c.crypto.hmacVerify({ kid: KID, msg: bytes(1), mac: bytes(1) }), pastLimit: (c) => c.crypto.hmacVerify({ kid: KID, msg: bytes(1), mac: bytes(0) }) },
+  { name: 'hmacVerify msg: 2048 bytes, not 2049', parameter: 'msg', atLimit: (c) => c.crypto.hmacVerify({ kid: KID, msg: bytes(2048), mac: bytes(1) }), pastLimit: (c) => c.crypto.hmacVerify({ kid: KID, msg: bytes(2049), mac: bytes(1) }) },
+  { name: 'sign ctx: 255 bytes, not 256', parameter: 'ctx', atLimit: (c) => c.crypto.sign({ kid: KID, msg: bytes(1), alg: 'Ed448', ctx: bytes(255) }), pastLimit: (c) => c.crypto.sign({ kid: KID, msg: bytes(1), alg: 'Ed448', ctx: bytes(256) }) },
+  { name: 'sign msg: 2048 bytes, not 2049', parameter: 'msg', atLimit: (c) => c.crypto.sign({ kid: KID, msg: bytes(2048), alg: 'Ed25519' }), pastLimit: (c) => c.crypto.sign({ kid: KID, msg: bytes(2049), alg: 'Ed25519' }) },
+  { name: 'verify sign: 1 byte, not 0', parameter: 'sign', atLimit: (c) => c.crypto.verify({ kid: KID, msg: bytes(1), sign: bytes(1), alg: 'Ed25519' }), pastLimit: (c) => c.crypto.verify({ kid: KID, msg: bytes(1), sign: bytes(0), alg: 'Ed25519' }) },
+  { name: 'verify ctx: 255 bytes, not 256', parameter: 'ctx', atLimit: (c) => c.crypto.verify({ kid: KID, msg: bytes(1), sign: bytes(1), alg: 'Ed25519ctx', ctx: bytes(255) }), pastLimit: (c) => c.crypto.verify({ kid: KID, msg: bytes(1), sign: bytes(1), alg: 'Ed25519ctx', ctx: bytes(256) }) },
   { name: 'approval scope: 1023 characters, not 1024', parameter: 'scope', atLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: chars(1023) }), pastLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: chars(1024) }) },
   { name: 'approval scope: 1 character, not 0', parameter: 'scope', atLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: 'k' }), pastLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: '' }) },
   { name: 'approval ctx: 64 characters, not 65', parameter: 'ctx', atLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: 'k', ctx: chars(64) }), pastLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: 'k', ctx: chars(65) }) },
@@ -346,6 +377,6 @@ describe('documented limits', () => {
 
   it('covers every validated parameter at least once', () => {
     const parameters = new Set(LIMITS.map((limit) => limit.parameter));
-    expect([...parameters].sort()).toEqual(['authreply', 'count', 'ctx', 'descr', 'epk', 'iv', 'kid', 'label', 'limit', 'msg', 'note', 'offset', 'peer', 'peer.extKid', 'peer.pubkey', 'pubkey', 'scope']);
+    expect([...parameters].sort()).toEqual(['authreply', 'count', 'ctx', 'descr', 'epk', 'iv', 'kid', 'label', 'limit', 'mac', 'msg', 'note', 'offset', 'peer', 'peer.extKid', 'peer.pubkey', 'pubkey', 'scope', 'sign']);
   });
 });
