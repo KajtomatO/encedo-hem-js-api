@@ -1,7 +1,7 @@
 ---
 id: REQ-BUILD-007
 title: Releases are published from CI on a version tag
-status: approved
+status: verified
 priority: must
 revision: 3
 source: user decision 2026-10-27; approved 2026-10-27

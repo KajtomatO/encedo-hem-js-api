@@ -2,9 +2,9 @@
 
 # Traceability matrix
 
-Generated: 2026-10-27 (M2A gate passed; STEP-M2A-080 waits for REQ-BUILD-007)
+Generated: 2026-10-27 (M2A complete: gate passed, release workflow in place)
 
-Scan inputs: 122 REQ files (`requirements/`), 55 step files (`workplan/{todo,doing,done}/`: 6 in `todo/`, 0 in `doing/`, 49 in `done/`). Code tags (`implements: REQ-`) scanned across `src/`; test tags (`verifies:`/`supports: REQ-`) scanned across `tests/`. Build/CI, test-infrastructure and README requirements are realised outside `src/` per REQUIREMENTS-MANAGEMENT.md §4.2, so `implements:` tags are also scanned in `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `vitest.integration.config.ts`, `tests/support`, `.github/workflows`, `README.md`. Locations present: `src/`, `tests/`, `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `vitest.integration.config.ts`, `tests/support`, `.github/workflows`, `README.md`. Unit suite: passed (`npm run check`) at generation.
+Scan inputs: 122 REQ files (`requirements/`), 55 step files (`workplan/{todo,doing,done}/`: 5 in `todo/`, 0 in `doing/`, 50 in `done/`). Code tags (`implements: REQ-`) scanned across `src/`; test tags (`verifies:`/`supports: REQ-`) scanned across `tests/`. Build/CI, test-infrastructure and README requirements are realised outside `src/` per REQUIREMENTS-MANAGEMENT.md §4.2, so `implements:` tags are also scanned in `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `vitest.integration.config.ts`, `tests/support`, `.github/workflows`, `README.md`. Locations present: `src/`, `tests/`, `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `vitest.integration.config.ts`, `tests/support`, `.github/workflows`, `README.md`. Unit suite: passed (`npm run check`) at generation.
 
 Steps column: step ID and its folder. A REQ listed in several steps becomes `implemented` only when all of them are in `done/` (§3.2). Tests column: `verifies:` locations; `supports …` entries are test support and never count as verification.
 
@@ -57,7 +57,7 @@ Steps column: step ID and its folder. A REQ listed in several steps becomes `imp
 | REQ-BUILD-004 | Node.js 24 as the minimum version | verified | must | §1 | STEP-M1A-010 (done), STEP-M1A-030 (done), STEP-M1A-220 (done) | package.json:41, .github/workflows/ci.yml:2, README.md:19 | tests/unit/ci.node.test.ts:30, tests/unit/package.node.test.ts:65, tests/unit/readme.node.test.ts:19 |
 | REQ-BUILD-005 | Continuous integration for build and unit tests | verified | must | §8, §9 | STEP-M1A-030 (done) | .github/workflows/ci.yml:2 | tests/unit/ci.node.test.ts:15, tests/unit/ci.node.test.ts:24, tests/unit/ci.node.test.ts:35 |
 | REQ-BUILD-006 | A versioned release at the end of each milestone | verified | must | §4, §10 | STEP-M1B-150 (done) | package.json:41 | tests/unit/pack-install.node.test.ts:20 |
-| REQ-BUILD-007 | Releases are published from CI on a version tag | draft | must | §4, §8 | STEP-M2A-080 (todo) | — | — |
+| REQ-BUILD-007 | Releases are published from CI on a version tag | verified | must | §4, §8 | STEP-M2A-080 (done) | .github/workflows/release.yml:2 | tests/unit/release.node.test.ts:17, tests/unit/release.node.test.ts:23, tests/unit/release.node.test.ts:32, tests/unit/release.node.test.ts:38, tests/unit/release.node.test.ts:46, tests/unit/release.node.test.ts:57, tests/unit/release.node.test.ts:65, tests/unit/release.node.test.ts:76 |
 | REQ-KEY-001 | Generate a key on the device | verified | must | §6 | STEP-M1A-160 (done), STEP-M1B-060 (done) | src/api/keymgmt.ts:454 | tests/integration/keys.test.ts:66, tests/unit/keys-create-get.test.ts:19, tests/unit/keys-create-get.test.ts:34, tests/unit/keys-create-get.test.ts:47, tests/unit/keys-create-get.test.ts:54 |
 | REQ-KEY-002 | Read one key | verified | must | §6 | STEP-M1A-160 (done), STEP-M1B-060 (done) | src/api/keymgmt.ts:467 | tests/integration/keys.test.ts:81, tests/unit/keys-create-get.test.ts:86, tests/unit/keys-create-get.test.ts:100, tests/unit/keys-create-get.test.ts:115 |
 | REQ-KEY-003 | Find keys by description | verified | must | §6, §11 | STEP-M1A-170 (done), STEP-M1B-060 (done) | src/api/keymgmt.ts:569, src/api/keymgmt.ts:592 | tests/integration/keys.test.ts:91, tests/integration/keys.test.ts:111, tests/unit/keys-list-search.test.ts:115, tests/unit/keys-list-search.test.ts:129, tests/unit/keys-list-search.test.ts:144, tests/unit/keys-list-search.test.ts:159, tests/unit/keys-list-search.test.ts:166, tests/unit/keys-list-search.test.ts:182 |
@@ -135,7 +135,7 @@ Steps column: step ID and its folder. A REQ listed in several steps becomes `imp
 
 ## Coverage report
 
-- Totals: 122 REQs (1 draft, 29 approved, 92 verified), 55 steps (6 todo, 0 doing, 49 done; 2 cancelled).
+- Totals: 122 REQs (29 approved, 93 verified), 55 steps (5 todo, 0 doing, 50 done; 2 cancelled).
 - By area: API 14, AUTH 27, BUILD 7, KEY 9, NET 13, OPS 15, SYS 31, TEST 6.
 - Steps by milestone: M1A 25, M1B 17, M2A 10, M2B 1, M3A 1, M3B 1.
 - REQs with no step: none.
@@ -147,4 +147,4 @@ Steps column: step ID and its folder. A REQ listed in several steps becomes `imp
 - Steps in `done/` with empty evidence: none.
 - Broken architecture anchors: none.
 - REQs in `needs-reverify`: none.
-- Status transitions applied in this run: none.
+- Status transitions applied in this run: REQ-BUILD-007: approved → verified.
