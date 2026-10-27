@@ -1,0 +1,11 @@
+{
+  // Type-check of src/, tests/ and the config files; emits nothing.
+  // implements: REQ-BUILD-001
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2024", "DOM"],
+    "types": ["node"],
+    "noEmit": true
+  },
+  "include": ["src", "tests", "vitest.config.ts", "vitest.integration.config.ts"]
+}

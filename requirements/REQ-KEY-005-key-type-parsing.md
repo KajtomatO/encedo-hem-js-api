@@ -1,9 +1,9 @@
 ---
 id: REQ-KEY-005
 title: Key type presented as flags and algorithm
-status: approved
+status: verified
 priority: must
-revision: 1
+revision: 4
 source: ref/api/hem-api-1.2.2.yaml; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: []
 supersedes: null
@@ -23,10 +23,13 @@ sign" without parsing strings. Key get returns a bare algorithm name for
 asymmetric keys [C-SDK], so both forms have to parse. Introduced in M1.
 
 **Acceptance criteria:**
-- [ ] The flags `ATT`, `PKEY`, `ECDH`, `ExDSA`, `CERT` and `PQC` and every
+- [x] The flags `ATT`, `PKEY`, `ECDH`, `ExDSA`, `CERT` and `PQC` and every
       algorithm name of the reference are recognised.
-- [ ] A bare algorithm name parses to that algorithm with no flags.
-- [ ] An unknown token does not raise an error; the original string stays
+- [x] A bare algorithm name parses to that algorithm with no flags.
+- [x] An unknown token does not raise an error; the original string stays
       available.
-- [ ] (M1B) the type strings of every key on the test device parse; any
-      token not in the reference is recorded.
+- [x] (M1B) the type strings of every key on the test device parse; any
+      token not in the reference is recorded — 2026-10-09: `ATT,AES128`,
+      `ATT,AES256`, `ATT,PKEY,ECDH,CURVE25519`, `ATT,SHA2-256`,
+      `CERT,GENERIC_DER`, `ECDH,CURVE25519`, `PKEY,GENERIC_DER` all parsed;
+      no token outside the reference.

@@ -1,9 +1,9 @@
 ---
 id: REQ-API-009
 title: Secrets never logged, stored or put into error messages
-status: approved
+status: verified
 priority: must
-revision: 1
+revision: 5
 source: start_point G13; ARCHITECTURE.md §1
 depends_on: []
 supersedes: null
@@ -22,11 +22,11 @@ Anything it leaks into logs or error reports ends up in places with weaker
 protection than the process memory. Introduced in M1.
 
 **Acceptance criteria:**
-- [ ] A static check shows `src/` contains no console output and no use of
+- [x] A static check shows `src/` contains no console output and no use of
       persistent storage (web storage, IndexedDB, files, environment
       variables).
-- [ ] A unit test inspects the error of a failed login — message, properties
+- [x] A unit test inspects the error of a failed login — message, properties
       and JSON form — and finds neither the passphrase, the eJWT nor a
       token.
-- [ ] A unit test does the same for a failed authenticated call and finds no
+- [x] A unit test does the same for a failed authenticated call and finds no
       token.

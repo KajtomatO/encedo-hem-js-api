@@ -1,9 +1,9 @@
 ---
 id: REQ-AUTH-007
 title: Renewal before expiry
-status: approved
+status: verified
 priority: must
-revision: 1
+revision: 4
 source: start_point G11; ARCHITECTURE.md §5; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: ["REQ-AUTH-004", "REQ-AUTH-006"]
 supersedes: null
@@ -22,8 +22,11 @@ device's check costs a failed call. A margin avoids that; 60 seconds is the
 margin the C client uses [C-SDK]. Introduced in M1.
 
 **Acceptance criteria:**
-- [ ] With an injected clock: at 61 seconds before expiry the cached token
+- [x] With an injected clock: at 61 seconds before expiry the cached token
       is used; at 60 seconds a login happens before the call.
-- [ ] Renewal happens on demand; the library starts no background timer.
-- [ ] (M1B) with a short configured lifetime, a call made after the token
-      has passed its margin triggers a login and succeeds.
+- [x] Renewal happens on demand; the library starts no background timer.
+- [x] (M1B) with a short configured lifetime, a call made after the token
+      has passed its margin triggers a login and succeeds — 2026-10-09:
+      `tokenLifetimeSeconds: 90`; a call 5 s after the login reused the
+      token, a call 36 s after it logged in again (second proof accepted) and
+      succeeded.

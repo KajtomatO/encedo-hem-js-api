@@ -1,9 +1,9 @@
 ---
 id: REQ-NET-005
 title: Cancellation of every call
-status: approved
+status: verified
 priority: must
-revision: 1
+revision: 5
 source: start_point G7
 depends_on: ["REQ-API-002"]
 supersedes: null
@@ -22,11 +22,11 @@ stop in-flight work. `AbortSignal` is the mechanism both runtimes share.
 Introduced in M1.
 
 **Acceptance criteria:**
-- [ ] Aborting during the request rejects with `HemAbortError` and aborts
+- [x] Aborting during the request rejects with `HemAbortError` and aborts
       the signal given to `fetch`.
-- [ ] A signal that is already aborted rejects the call without calling
+- [x] A signal that is already aborted rejects the call without calling
       `fetch`.
-- [ ] Aborting a call that is still waiting in the request queue removes it;
+- [x] Aborting a call that is still waiting in the request queue removes it;
       it is never sent.
-- [ ] Aborting one call does not fail another call that shares the same
+- [x] Aborting one call does not fail another call that shares the same
       login.

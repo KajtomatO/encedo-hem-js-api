@@ -1,9 +1,9 @@
 ---
 id: REQ-AUTH-001
 title: Unattended passphrase login
-status: approved
+status: verified
 priority: must
-revision: 1
+revision: 4
 source: start_point M1.1; start_point G9; start_point §6 Q1; https://github.com/KajtomatO/encedo-hem-c-api; ref/api/hem-api-1.2.2.yaml
 depends_on: ["REQ-AUTH-002", "REQ-AUTH-003", "REQ-API-002"]
 supersedes: null
@@ -34,17 +34,23 @@ complete a login. The reference does not describe how the proof is built
 [YAML]; the flow above is the answer to open question Q1. Introduced in M1.
 
 **Acceptance criteria:**
-- [ ] With a substituted `fetch` replaying a challenge, the requests are one
+- [x] With a substituted `fetch` replaying a challenge, the requests are one
       GET then one POST, neither carries an `Authorization` header, and the
       POST body is exactly the expected proof for the vector of
       REQ-AUTH-002.
-- [ ] A challenge missing `eid`, `spk` or `jti`, an `spk` that does not
+- [x] A challenge missing `eid`, `spk` or `jti`, an `spk` that does not
       decode to 32 bytes, or a reply without `token`, raises
       `HemProtocolError`.
-- [ ] A 401 on the proof raises `HemUnauthenticatedError` (after the
+- [x] A 401 on the proof raises `HemUnauthenticatedError` (after the
       recovery of REQ-AUTH-009 where it applies); a 409 raises
       `HemDeviceStateError`.
-- [ ] (M1B) an unattended login against the device succeeds; the token's
-      `sub` is `U` and its `scope` equals the requested scope.
-- [ ] (M1B) a wrong passphrase raises `HemUnauthenticatedError`; the
-      observed response delay is recorded.
+- [x] (M1B) an unattended login against the device succeeds; the token's
+      `sub` is `U` and its `scope` equals the requested scope — 2026-10-09,
+      fw 1.2.2-DIAG: the proof was accepted in 722 ms; the token's claims are
+      `scope` (the requested `keymgmt:list`), `sub` `U`, `iat`, `exp`, `jti`
+      (tests/integration/login-session.test.ts).
+- [x] (M1B) a wrong passphrase raises `HemUnauthenticatedError`; the
+      observed response delay is recorded — 2026-10-09: two attempts, 401
+      after 718 ms and 729 ms (the device's ≥ 500 ms delay plus the round
+      trip; no escalation after two failures); a correct login right after
+      took 721 ms.
