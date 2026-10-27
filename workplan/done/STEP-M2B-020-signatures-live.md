@@ -7,9 +7,9 @@ traces:
   architecture: ["ARCHITECTURE.md#6-protocol-bindings"]
 depends_on: ["STEP-M2B-010"]
 evidence:
-  commits: []
-  tests: []
-  notes: null
+  commits: ["322018f", "10780af"]
+  tests: ["verifies: REQ-OPS-005, REQ-OPS-006, REQ-OPS-007 (tests/integration/signatures.test.ts, live 2026-10-27)"]
+  notes: "Live 2026-10-27 against my.ence.do: 4/4 passed. HMAC verify: own MAC true, altered MAC false, other message false. P-256: 70-byte DER signature, verified locally after DER→r||s conversion against the X9.63-compressed public key decompressed in the test (Web Crypto takes raw uncompressed or JWK; the decompression is a 20-line modular square root in the test, nothing in the library). Ed25519: raw 64 bytes, verified locally. Ed25519ctx with a context: signed. ECDH-only SECP256R1 key signing → 406 (quirk 11). Device verify: true for the right message, false for another, both keys. All EHEMTEST keys deleted. The user gave a standing go for the remaining non-destructive M2B steps (2026-10-27)."
 reopened: []
 cancelled: null
 ---
@@ -33,14 +33,14 @@ cancelled: null
   decide in the test and note it.
 
 **Definition of done**
-- [ ] HMAC verify: `true` for the device's own MAC, `false` for an altered
+- [x] HMAC verify: `true` for the device's own MAC, `false` for an altered
       one.
-- [ ] Sign: P-256 and Ed25519 signatures verify locally; ECDSA encoding
+- [x] Sign: P-256 and Ed25519 signatures verify locally; ECDSA encoding
       recorded in REQ-OPS-006.
-- [ ] Verify: `true` for the device's signature, `false` over another
+- [x] Verify: `true` for the device's signature, `false` over another
       message.
-- [ ] The integration test passes live; the summary (counts, time) is in
+- [x] The integration test passes live; the summary (counts, time) is in
       `evidence.notes`.
-- [ ] Every `(M2B)` box of the REQs above is ticked with its finding, or
+- [x] Every `(M2B)` box of the REQs above is ticked with its finding, or
       carried forward by a recorded user decision; revisions bumped.
-- [ ] No `EHEMTEST` key remains on the device.
+- [x] No `EHEMTEST` key remains on the device.
