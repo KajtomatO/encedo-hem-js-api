@@ -96,21 +96,21 @@ describeDevice('key update, import and derive on the device', () => {
   }, 60_000);
 
   // verifies: REQ-KEY-009
-  it('probes the derive echo quirk: an unrecognised type sent without the library’s validation', async () => {
+  it.each(['EHEMTEST-NOT-A-TYPE', 'MLKEM768'])('probes the derive echo quirk: type %s sent without the library’s validation', async (type) => {
     const label = keys.label();
-    const body = { kid: aliceKid, label, type: 'EHEMTEST-NOT-A-TYPE', ext_kid: bobKid };
+    const body = { kid: aliceKid, label, type, ext_kid: bobKid };
     const outcome = await invoke(contextOf(client), KEY_DERIVE, { body }).then(
       (r) => ({ kind: 'reply' as const, kid: String(r['kid']), echoed: String(r['kid']).toLowerCase() === aliceKid }),
       (error: unknown) => ({ kind: 'error' as const, name: (error as Error).name, status: (error as { status?: number }).status }),
     );
-    log('derive echo probe', outcome);
+    log(`derive echo probe ${type}`, outcome);
     if (outcome.kind === 'reply' && !outcome.echoed) keys.track(outcome.kid.toLowerCase());
-    // The library's own call with a bad type never reaches the device; with an
+    // The library's own call with such a type never reaches the device; with an
     // echoed id it would raise HemProtocolError (unit-tested). Nothing is asserted
     // about the device here: the finding is recorded.
     expect(['reply', 'error']).toContain(outcome.kind);
     const stillThere = (await client.keys.listAll()).filter((key) => key.label === label);
-    log('derive echo probe: keys with the probe label', stillThere.map((key) => ({ kid: key.kid, type: key.type.raw })));
+    log(`derive echo probe ${type}: keys with the probe label`, stillThere.map((key) => ({ kid: key.kid, type: key.type.raw })));
     for (const key of stillThere) keys.track(key.kid);
     expect(HemProtocolError).toBeDefined();
   }, 60_000);

@@ -3,7 +3,7 @@ id: REQ-KEY-009
 title: Derive a key by ECDH and HKDF
 status: verified
 priority: must
-revision: 3
+revision: 4
 source: start_point §4; start_point G16; ref/api/hem-api-1.2.2.yaml; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: ["REQ-AUTH-005", "REQ-API-005"]
 supersedes: null
@@ -41,5 +41,11 @@ Introduced in M2.
 - [x] (M2B) a key is derived on the test device from two X25519 keys and
       appears in the list — live 2026-10-27 (STEP-M2B-010): type `AES256`,
       listed with its label; deriving the same key again → 406 (quirk 12).
-- [ ] (M2B) the echo behaviour is probed with an unrecognised type sent
-      outside the library's validation, and the result recorded.
+- [x] (M2B) the echo behaviour is probed with an unrecognised type sent
+      outside the library's validation, and the result recorded — live
+      2026-10-27 (STEP-M2B-010): an arbitrary string (`EHEMTEST-NOT-A-TYPE`)
+      is refused with 400; a known type the derive cannot produce
+      (`MLKEM768`) is answered 200 with the *source* key id and no key is
+      created — the echo of quirk 4, exactly as the reference describes.
+      The library's guards (type list before sending, echoed id →
+      `HemProtocolError`) cover both.
