@@ -7,9 +7,9 @@ traces:
   architecture: ["ARCHITECTURE.md#6-protocol-bindings"]
 depends_on: ["STEP-M2B-020"]
 evidence:
-  commits: []
-  tests: []
-  notes: null
+  commits: ["85bbeb0", "8f6487b"]
+  tests: ["verifies: REQ-OPS-008, REQ-OPS-009 (tests/integration/cipher.test.ts, live 2026-10-27)"]
+  notes: "Live 2026-10-27 against my.ence.do: 6/6 passed. ECB 32→32 bytes, no IV; CBC 47→48 bytes with a 16-byte IV (device pads); GCM 47→47 bytes, 16-byte IV and tag; fresh IV per GCM call; altered tag → 406, other AAD → 406; AES256 algorithm on an AES128 key → 406. All EHEMTEST keys deleted."
 reopened: []
 cancelled: null
 ---
@@ -27,10 +27,10 @@ cancelled: null
   CBC ciphertext length shows the device's padding. Deletes the key.
 
 **Definition of done**
-- [ ] Each mode round-trips; IV and tag lengths recorded in REQ-OPS-008.
-- [ ] Altered GCM tag fails with the recorded status (REQ-OPS-009).
-- [ ] The integration test passes live; the summary (counts, time) is in
+- [x] Each mode round-trips; IV and tag lengths recorded in REQ-OPS-008.
+- [x] Altered GCM tag fails with the recorded status (REQ-OPS-009).
+- [x] The integration test passes live; the summary (counts, time) is in
       `evidence.notes`.
-- [ ] Every `(M2B)` box of the REQs above is ticked with its finding, or
+- [x] Every `(M2B)` box of the REQs above is ticked with its finding, or
       carried forward by a recorded user decision; revisions bumped.
-- [ ] No `EHEMTEST` key remains on the device.
+- [x] No `EHEMTEST` key remains on the device.
