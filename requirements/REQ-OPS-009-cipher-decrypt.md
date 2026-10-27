@@ -3,7 +3,7 @@ id: REQ-OPS-009
 title: AES decryption
 status: verified
 priority: must
-revision: 2
+revision: 3
 source: start_point §4; ref/api/hem-api-1.2.2.yaml
 depends_on: ["REQ-AUTH-005", "REQ-API-005", "REQ-NET-003"]
 supersedes: null
@@ -30,5 +30,7 @@ encrypt returned. Introduced in M2.
       value the mode cannot use is a caller mistake, not noise).
 - [x] A 406 (decryption or authentication failure) raises
       `HemOperationFailedError`.
-- [ ] (M2B) the outputs of REQ-OPS-008 decrypt on the test device to the
-      original message; a GCM message with an altered tag fails.
+- [x] (M2B) the outputs of REQ-OPS-008 decrypt on the test device to the
+      original message; a GCM message with an altered tag fails — live
+      2026-10-27 (STEP-M2B-030): all three modes round-trip; an altered
+      tag and a different AAD both → 406.

@@ -3,7 +3,7 @@ id: REQ-OPS-008
 title: AES encryption
 status: verified
 priority: must
-revision: 2
+revision: 3
 source: start_point §4; ref/api/hem-api-1.2.2.yaml; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: ["REQ-AUTH-005", "REQ-API-005", "REQ-NET-003"]
 supersedes: null
@@ -35,5 +35,9 @@ has to carry everything decryption will need. Introduced in M2.
 - [x] An unknown algorithm, ECB input that is not a multiple of 16 bytes, or
       associated data given with a mode other than GCM, raises
       `HemValidationError`.
-- [ ] (M2B) each of the three modes is run on the test device with an
-      `AES256` key; the IV and tag lengths are recorded.
+- [x] (M2B) each of the three modes is run on the test device with an
+      `AES256` key; the IV and tag lengths are recorded — live 2026-10-27
+      (STEP-M2B-030): ECB 32 → 32 bytes, no IV; CBC 47 → 48 bytes (PKCS#7
+      padding by the device), 16-byte IV; GCM 47 → 47 bytes, 16-byte IV
+      and 16-byte tag; two GCM encryptions of one message got different
+      IVs. An `AES256-*` algorithm on an `AES128` key → 406.
