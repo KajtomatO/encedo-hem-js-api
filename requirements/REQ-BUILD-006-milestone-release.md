@@ -3,7 +3,7 @@ id: REQ-BUILD-006
 title: A versioned release at the end of each milestone
 status: verified
 priority: must
-revision: 1
+revision: 2
 source: start_point G4; ARCHITECTURE.md §4
 depends_on: ["REQ-API-008", "REQ-BUILD-001"]
 supersedes: null
@@ -35,6 +35,7 @@ in M1B.
       `README.md`, `LICENSE` and `CHANGELOG.md`.
 - [x] The package name is decided before 0.1.0 (ARCHITECTURE.md §11, risk
       12) — `@kajtomato/encedo-hem-sdk` (user decision 2026-10-20).
-- [ ] Tagging and publishing are done by the user — left open on purpose:
-      the tag `v0.1.0` and `npm publish` are the user's actions; the
-      library never pushes or publishes.
+- [x] Tagging and publishing are done by the user — tag `v0.1.0` pushed
+      and 0.1.0 published by the user on 2026-10-27;
+      `npm view @kajtomato/encedo-hem-sdk version` → `0.1.0`. The library
+      never pushes or publishes by itself.

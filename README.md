@@ -6,9 +6,9 @@ dependencies and uses only `fetch` and Web Crypto.
 
 > **Status:** version 0.1.0 — milestone M1 implemented, unit-tested and
 > **verified against a development device** (firmware 1.2.2) in October 2026;
-> not yet published to npm. Device behaviour that the library relies on comes
-> from the API reference (`ref/api/hem-api-1.2.2.yaml`), from the
-> device-verified C client, https://github.com/KajtomatO/encedo-hem-c-api,
+> published to npm as `@kajtomato/encedo-hem-sdk`. Device behaviour that the
+> library relies on comes from the API reference (`ref/api/hem-api-1.2.2.yaml`),
+> from the device-verified C client, https://github.com/KajtomatO/encedo-hem-c-api,
 > and from this library's own device runs. See `CHANGELOG.md`.
 
 ## Requirements
