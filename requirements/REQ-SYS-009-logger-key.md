@@ -3,7 +3,7 @@ id: REQ-SYS-009
 title: Audit-log verification key
 status: verified
 priority: must
-revision: 2
+revision: 3
 source: start_point §4; start_point M2.3; ref/api/hem-api-1.2.2.yaml
 depends_on: ["REQ-AUTH-005", "REQ-API-004"]
 supersedes: null
@@ -27,4 +27,6 @@ caller. Introduced in M2.
 - [x] The result contains `key` (32 bytes), `nonce` (32 bytes) and
       `nonce_signed` (64 bytes) as bytes — `{ key, nonce, nonceSigned }`;
       the lengths are not enforced by the library and are recorded at M2B.
-- [ ] (M2B) the device returns key material of those lengths.
+- [x] (M2B) the device returns key material of those lengths — live
+      2026-10-27 (STEP-M2B-060): 32, 32 and 64 bytes; two calls within a
+      second returned the same nonce (it is time-based, per the reference).

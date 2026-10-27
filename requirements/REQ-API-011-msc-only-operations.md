@@ -3,7 +3,7 @@ id: REQ-API-011
 title: Clear error for operations the hardware does not provide
 status: verified
 priority: must
-revision: 2
+revision: 3
 source: start_point G20; ref/api/hem-api-1.2.2.yaml; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: ["REQ-API-002"]
 supersedes: null
@@ -38,6 +38,10 @@ translation looks like a library bug. Introduced in M2.
 - [x] For audit-log download, where 404 also means an unknown file id
       [YAML], the error states both possible causes — STEP-M2A-070
       (2026-10-27).
-- [ ] (M2B) the M2 operations of this kind run on the test device, and its
-      hardware build is recorded. Behaviour on hardware without mass storage
-      stays unverified unless such a device is available.
+- [x] (M2B) the M2 operations of this kind run on the test device, and its
+      hardware build is recorded — live 2026-10-27 (STEP-M2B-060): the
+      test device is a mass-storage build (`PPA rev 2.2`, `Encedo nGINE FW
+      v1.2.2-DIAG`, status `storage` `["8388607:ro", "234364924:-"]`, the
+      storage fields in the configuration); listing and download worked.
+      Behaviour on hardware without mass storage stays unverified unless
+      such a device is available.

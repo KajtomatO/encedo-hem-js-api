@@ -3,7 +3,7 @@ id: REQ-SYS-008
 title: Read device configuration
 status: verified
 priority: must
-revision: 2
+revision: 3
 source: start_point §4; ref/api/hem-api-1.2.2.yaml
 depends_on: ["REQ-AUTH-005", "REQ-API-006"]
 supersedes: null
@@ -34,5 +34,11 @@ flags. Introduced in M2.
 - [x] Optional fields (`instanceid` and the mass-storage ones) are included
       when present — `instanceid`, `genuineId`, `storageMode`,
       `storageDisk0Size`, `storageCapacity`.
-- [ ] (M2B) the live configuration of the test device is read; field
-      presence is recorded.
+- [x] (M2B) the live configuration of the test device is read; field
+      presence is recorded — live 2026-10-27 (STEP-M2B-060): all 19
+      required fields present (`email` is an empty string); every optional
+      field present on this mass-storage build (`instanceid`, `genuine_id`,
+      `storage_mode` 81, `storage_disk0size` 8388607, `storage_capacity`
+      242753531); `eid`, `eid_sign`, `spk`, `nonce` 32 bytes each;
+      `origin` `*`, `trusted_backend` true, `trusted_ts` true,
+      `allow_keysearch` true, `dnsd` false, `hsts` false, DoS mode 0.

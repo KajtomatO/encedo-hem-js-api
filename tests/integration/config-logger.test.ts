@@ -80,12 +80,24 @@ describeDevice('configuration and audit log on the device', () => {
       const next = await client.logger.list({ offset: page.ids.length });
       log('logger list: second page', { offset: page.ids.length, idsOnPage: next.ids.length, total: next.total });
     }
-    const newest = [...page.ids].sort().at(-1);
+    const sorted = [...page.ids].sort();
+    const newest = sorted.at(-1);
     if (newest === undefined) {
       log('logger download', 'no log file to download');
       return;
     }
-    const file = await client.logger.download(newest);
+    // The newest file is the one of the current boot, still being written: the reference says 406.
+    const current = await client.logger.download(newest).then(
+      (f) => ({ downloaded: true, bytes: f.bytes.length }),
+      (error: unknown) => ({ downloaded: false, error: `${(error as Error).name} ${(error as { status?: number }).status ?? ''}` }),
+    );
+    log('logger download of the newest (current boot) file', { id: newest, ...current });
+    const previous = sorted.at(-2);
+    if (previous === undefined) {
+      log('logger download', 'only the current file exists');
+      return;
+    }
+    const file = await client.logger.download(previous);
     const text = file.text();
     const lines = text.split('\n');
     const sample = lines.slice(0, 3).map((line) => line.replace(/[0-9a-fA-F]{32,}/g, (h) => `<${h.length} hex>`));

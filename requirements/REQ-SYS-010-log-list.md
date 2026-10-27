@@ -3,7 +3,7 @@ id: REQ-SYS-010
 title: Paged audit-log listing
 status: verified
 priority: must
-revision: 2
+revision: 3
 source: start_point §4; start_point M2.4; ref/api/hem-api-1.2.2.yaml
 depends_on: ["REQ-AUTH-005", "REQ-API-011"]
 supersedes: null
@@ -34,4 +34,6 @@ Introduced in M2.
       mass-storage hardware — TSDoc of `logger.list`; the operation-docs
       test requires the mass-storage note for every `mscOnly` operation.
 - [x] A negative or non-integer offset raises `HemValidationError`.
-- [ ] (M2B) the log files of the test device are listed.
+- [x] (M2B) the log files of the test device are listed — live 2026-10-27
+      (STEP-M2B-060): `total` 64, 64 ids on the first page (8 lower-case
+      hex each), so no second page was needed.
