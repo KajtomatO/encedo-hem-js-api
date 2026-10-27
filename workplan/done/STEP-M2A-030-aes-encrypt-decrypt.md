@@ -7,9 +7,9 @@ traces:
   architecture: ["ARCHITECTURE.md#6-protocol-bindings"]
 depends_on: []
 evidence:
-  commits: []
-  tests: []
-  notes: null
+  commits: ["c0562cb"]
+  tests: ["verifies: REQ-OPS-008 (tests/unit/crypto-cipher.test.ts)", "verifies: REQ-OPS-009 (tests/unit/crypto-cipher.test.ts)"]
+  notes: "npm run check on 2026-10-27: 90 files, 1741 tests passed in Node v24.21.0 and headless Chromium. Response fields from the reference: ciphertext, iv, tag; plaintext. The IV is read as required for CBC/GCM and the tag for GCM (HemProtocolError when absent); ECB tolerates either being present. Decrypt refuses an IV with ECB, a tag outside GCM and aad outside GCM (library decision, noted in REQ-OPS-009). The ciphertext of decrypt has no upper bound of its own (the reference states none); the 'max 16 bytes nominal' of aad is not enforced. Surface snapshot: 22 additions. The peer/ctx fields of the ECDH-agreed mode come with STEP-M2A-040."
 reopened: []
 cancelled: null
 ---
@@ -29,21 +29,21 @@ cancelled: null
 - Message limits from the reference, enforced before sending (REQ-API-005).
 
 **Definition of done**
-- [ ] Encrypt: body `{kid, msg, alg}` plus `aad` for GCM; scope
+- [x] Encrypt: body `{kid, msg, alg}` plus `aad` for GCM; scope
       `keymgmt:use:<kid>`; result has ciphertext, IV (CBC, GCM) and tag
       (GCM) as bytes.
-- [ ] Encrypt: unknown algorithm, ECB input not a multiple of 16 bytes, or
+- [x] Encrypt: unknown algorithm, ECB input not a multiple of 16 bytes, or
       `aad` with a non-GCM mode raises `HemValidationError`.
-- [ ] Decrypt: body `{kid, msg, alg}` plus `iv`, `tag`, `aad` as the mode
+- [x] Decrypt: body `{kid, msg, alg}` plus `iv`, `tag`, `aad` as the mode
       requires; result is the plaintext as bytes; wrong-length or missing
       IV/tag raises `HemValidationError`; 406 raises
       `HemOperationFailedError`.
-- [ ] Each operation has unit tests asserting method, path, headers, body
+- [x] Each operation has unit tests asserting method, path, headers, body
       and response mapping (Node 24 and the browser run), and TSDoc stating
       scope and milestone (`Introduced in M2.`).
-- [ ] Each operation raises `HemTlsRequiredError` on an `http:` client with
+- [x] Each operation raises `HemTlsRequiredError` on an `http:` client with
       zero `fetch` calls.
-- [ ] `implements:` and `verifies:` tags exist for the REQs above; the
+- [x] `implements:` and `verifies:` tags exist for the REQs above; the
       non-`(M2B)` acceptance boxes this step closes are ticked in the REQ
       files (revision bumped).
-- [ ] `npm run surface:update` adds entries only; `npm run check` passes.
+- [x] `npm run surface:update` adds entries only; `npm run check` passes.
