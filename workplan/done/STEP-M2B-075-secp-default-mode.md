@@ -7,9 +7,9 @@ traces:
   architecture: ["ARCHITECTURE.md#6-protocol-bindings"]
 depends_on: ["STEP-M2B-070"]
 evidence:
-  commits: []
-  tests: []
-  notes: null
+  commits: ["2b93ad3", "ac13b18"]
+  tests: ["verifies: REQ-KEY-001, REQ-KEY-008, REQ-KEY-009 (tests/unit/keys-create-get.test.ts, tests/unit/keys-update-import-derive.test.ts; tests/integration/keys-secp-mode.test.ts, live 2026-10-27)"]
+  notes: "Live 2026-10-27 against my.ence.do: 4/4 passed in 12.6 s. A SECP256R1 key created without mode is listed ATT,PKEY,ECDH,SECP256R1 and gives a 32-byte secret against a local P-256 peer; a local P-256 public key imported without mode is listed ECDH,SECP256R1 and, as extKid, gives the same secret as the raw form; mode ExDSA is kept (ATT,PKEY,ExDSA,SECP256R1). Derive: firmware 1.2.2 refuses every SECP* target with 406 — probed with no mode, ECDH and ECDH,ExDSA from X25519 and P-256 sources, while CURVE25519, ED25519, AES256 and SHA2-256 targets derive (new quirk 21); the REQ-KEY-009 (M2B) box stays open for the user. Two probe anomalies (an imported peer refused by key id, a raw peer refused) were both the quirk-12 duplicate of a derivation made moments before from the same material, not a peer-form rule. npm run check: 99 files, 2107 tests; surface unchanged. All EHEMTEST keys deleted."
 reopened: []
 cancelled: null
 ---
@@ -41,9 +41,11 @@ cancelled: null
   kept). All keys `EHEMTEST`-labelled and deleted.
 
 **Definition of done**
-- [ ] The three bindings default `mode` to `ECDH` for `SECP*` types only;
+- [x] The three bindings default `mode` to `ECDH` for `SECP*` types only;
       unit tests cover the default, an explicit mode and a non-`SECP` type;
       `npm run check` passes with the surface unchanged.
-- [ ] The integration test passes live; the summary is in `evidence.notes`.
-- [ ] The reworded criteria and the new `(M2B)` boxes of REQ-KEY-001/008/009
-      are ticked with their findings; docs updated.
+- [x] The integration test passes live; the summary is in `evidence.notes`.
+- [x] The reworded criteria and the new `(M2B)` boxes of REQ-KEY-001/008/009
+      are ticked with their findings; docs updated — except the REQ-KEY-009
+      `(M2B)` box, not observable on firmware 1.2.2 (quirk 21), left to the
+      user.
