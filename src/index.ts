@@ -49,7 +49,7 @@ export type { Role, SessionInfo } from './auth/session.js';
 export type { Clock } from './auth/login.js';
 export type { ApprovalDetails, ApprovalPoll, PendingApproval, WaitOptions } from './auth/approval.js';
 export type { HemClientOptions, MobileApprovalOptions } from './client.js';
-export type { CheckinResult, HealthReport, SystemApi, SystemStatus, SystemVersion } from './api/system.js';
+export type { CheckinResult, DeviceConfig, HealthReport, SystemApi, SystemStatus, SystemVersion } from './api/system.js';
 export { EncedoCheckinRelay, ENCEDO_CHECKIN_URL } from './relay/checkin.js';
 export type { CheckinRelay, EncedoCheckinRelayOptions } from './relay/checkin.js';
 export type { RelayCallOptions } from './relay/http.js';

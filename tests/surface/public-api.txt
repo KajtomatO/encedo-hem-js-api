@@ -85,6 +85,31 @@ DeriveKeyParams.mode	mode?:KeyMode|undefined
 DeriveKeyParams.peer	peer:KeyPeer
 DeriveKeyParams.type	type:DerivableKeyType
 DescriptionMatch	export type DescriptionMatch='prefix'|'suffix'|'contains'
+DeviceConfig	export interface DeviceConfig
+DeviceConfig.allowKeysearch	readonly allowKeysearch:boolean
+DeviceConfig.createdAt	readonly createdAt:number
+DeviceConfig.ctx	readonly ctx:number
+DeviceConfig.devid	readonly devid:string
+DeviceConfig.dnsd	readonly dnsd:boolean
+DeviceConfig.dosProtectionMode	readonly dosProtectionMode:number
+DeviceConfig.eid	readonly eid:Uint8Array
+DeviceConfig.eidSign	readonly eidSign:Uint8Array
+DeviceConfig.email	readonly email:string
+DeviceConfig.genuineId	readonly genuineId?:string
+DeviceConfig.hostname	readonly hostname:string
+DeviceConfig.hsts	readonly hsts:boolean
+DeviceConfig.instanceid	readonly instanceid?:string
+DeviceConfig.ip	readonly ip:string
+DeviceConfig.nonce	readonly nonce:Uint8Array
+DeviceConfig.origin	readonly origin:string
+DeviceConfig.spk	readonly spk:Uint8Array
+DeviceConfig.storageCapacity	readonly storageCapacity?:number
+DeviceConfig.storageDisk0Size	readonly storageDisk0Size?:number
+DeviceConfig.storageMode	readonly storageMode?:number
+DeviceConfig.trustedBackend	readonly trustedBackend:boolean
+DeviceConfig.trustedTime	readonly trustedTime:boolean
+DeviceConfig.updatedAt	readonly updatedAt:number
+DeviceConfig.user	readonly user:string
 ENCEDO_CHECKIN_URL	export declare const ENCEDO_CHECKIN_URL="https://api.encedo.com/checkin"
 ENCEDO_NOTIFY_URL	export declare const ENCEDO_NOTIFY_URL="https://api.encedo.com/notify"
 EcdhParams	export interface EcdhParams
@@ -348,6 +373,7 @@ SignParams.msg	msg:Uint8Array
 SignatureAlgorithm	export type SignatureAlgorithm=(typeof SIGNATURE_ALGORITHMS)[number]
 SystemApi	export interface SystemApi
 SystemApi.checkin	checkin(options?:CallOptions):Promise<CheckinResult>
+SystemApi.config	config(options?:CallOptions):Promise<DeviceConfig>
 SystemApi.getCheckin	getCheckin(options?:CallOptions):Promise<string>
 SystemApi.health	health(options?:CallOptions):Promise<HealthReport>
 SystemApi.postCheckin	postCheckin(checked:string,options?:CallOptions):Promise<CheckinResult>

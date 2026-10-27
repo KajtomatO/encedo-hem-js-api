@@ -141,11 +141,11 @@ export function contextOf(client: HemClient): BindingContext {
 export class HemClient {
   /** Session: role and logout. */
   readonly auth: AuthApi;
-  /** Device-wide calls: status, version, health, check-in. */
+  /** Device-wide calls: status, version, health, check-in, configuration. */
   readonly system: SystemApi;
-  /** Key repository: create, get, list, search, delete. */
+  /** Key repository: create, get, list, search, delete, update, import, derive. */
   readonly keys: KeysApi;
-  /** Operations with stored keys: HMAC, wrap, unwrap. */
+  /** Operations with stored keys: HMAC, wrap, unwrap, sign, verify, encrypt, decrypt, ECDH, ML-KEM, ML-DSA. */
   readonly crypto: CryptoApi;
 
   constructor(options: HemClientOptions) {

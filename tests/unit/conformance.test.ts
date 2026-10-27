@@ -12,6 +12,15 @@ const KID = '0123456789abcdef0123456789abcdef';
 const UPPER_KID = KID.toUpperCase();
 const NEW_KID = '00112233445566778899aabbccddeeff';
 const IV16 = 'AQEBAQEBAQEBAQEBAQEBAQ==';
+const CONFIG = {
+  iat: 1, uts: 2, devid: '0011223344556677', eid: 'AQ==', eid_sign: 'Ag==', user: 'u', email: 'e', hostname: 'h', dnsd: true, trusted_ts: true,
+  trusted_backend: false, allow_keysearch: true, origin: '*', ctx: 0, ip: '192.168.7.1/24', http_option_hsts: false, http_option_dosprot_mode: 0, spk: 'Aw==', nonce: 'BA==',
+};
+const CONFIG_RESULT = {
+  createdAt: 1, updatedAt: 2, devid: '0011223344556677', eid: Uint8Array.from([1]), eidSign: Uint8Array.from([2]), user: 'u', email: 'e', hostname: 'h', dnsd: true,
+  trustedTime: true, trustedBackend: false, allowKeysearch: true, origin: '*', ctx: 0, ip: '192.168.7.1/24', hsts: false, dosProtectionMode: 0,
+  spk: Uint8Array.from([3]), nonce: Uint8Array.from([4]),
+};
 const EPK = 'AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE=';
 const APP_TOKEN = fakeToken({ sub: 'YXBw', exp: v.iat + 900 });
 const STATUS = { ctx: 0, uptime: 1, temp: 30, fls_state: 0 };
@@ -32,6 +41,7 @@ function device(): FakeFetch {
     .always('GET', '/api/system/version', { body: { hwv: 'h', fwv: 'f', fwk: 'AQI=', fws: 'AwQ=' } })
     .always('GET', '/api/system/checkin', { body: { check: 'chk' } })
     .always('POST', '/api/system/checkin', { body: { status: 'OK' } })
+    .always('GET', '/api/system/config', { body: CONFIG })
     .always('POST', '/api/keymgmt/create', { body: { kid: KID } })
     .always('GET', `/api/keymgmt/get/${KID}`, { body: { updated: 5, pubkey: 'AQID' } })
     .always('GET', /^\/api\/keymgmt\/list/, { body: ENVELOPE })
@@ -99,6 +109,7 @@ const samples: Record<string, Sample> = {
     body: { checked: 'reply' },
     result: { status: 'OK' },
   },
+  'system.config /api/system/config': { run: (c) => c.system.config(), path: '/api/system/config', body: undefined, result: CONFIG_RESULT },
   'keys.create /api/keymgmt/create': {
     run: (c) => c.keys.create({ label: 'k', type: 'AES256' }),
     path: '/api/keymgmt/create',
@@ -234,6 +245,7 @@ const ARCHITECTURE_SCOPES: Record<string, string | null> = {
   'system.version': null,
   'system.getCheckin': null,
   'system.postCheckin': null,
+  'system.config': 'system:config',
   'keys.create': 'keymgmt:gen',
   'keys.get': `keymgmt:use:${KID}`,
   'keys.search': 'keymgmt:search',
