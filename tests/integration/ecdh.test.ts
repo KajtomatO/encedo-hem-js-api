@@ -30,16 +30,13 @@ async function localX25519(): Promise<LocalPeer> {
   };
 }
 
-/** A local P-384 pair; the public key in compressed X9.63 form, as the device takes SECP keys. */
-async function localP384(): Promise<LocalPeer> {
+/** A local P-384 public key in compressed X9.63 form (as the device takes SECP keys) and uncompressed. */
+async function localP384(): Promise<{ compressed: Uint8Array; uncompressed: Uint8Array }> {
   const pair = (await crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-384' }, false, ['deriveBits'])) as CryptoKeyPair;
-  const raw = new Uint8Array(await crypto.subtle.exportKey('raw', pair.publicKey)); // 0x04 || x || y, 97 bytes
-  const x = raw.slice(1, 49);
-  const yIsOdd = ((raw[96] as number) & 1) === 1;
-  return {
-    publicKey: Uint8Array.from([yIsOdd ? 3 : 2, ...x]),
-    secretWith: async () => new Uint8Array(0), // not needed: the device's raw P-384 output is only measured
-  };
+  const uncompressed = new Uint8Array(await crypto.subtle.exportKey('raw', pair.publicKey)); // 0x04 || x || y, 97 bytes
+  const x = uncompressed.slice(1, 49);
+  const yIsOdd = ((uncompressed[96] as number) & 1) === 1;
+  return { compressed: Uint8Array.from([yIsOdd ? 3 : 2, ...x]), uncompressed };
 }
 
 describeDevice('ECDH and the agreed-key mode on the device', () => {
@@ -54,7 +51,7 @@ describeDevice('ECDH and the agreed-key mode on the device', () => {
     client = deviceClient();
     keys = new TestKeys(client);
     xKid = await keys.create({ type: 'CURVE25519' });
-    p384Kid = await keys.create({ type: 'SECP384R1' });
+    p384Kid = await keys.create({ type: 'SECP384R1', mode: 'ECDH' });
     xPeer = await localX25519();
     devicePub = (await client.keys.get(xKid)).pubkey as Uint8Array;
     expect(devicePub).toHaveLength(32);
@@ -78,15 +75,53 @@ describeDevice('ECDH and the agreed-key mode on the device', () => {
   }, 60_000);
 
   // verifies: REQ-OPS-010
-  it('records the raw output length for a P-384 key (quirk 9)', async () => {
+  it('records the raw output length for a P-384 key (quirk 9), trying the peer as compressed, uncompressed and stored', async () => {
     const peer = await localP384();
-    const outcome = await client.crypto.ecdh({ kid: p384Kid, peer: { pubkey: peer.publicKey } }).then(
-      (secret) => ({ ok: true, bytes: secret.length }),
-      (error: unknown) => ({ ok: false, error: `${(error as Error).name} ${(error as { status?: number }).status ?? ''}` }),
+    const attempt = (run: () => Promise<Uint8Array>): Promise<{ ok: boolean; bytes?: number; error?: string }> =>
+      run().then(
+        (secret) => ({ ok: true, bytes: secret.length }),
+        (error: unknown) => ({ ok: false, error: `${(error as Error).name} ${(error as { status?: number }).status ?? ''}` }),
+      );
+    const compressed = await attempt(() => client.crypto.ecdh({ kid: p384Kid, peer: { pubkey: peer.compressed } }));
+    const uncompressed = await attempt(() => client.crypto.ecdh({ kid: p384Kid, peer: { pubkey: peer.uncompressed } }));
+    const imported = await client.keys.import({ label: keys.label(), pubkey: peer.compressed, type: 'SECP384R1' }).then(
+      (kid) => {
+        keys.track(kid);
+        return kid;
+      },
+      (error: unknown) => `${(error as Error).name} ${(error as { status?: number }).status ?? ''}`,
     );
-    log('P-384 raw', outcome);
-    expect(outcome.ok).toBe(true);
-  }, 60_000);
+    const stored = /^[0-9a-f]{32}$/.test(imported) ? await attempt(() => client.crypto.ecdh({ kid: p384Kid, peer: { extKid: imported } })) : { ok: false, error: `import: ${imported}` };
+    const deviceP384 = await keys.create({ type: 'SECP384R1', mode: 'ECDH' });
+    const twoStored = await attempt(() => client.crypto.ecdh({ kid: p384Kid, peer: { extKid: deviceP384 } }));
+    const noMode384 = await attempt(async () => {
+      const plain = await keys.create({ type: 'SECP384R1' });
+      return client.crypto.ecdh({ kid: plain, peer: { pubkey: peer.compressed } });
+    });
+    const stored256 = await attempt(async () => {
+      const other = await keys.create({ type: 'SECP256R1' });
+      const mine = await keys.create({ type: 'SECP256R1' });
+      return client.crypto.ecdh({ kid: mine, peer: { extKid: other } });
+    });
+    const explicitMode256 = await attempt(async () => {
+      const other = await keys.create({ type: 'SECP256R1', mode: 'ECDH' });
+      const mine = await keys.create({ type: 'SECP256R1', mode: 'ECDH' });
+      return client.crypto.ecdh({ kid: mine, peer: { extKid: other } });
+    });
+    const curve448 = await attempt(async () => {
+      const other = await keys.create({ type: 'CURVE448' });
+      const mine = await keys.create({ type: 'CURVE448' });
+      return client.crypto.ecdh({ kid: mine, peer: { extKid: other } });
+    });
+    const x25519TwoDeviceKeys = await attempt(async () => {
+      const other = await keys.create({ type: 'CURVE25519' });
+      return client.crypto.ecdh({ kid: xKid, peer: { extKid: other } });
+    });
+    const types = Object.fromEntries((await client.keys.listAll()).filter((k) => keys.created.includes(k.kid)).map((k) => [k.kid.slice(0, 8), k.type.raw]));
+    log('P-384 raw', { keyWithEcdhMode: { compressedPeer: compressed, uncompressedPeer: uncompressed, storedLocalPeer: stored, twoDeviceKeys: twoStored }, keyWithoutMode: noMode384, p256WithoutMode: stored256, p256ExplicitEcdhMode: explicitMode256, curve448TwoDeviceKeys: curve448, x25519TwoDeviceKeys, listedTypes: types });
+    expect(x25519TwoDeviceKeys.ok).toBe(true);
+    expect(compressed.ok || stored.ok, 'a P-384 key created with mode ECDH agrees with a P-384 peer').toBe(true);
+  }, 180_000);
 
   // verifies: REQ-OPS-010
   it('a stored peer works too: ECDH with the imported local public key gives the same secret', async () => {

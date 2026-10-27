@@ -442,9 +442,9 @@ Firmware quirks the bindings normalise or document [BRIEF G16]:
 | 6 | The device accepts a 65-byte description on create and silently truncates it on read. | [C-SDK] | Descriptions over 64 bytes are rejected before sending. |
 | 7 | `GET /api/keymgmt/get/{kid}` never returns the label, and on fw 1.2.2 not the description either. | [C-SDK] | Documented; label and description come from list or search. |
 | 8 | No match is 200 with an empty list (older firmware: 404), and the reply's `total` is then the repository's record count, not 0. [C-SDK] described the matching as on base64 text; on the device the comparison is on the decoded bytes — a 1-byte prefix and an unaligned `contains` needle both match. | [C-SDK]; device (2026-10-09) | 404 is mapped to an empty result; paging stops at an empty page. |
-| 9 | Raw ECDH output is truncated to 32 bytes even for larger curves. | [C-SDK] | Documented. |
+| 9 | Raw ECDH output is truncated to 32 bytes even for larger curves. | [C-SDK]; device (2026-10-27): 32 bytes for P-384 and Curve448 | Documented. |
 | 10 | In HMAC with a stored key, `alg` is ignored; the key's type decides the hash. | [YAML], [C-SDK] | `alg` is not sent in stored-key mode. |
-| 11 | SECP keys are created ECDH-only unless `mode` asks for ExDSA; signing with them fails with 406. | [C-SDK] | Documented on create and sign. |
+| 11 | A SECP key created without `mode` carries no usage flag: signing *and* ECDH with it fail with 406. [C-SDK] described the default as ECDH-only; the device does not grant ECDH either. The same holds for an imported SECP public key: without `mode` it cannot serve as an ECDH peer. A raw SECP peer must be compressed X9.63. | [C-SDK]; device (2026-10-27) | Documented on create, import, sign and ECDH: pass `mode` for every SECP key. |
 | 12 | Importing or deriving the same key material again fails with 406, because key ids are derived from the material. | [YAML], [C-SDK] | Documented. |
 | 13 | Firmware upload can close the connection with no response for an oversize image or a wrong file extension. | [YAML] | Size and filename are validated before sending. |
 | 14 | `GET /api/system/status` omits fields rather than sending defaults (`inited` only when false, `ts`/`time` only when the clock is set, `https` only over plain HTTP). | [YAML] | Parsed into explicit booleans. |

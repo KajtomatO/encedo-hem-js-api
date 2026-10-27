@@ -3,7 +3,7 @@ id: REQ-KEY-001
 title: Generate a key on the device
 status: verified
 priority: must
-revision: 4
+revision: 5
 source: start_point §3; ref/api/hem-api-1.2.2.yaml; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: ["REQ-AUTH-005", "REQ-API-005"]
 supersedes: null
@@ -26,10 +26,12 @@ Key types [YAML]: `SECP256R1`, `SECP384R1`, `SECP521R1`, `SECP256K1`,
 `ExDSA` or `ECDH,ExDSA` — applies to the `SECP*` types only.
 
 **Rationale:** The consumer creates its root keys on the device so that they
-never exist outside it. Two details matter in practice: a `SECP*` key is
-created ECDH-only unless the mode asks for `ExDSA`, and then cannot sign;
-and the mode literals are exact — `ExDSA,ECDH` is rejected [C-SDK].
-Introduced in M1.
+never exist outside it. Two details matter in practice: a `SECP*` key needs
+an explicit `mode` — [C-SDK] recorded "ECDH-only" as the default, but on the
+test device (firmware 1.2.2-DIAG, 2026-10-27, STEP-M2B-040) a `SECP*` key
+created without `mode` carries no usage flag and can neither sign nor run
+ECDH (406); and the mode literals are exact — `ExDSA,ECDH` is rejected
+[C-SDK]. Introduced in M1.
 
 **Acceptance criteria:**
 - [x] The body is `{label, type}` plus `mode` and `descr` (base64) when

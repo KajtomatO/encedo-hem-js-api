@@ -3,7 +3,7 @@ id: REQ-OPS-015
 title: ECDH-agreed keys for HMAC, cipher and wrap
 status: verified
 priority: must
-revision: 2
+revision: 3
 source: start_point M2.1; ref/api/hem-api-1.2.2.yaml; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: ["REQ-OPS-001", "REQ-OPS-002", "REQ-OPS-003", "REQ-OPS-005", "REQ-OPS-008", "REQ-OPS-009"]
 supersedes: null
@@ -38,7 +38,12 @@ working key without it ever being exported. Introduced in M2.
       and `alg` on HMAC with a stored key (the device ignores it, quirk 10).
 - [x] The token scope remains `keymgmt:use:<kid>` of the primary key —
       tested per operation with a peer key id that differs from `kid`.
-- [ ] (M2B) on the test device, encrypt with an agreed key followed by
-      decrypt with the same pair returns the original message.
-- [ ] (M2B) the HMAC from the device in this mode equals one computed
-      locally from the ECDH secret.
+- [x] (M2B) on the test device, encrypt with an agreed key followed by
+      decrypt with the same pair returns the original message — live
+      2026-10-27 (STEP-M2B-040): GCM with a 12-byte `ctx` round-trips;
+      decrypting with another `ctx` → 406; wrap/unwrap in this mode
+      round-trips (32 → 40 bytes).
+- [x] (M2B) the HMAC from the device in this mode equals one computed
+      locally from the ECDH secret — live 2026-10-27: HMAC-SHA256 with the
+      raw X25519 secret as the key, byte for byte; the device also verifies
+      the locally computed MAC as `true`.
