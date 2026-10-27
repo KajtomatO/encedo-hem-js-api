@@ -629,7 +629,10 @@ strict sequence (D8). Scope comes from [BRIEF] §3–§5.
   Node; quirks 4, 9 and 11 sharpened from the device (11 corrected: a
   SECP key needs an explicit mode). The device stopped answering once,
   during a P-256 signing in the first full run, and needed a power cycle;
-  the rerun passed.
+  the rerun passed. After the gate, STEP-M2B-075 (user decision: the
+  library defaults `SECP*` keys to mode `ECDH`) added quirk 21 and left
+  one `(M2B)` box of REQ-KEY-009 open for the user (the device derives no
+  `SECP*` key); 0.2.0 cut (STEP-M2B-080).
 - **M3A — full specification: implementation and unit tests.**
   Provisioning; config write with user-key rotation, TLS import, CSR and
   wipe; mobile-app pairing; attestation; firmware and dashboard upgrade;

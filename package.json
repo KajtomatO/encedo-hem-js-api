@@ -1,6 +1,6 @@
 {
   "name": "@kajtomato/encedo-hem-sdk",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "TypeScript client for the Encedo HEM REST API",
   "license": "MIT",
   "type": "module",
@@ -38,5 +38,5 @@
     "typescript": "7.0.2",
     "vitest": "5.0.3"
   },
-  "//": "implements: REQ-BUILD-001, REQ-BUILD-002, REQ-BUILD-004, REQ-BUILD-006, REQ-TEST-003 — version 0.1.0 cut at the M1B gate; ESM with types, no runtime dependencies or install scripts, Node >= 24; device tests run only through test:integration and test:attended"
+  "//": "implements: REQ-BUILD-001, REQ-BUILD-002, REQ-BUILD-004, REQ-BUILD-006, REQ-TEST-003 — version 0.2.0 cut at the M2B gate; ESM with types, no runtime dependencies or install scripts, Node >= 24; device tests run only through test:integration and test:attended"
 }

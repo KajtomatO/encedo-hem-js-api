@@ -4,11 +4,11 @@ TypeScript client for the REST API of the **Encedo HEM** hardware security
 module. One package runs in Node.js and in browsers. It needs no runtime
 dependencies and uses only `fetch` and Web Crypto.
 
-> **Status:** version 0.1.0 — milestone M1 implemented, unit-tested and
-> **verified against a development device** (firmware 1.2.2) in October 2026;
-> published to npm as `@kajtomato/encedo-hem-sdk`. Milestone M2 (daily
-> usage and audit logs, see below) is implemented and unit-tested in this
-> repository and awaits its hardware verification before 0.2.0. Device
+> **Status:** version 0.2.0 — milestones M1 and M2 (daily usage and audit
+> logs) implemented, unit-tested and **verified against a development
+> device** (firmware 1.2.2) in October 2026; published to npm as
+> `@kajtomato/encedo-hem-sdk`. Milestone M3 (the full specification:
+> configuration write, storage, attestation, upgrades) comes next. Device
 > behaviour that the library relies on comes from the API reference
 > (`ref/api/hem-api-1.2.2.yaml`), from the device-verified C client,
 > https://github.com/KajtomatO/encedo-hem-c-api, and from this library's own
@@ -92,7 +92,8 @@ passphrase, a login proof or a token.
 Milestone M2 adds the remaining key-management and crypto operations, the
 configuration read and the audit log. Every call below needs the per-key
 scope `keymgmt:use:<kid>` unless stated otherwise, and is refused over
-plain HTTP. Not yet verified on hardware; see the status above.
+plain HTTP. Verified on hardware in October 2026 (firmware 1.2.2-DIAG); the
+findings are in `CHANGELOG.md`.
 
 ```ts
 // Keys: rename, import a peer's public key, derive a shared key on the device.
