@@ -7,9 +7,9 @@ traces:
   architecture: ["ARCHITECTURE.md#6-protocol-bindings", "ARCHITECTURE.md#11-risks--open-questions"]
 depends_on: ["STEP-M2B-040"]
 evidence:
-  commits: []
-  tests: []
-  notes: null
+  commits: ["7414eaa", "1cee8d0"]
+  tests: ["verifies: REQ-OPS-011, REQ-OPS-012, REQ-OPS-013, REQ-OPS-014 (tests/integration/pqc.test.ts, live 2026-10-27)"]
+  notes: "Live 2026-10-27 against my.ence.do: 3/3 passed in 13.9 s. Key generation: MLKEM768 2.5 s, MLDSA65 0.3 s (well inside the default limit; the TSDoc warning stays as a caution). ML-KEM: ss 32, ct 1088, decaps equal; decaps alg field = 'keymgmt:use:<kid>' (the token scope — quirk 2 content recorded); tampered ciphertext → a different secret, no error. ML-DSA: 3309-byte signatures, context honoured (verify without the context → false). Bad signature: the device answers status line 795 in 0.3 s; node:https delivers HemDeviceError status 795; mldsaVerify → false; §11 risk 2 RESOLVED for Node, browsers unprobed. This commit also carries the crypto.ecdh TSDoc correction left over from STEP-M2B-040 (its edit script stopped before that file). All EHEMTEST keys deleted."
 reopened: []
 cancelled: null
 ---
@@ -33,12 +33,12 @@ cancelled: null
   the user.
 
 **Definition of done**
-- [ ] ML-KEM: secrets equal; lengths and `alg` content recorded.
-- [ ] ML-DSA: signature length recorded; good signature `true`; bad
+- [x] ML-KEM: secrets equal; lengths and `alg` content recorded.
+- [x] ML-DSA: signature length recorded; good signature `true`; bad
       signature: observed behaviour recorded and the `false` mapping
       confirmed or a revision proposed; §11 risk 2 resolved.
-- [ ] The integration test passes live; the summary (counts, time) is in
+- [x] The integration test passes live; the summary (counts, time) is in
       `evidence.notes`.
-- [ ] Every `(M2B)` box of the REQs above is ticked with its finding, or
+- [x] Every `(M2B)` box of the REQs above is ticked with its finding, or
       carried forward by a recorded user decision; revisions bumped.
-- [ ] No `EHEMTEST` key remains on the device.
+- [x] No `EHEMTEST` key remains on the device.
