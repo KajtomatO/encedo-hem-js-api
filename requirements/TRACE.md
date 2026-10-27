@@ -2,9 +2,9 @@
 
 # Traceability matrix
 
-Generated: 2026-10-27 (STEP-M2B-020 done)
+Generated: 2026-10-27 (STEP-M2B-030 done)
 
-Scan inputs: 122 REQ files (`requirements/`), 63 step files (`workplan/{todo,doing,done}/`: 11 in `todo/`, 0 in `doing/`, 52 in `done/`). Code tags (`implements: REQ-`) scanned across `src/`; test tags (`verifies:`/`supports: REQ-`) scanned across `tests/`. Build/CI, test-infrastructure and README requirements are realised outside `src/` per REQUIREMENTS-MANAGEMENT.md §4.2, so `implements:` tags are also scanned in `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `vitest.integration.config.ts`, `tests/support`, `.github/workflows`, `README.md`. Locations present: `src/`, `tests/`, `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `vitest.integration.config.ts`, `tests/support`, `.github/workflows`, `README.md`. Unit suite: passed (`npm run check`) at generation.
+Scan inputs: 122 REQ files (`requirements/`), 63 step files (`workplan/{todo,doing,done}/`: 10 in `todo/`, 0 in `doing/`, 53 in `done/`). Code tags (`implements: REQ-`) scanned across `src/`; test tags (`verifies:`/`supports: REQ-`) scanned across `tests/`. Build/CI, test-infrastructure and README requirements are realised outside `src/` per REQUIREMENTS-MANAGEMENT.md §4.2, so `implements:` tags are also scanned in `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `vitest.integration.config.ts`, `tests/support`, `.github/workflows`, `README.md`. Locations present: `src/`, `tests/`, `package.json`, `tsconfig.json`, `tsconfig.base.json`, `tsconfig.build.json`, `vitest.config.ts`, `vitest.integration.config.ts`, `tests/support`, `.github/workflows`, `README.md`. Unit suite: passed (`npm run check`) at generation.
 
 Steps column: step ID and its folder. A REQ listed in several steps becomes `implemented` only when all of them are in `done/` (§3.2). Tests column: `verifies:` locations; `supports …` entries are test support and never count as verification.
 
@@ -87,8 +87,8 @@ Steps column: step ID and its folder. A REQ listed in several steps becomes `imp
 | REQ-OPS-005 | Verify an HMAC | verified | must | §6 | STEP-M2A-020 (done), STEP-M2B-020 (done) | src/api/crypto.ts:767 | tests/integration/signatures.test.ts:91, tests/unit/crypto-sign-verify.test.ts:36, tests/unit/crypto-sign-verify.test.ts:45, tests/unit/crypto-sign-verify.test.ts:51, tests/unit/crypto-sign-verify.test.ts:67 |
 | REQ-OPS-006 | ECDSA and EdDSA signature | verified | must | §6 | STEP-M2A-020 (done), STEP-M2B-020 (done) | src/api/crypto.ts:777 | tests/integration/signatures.test.ts:103, tests/integration/signatures.test.ts:122, tests/integration/signatures.test.ts:138, tests/unit/crypto-sign-verify.test.ts:76, tests/unit/crypto-sign-verify.test.ts:86, tests/unit/crypto-sign-verify.test.ts:93, tests/unit/crypto-sign-verify.test.ts:100, tests/unit/crypto-sign-verify.test.ts:120, tests/unit/crypto-sign-verify.test.ts:127 |
 | REQ-OPS-007 | Verify an ECDSA or EdDSA signature | verified | must | §6 | STEP-M2A-020 (done), STEP-M2B-020 (done) | src/api/crypto.ts:784 | tests/integration/signatures.test.ts:103, tests/integration/signatures.test.ts:122, tests/unit/crypto-sign-verify.test.ts:135, tests/unit/crypto-sign-verify.test.ts:144, tests/unit/crypto-sign-verify.test.ts:151, tests/unit/crypto-sign-verify.test.ts:157 |
-| REQ-OPS-008 | AES encryption | verified | must | §6 | STEP-M2A-030 (done), STEP-M2B-030 (todo) | src/api/crypto.ts:791 | tests/unit/crypto-cipher.test.ts:32, tests/unit/crypto-cipher.test.ts:41, tests/unit/crypto-cipher.test.ts:50, tests/unit/crypto-cipher.test.ts:57, tests/unit/crypto-cipher.test.ts:64, tests/unit/crypto-cipher.test.ts:84, tests/unit/crypto-cipher.test.ts:93 |
-| REQ-OPS-009 | AES decryption | verified | must | §6 | STEP-M2A-030 (done), STEP-M2B-030 (todo) | src/api/crypto.ts:811 | tests/unit/crypto-cipher.test.ts:101, tests/unit/crypto-cipher.test.ts:110, tests/unit/crypto-cipher.test.ts:121, tests/unit/crypto-cipher.test.ts:144 |
+| REQ-OPS-008 | AES encryption | verified | must | §6 | STEP-M2A-030 (done), STEP-M2B-030 (done) | src/api/crypto.ts:791 | tests/integration/cipher.test.ts:34, tests/integration/cipher.test.ts:50, tests/integration/cipher.test.ts:69, tests/unit/crypto-cipher.test.ts:32, tests/unit/crypto-cipher.test.ts:41, tests/unit/crypto-cipher.test.ts:50, tests/unit/crypto-cipher.test.ts:57, tests/unit/crypto-cipher.test.ts:64, tests/unit/crypto-cipher.test.ts:84, tests/unit/crypto-cipher.test.ts:93 |
+| REQ-OPS-009 | AES decryption | verified | must | §6 | STEP-M2A-030 (done), STEP-M2B-030 (done) | src/api/crypto.ts:811 | tests/integration/cipher.test.ts:34, tests/integration/cipher.test.ts:58, tests/unit/crypto-cipher.test.ts:101, tests/unit/crypto-cipher.test.ts:110, tests/unit/crypto-cipher.test.ts:121, tests/unit/crypto-cipher.test.ts:144 |
 | REQ-OPS-010 | ECDH shared secret | verified | must | §6 | STEP-M2A-040 (done), STEP-M2B-040 (todo) | src/api/crypto.ts:836, src/api/peer.ts:31 | tests/unit/crypto-ecdh.test.ts:24, tests/unit/crypto-ecdh.test.ts:37, tests/unit/crypto-ecdh.test.ts:44, tests/unit/crypto-ecdh.test.ts:51, tests/unit/crypto-ecdh.test.ts:67 |
 | REQ-OPS-011 | ML-KEM encapsulation | verified | must | §6 | STEP-M2A-050 (done), STEP-M2B-050 (todo) | src/api/crypto.ts:845 | tests/unit/crypto-pqc.test.ts:38, tests/unit/crypto-pqc.test.ts:47 |
 | REQ-OPS-012 | ML-KEM decapsulation | verified | must | §6 | STEP-M2A-050 (done), STEP-M2B-050 (todo) | src/api/crypto.ts:853 | tests/unit/crypto-pqc.test.ts:62, tests/unit/crypto-pqc.test.ts:72, tests/unit/crypto-pqc.test.ts:78, tests/unit/crypto-pqc.test.ts:85, tests/unit/crypto-pqc.test.ts:101 |
@@ -135,7 +135,7 @@ Steps column: step ID and its folder. A REQ listed in several steps becomes `imp
 
 ## Coverage report
 
-- Totals: 122 REQs (29 approved, 93 verified), 63 steps (11 todo, 0 doing, 52 done; 3 cancelled).
+- Totals: 122 REQs (29 approved, 93 verified), 63 steps (10 todo, 0 doing, 53 done; 3 cancelled).
 - By area: API 14, AUTH 27, BUILD 7, KEY 9, NET 13, OPS 15, SYS 31, TEST 6.
 - Steps by milestone: M1A 25, M1B 17, M2A 10, M2B 9, M3A 1, M3B 1.
 - REQs with no step: none.
