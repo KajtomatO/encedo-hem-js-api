@@ -448,7 +448,7 @@ Firmware quirks the bindings normalise or document [BRIEF G16]:
 | 12 | Importing or deriving the same key material again fails with 406, because key ids are derived from the material. | [YAML], [C-SDK] | Documented. |
 | 13 | Firmware upload can close the connection with no response for an oversize image or a wrong file extension. | [YAML] | Size and filename are validated before sending. |
 | 14 | `GET /api/system/status` omits fields rather than sending defaults (`inited` only when false, `ts`/`time` only when the clock is set, `https` only over plain HTTP). | [YAML] | Parsed into explicit booleans. |
-| 15 | Audit-log files are pipe-delimited text. | [C-SDK] | Returned verbatim; never parsed [BRIEF M2.3]. |
+| 15 | Audit-log files are pipe-delimited text: a `#` banner line with the firmware name, then CRLF-terminated records; served as `text/plain`. The file of the current boot is locked (406) until the next boot. | [C-SDK]; device (2026-10-27) | Returned verbatim; never parsed [BRIEF M2.3]. |
 | 16 | Firmware 1.2.2 acknowledges a certificate delivered by check-in but never installs it. | [C-SDK] | Documented; the working path is TLS import through config write (M3). |
 | 17 | The device clock runs about 8% fast and is unset after a cold boot. | [C-SDK] | Clock recovery (§5.2). |
 | 18 | Header names are matched case-sensitively: a lowercase `content-length` gets 411, `content-type` 413, `authorization` is ignored. Node's `fetch` cannot spell `content-length` any other way. | device (2026-10-07) | On Node.js the device transport is `node:https` with the names spelled as required (REQ-NET-013); browsers and libcurl spell them so already. |
@@ -622,6 +622,13 @@ strict sequence (D8). Scope comes from [BRIEF] §3–§5.
   (ML-DSA verify status through `fetch`, ML-KEM `alg`, derive echo).
   REQs: the `(M2B)` criteria of the M2A REQs.
   **Gate:** B gate; version 0.2.0.
+  **Passed 2026-10-27** (STEP-M2B-070): integration suite green on the
+  device (14 files, 59 tests, after a cold boot with clock recovery);
+  every `(M2B)` criterion ticked, none carried; §11 risk 2 resolved for
+  Node; quirks 4, 9 and 11 sharpened from the device (11 corrected: a
+  SECP key needs an explicit mode). The device stopped answering once,
+  during a P-256 signing in the first full run, and needed a power cycle;
+  the rerun passed.
 - **M3A — full specification: implementation and unit tests.**
   Provisioning; config write with user-key rotation, TLS import, CSR and
   wipe; mobile-app pairing; attestation; firmware and dashboard upgrade;
