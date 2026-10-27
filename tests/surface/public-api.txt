@@ -58,6 +58,10 @@ CryptoApi.ecdh	ecdh(params:EcdhParams,options?:CallOptions):Promise<Uint8Array>
 CryptoApi.encrypt	encrypt(params:EncryptParams,options?:CallOptions):Promise<EncryptResult>
 CryptoApi.hmac	hmac(params:HmacParams,options?:CallOptions):Promise<Uint8Array>
 CryptoApi.hmacVerify	hmacVerify(params:HmacVerifyParams,options?:CallOptions):Promise<boolean>
+CryptoApi.mldsaSign	mldsaSign(params:MldsaSignParams,options?:CallOptions):Promise<MldsaSignature>
+CryptoApi.mldsaVerify	mldsaVerify(params:MldsaVerifyParams,options?:CallOptions):Promise<boolean>
+CryptoApi.mlkemDecaps	mlkemDecaps(params:MlkemDecapsParams,options?:CallOptions):Promise<Uint8Array>
+CryptoApi.mlkemEncaps	mlkemEncaps(params:MlkemEncapsParams,options?:CallOptions):Promise<MlkemEncapsulation>
 CryptoApi.sign	sign(params:SignParams,options?:CallOptions):Promise<Uint8Array>
 CryptoApi.unwrap	unwrap(params:WrapParams,options?:CallOptions):Promise<Uint8Array>
 CryptoApi.verify	verify(params:VerifyParams,options?:CallOptions):Promise<boolean>
@@ -287,6 +291,27 @@ ListKeysParams.offset	offset?:number|undefined
 MAX_CONTEXT_BYTES	export declare const MAX_CONTEXT_BYTES=255
 MAX_HKDF_CONTEXT_BYTES	export declare const MAX_HKDF_CONTEXT_BYTES=64
 MAX_MAC_BYTES	export declare const MAX_MAC_BYTES=64
+MLDSA_SIGNATURE_BYTES	export declare const MLDSA_SIGNATURE_BYTES:Readonly<{readonly MLDSA44:2420;readonly MLDSA65:3309;readonly MLDSA87:4627;}>
+MLKEM_CIPHERTEXT_BYTES	export declare const MLKEM_CIPHERTEXT_BYTES:Readonly<{readonly MLKEM512:768;readonly MLKEM768:1088;readonly MLKEM1024:1568;}>
+MLKEM_SHARED_SECRET_BYTES	export declare const MLKEM_SHARED_SECRET_BYTES=32
+MldsaSignParams	export interface MldsaSignParams
+MldsaSignParams.ctx	ctx?:Uint8Array|undefined
+MldsaSignParams.kid	kid:string
+MldsaSignParams.msg	msg:Uint8Array
+MldsaSignature	export interface MldsaSignature
+MldsaSignature.alg	readonly alg:string
+MldsaSignature.signature	readonly signature:Uint8Array
+MldsaVerifyParams	export interface MldsaVerifyParams extends MldsaSignParams
+MldsaVerifyParams.sign	sign:Uint8Array
+MlkemDecapsParams	export interface MlkemDecapsParams
+MlkemDecapsParams.ct	ct:Uint8Array
+MlkemDecapsParams.kid	kid:string
+MlkemEncapsParams	export interface MlkemEncapsParams
+MlkemEncapsParams.kid	kid:string
+MlkemEncapsulation	export interface MlkemEncapsulation
+MlkemEncapsulation.alg	readonly alg:string
+MlkemEncapsulation.ciphertext	readonly ciphertext:Uint8Array
+MlkemEncapsulation.sharedSecret	readonly sharedSecret:Uint8Array
 MobileApprovalOptions	export interface MobileApprovalOptions
 MobileApprovalOptions.ctx	ctx?:string|undefined
 MobileApprovalOptions.intervalMs	intervalMs?:number|undefined

@@ -48,7 +48,11 @@ function device(): FakeFetch {
     .always('POST', '/api/crypto/exdsa/verify', { status: 200 })
     .always('POST', '/api/crypto/cipher/encrypt', { body: { ciphertext: 'Dw==', iv: IV16, tag: IV16 } })
     .always('POST', '/api/crypto/cipher/decrypt', { body: { plaintext: 'EA==' } })
-    .always('POST', '/api/crypto/ecdh', { body: { ecdh: 'ERI=' } });
+    .always('POST', '/api/crypto/ecdh', { body: { ecdh: 'ERI=' } })
+    .always('POST', '/api/crypto/pqc/mlkem/encaps', { body: { alg: 'MLKEM768', ss: 'Ew==', ct: 'FA==' } })
+    .always('POST', '/api/crypto/pqc/mlkem/decaps', { body: { alg: 'garbage', ss: 'Ew==' } })
+    .always('POST', '/api/crypto/pqc/mldsa/sign', { body: { alg: 'MLDSA65', sign: 'FQ==' } })
+    .always('POST', '/api/crypto/pqc/mldsa/verify', { status: 200 });
 }
 
 interface Sample {
@@ -188,6 +192,30 @@ const samples: Record<string, Sample> = {
     body: { kid: KID, ext_kid: NEW_KID },
     result: Uint8Array.from([17, 18]),
   },
+  'crypto.mlkemEncaps /api/crypto/pqc/mlkem/encaps': {
+    run: (c) => c.crypto.mlkemEncaps({ kid: UPPER_KID }),
+    path: '/api/crypto/pqc/mlkem/encaps',
+    body: { kid: KID },
+    result: { alg: 'MLKEM768', sharedSecret: Uint8Array.from([19]), ciphertext: Uint8Array.from([20]) },
+  },
+  'crypto.mlkemDecaps /api/crypto/pqc/mlkem/decaps': {
+    run: (c) => c.crypto.mlkemDecaps({ kid: UPPER_KID, ct: new Uint8Array(768) }),
+    path: '/api/crypto/pqc/mlkem/decaps',
+    body: { kid: KID, ct: btoa(String.fromCharCode(...new Uint8Array(768))) },
+    result: Uint8Array.from([19]),
+  },
+  'crypto.mldsaSign /api/crypto/pqc/mldsa/sign': {
+    run: (c) => c.crypto.mldsaSign({ kid: UPPER_KID, msg: Uint8Array.from([1]) }),
+    path: '/api/crypto/pqc/mldsa/sign',
+    body: { kid: KID, msg: 'AQ==' },
+    result: { alg: 'MLDSA65', signature: Uint8Array.from([21]) },
+  },
+  'crypto.mldsaVerify /api/crypto/pqc/mldsa/verify': {
+    run: (c) => c.crypto.mldsaVerify({ kid: UPPER_KID, msg: Uint8Array.from([1]), sign: Uint8Array.from([21]) }),
+    path: '/api/crypto/pqc/mldsa/verify',
+    body: { kid: KID, msg: 'AQ==', sign: 'FQ==' },
+    result: true,
+  },
   'crypto.verify /api/crypto/exdsa/verify': {
     run: (c) => c.crypto.verify({ kid: UPPER_KID, msg: Uint8Array.from([1]), sign: Uint8Array.from([13, 14]), alg: 'Ed25519' }),
     path: '/api/crypto/exdsa/verify',
@@ -223,6 +251,10 @@ const ARCHITECTURE_SCOPES: Record<string, string | null> = {
   'crypto.encrypt': `keymgmt:use:${KID}`,
   'crypto.decrypt': `keymgmt:use:${KID}`,
   'crypto.ecdh': `keymgmt:use:${KID}`,
+  'crypto.mlkemEncaps': `keymgmt:use:${KID}`,
+  'crypto.mlkemDecaps': `keymgmt:use:${KID}`,
+  'crypto.mldsaSign': `keymgmt:use:${KID}`,
+  'crypto.mldsaVerify': `keymgmt:use:${KID}`,
 };
 
 const operations = ALL_OPERATIONS.map((spec) => ({ spec, key: `${spec.name} ${spec.path}` }));
@@ -333,8 +365,8 @@ const bytes = (n: number): Uint8Array => new Uint8Array(n);
 const chars = (n: number): string => 'x'.repeat(n);
 
 // Every documented hard limit (ARCHITECTURE.md §2 and the reference), each with
-// its boundary value and the first value past it. The 7300-byte body limit
-// cannot be reached through any M1 operation's fields and is covered in
+// its boundary value and the first value past it. The 7300-byte body limit is
+// reached through ML-DSA verify (M2) and is also covered in
 // tests/unit/binding-core.test.ts with a synthetic operation.
 const LIMITS: Limit[] = [
   { name: 'kid: 32 hex characters, not 33', parameter: 'kid', atLimit: (c) => c.keys.get(KID), pastLimit: (c) => c.keys.get(`${KID}0`) },
@@ -383,6 +415,11 @@ const LIMITS: Limit[] = [
   { name: 'decrypt msg: 1 byte, not 0', parameter: 'msg', atLimit: (c) => c.crypto.decrypt({ kid: KID, msg: bytes(1), alg: 'AES256-GCM', iv: bytes(16), tag: bytes(16) }), pastLimit: (c) => c.crypto.decrypt({ kid: KID, msg: bytes(0), alg: 'AES256-GCM', iv: bytes(16), tag: bytes(16) }) },
   { name: 'agreed-key ctx: 64 bytes, not 65', parameter: 'ctx', atLimit: (c) => c.crypto.wrap({ kid: KID, msg: bytes(16), peer: { extKid: NEW_KID }, ctx: bytes(64) }), pastLimit: (c) => c.crypto.wrap({ kid: KID, msg: bytes(16), peer: { extKid: NEW_KID }, ctx: bytes(65) }) },
   { name: 'ecdh peer: one form, not both', parameter: 'peer', atLimit: (c) => c.crypto.ecdh({ kid: KID, peer: { pubkey: bytes(1) } }), pastLimit: (c) => c.crypto.ecdh({ kid: KID, peer: { extKid: NEW_KID, pubkey: bytes(1) } as never }) },
+  { name: 'decaps ct: 768 bytes, not 767', parameter: 'ct', atLimit: (c) => c.crypto.mlkemDecaps({ kid: KID, ct: bytes(768) }), pastLimit: (c) => c.crypto.mlkemDecaps({ kid: KID, ct: bytes(767) }) },
+  { name: 'decaps ct: 1568 bytes, not 1569', parameter: 'ct', atLimit: (c) => c.crypto.mlkemDecaps({ kid: KID, ct: bytes(1568) }), pastLimit: (c) => c.crypto.mlkemDecaps({ kid: KID, ct: bytes(1569) }) },
+  { name: 'mldsaSign ctx: 255 bytes, not 256', parameter: 'ctx', atLimit: (c) => c.crypto.mldsaSign({ kid: KID, msg: bytes(1), ctx: bytes(255) }), pastLimit: (c) => c.crypto.mldsaSign({ kid: KID, msg: bytes(1), ctx: bytes(256) }) },
+  { name: 'mldsaVerify sign: 4627 bytes, not 4628', parameter: 'sign', atLimit: (c) => c.crypto.mldsaVerify({ kid: KID, msg: bytes(1), sign: bytes(4627) }), pastLimit: (c) => c.crypto.mldsaVerify({ kid: KID, msg: bytes(1), sign: bytes(4628) }) },
+  { name: 'mldsaVerify body: 7300 bytes, not more', parameter: 'body', atLimit: (c) => c.crypto.mldsaVerify({ kid: KID, msg: bytes(798), sign: bytes(4627) }), pastLimit: (c) => c.crypto.mldsaVerify({ kid: KID, msg: bytes(2048), sign: bytes(4627) }) },
   { name: 'approval scope: 1023 characters, not 1024', parameter: 'scope', atLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: chars(1023) }), pastLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: chars(1024) }) },
   { name: 'approval scope: 1 character, not 0', parameter: 'scope', atLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: 'k' }), pastLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: '' }) },
   { name: 'approval ctx: 64 characters, not 65', parameter: 'ctx', atLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: 'k', ctx: chars(64) }), pastLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: 'k', ctx: chars(65) }) },
@@ -410,6 +447,6 @@ describe('documented limits', () => {
 
   it('covers every validated parameter at least once', () => {
     const parameters = new Set(LIMITS.map((limit) => limit.parameter));
-    expect([...parameters].sort()).toEqual(['authreply', 'count', 'ctx', 'descr', 'epk', 'iv', 'kid', 'label', 'limit', 'mac', 'msg', 'note', 'offset', 'peer', 'peer.extKid', 'peer.pubkey', 'pubkey', 'scope', 'sign', 'tag']);
+    expect([...parameters].sort()).toEqual(['authreply', 'body', 'count', 'ct', 'ctx', 'descr', 'epk', 'iv', 'kid', 'label', 'limit', 'mac', 'msg', 'note', 'offset', 'peer', 'peer.extKid', 'peer.pubkey', 'pubkey', 'scope', 'sign', 'tag']);
   });
 });

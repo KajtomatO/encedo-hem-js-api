@@ -1,8 +1,9 @@
 /**
  * Cryptographic operations with stored keys: HMAC, AES key wrap and unwrap
  * (M1); HMAC verify, ECDSA/EdDSA sign and verify, AES encrypt and decrypt,
- * ECDH, and the ECDH-agreed key mode of the symmetric operations (M2).
- * Every operation uses
+ * ECDH, the ECDH-agreed key mode of the symmetric operations, ML-KEM
+ * encapsulation and decapsulation, ML-DSA sign and verify (M2). Every
+ * operation uses
  * the exact per-key scope `keymgmt:use:<kid>` and needs an `https:` device
  * URL.
  *
@@ -10,9 +11,9 @@
  */
 import { bytesToBase64 } from '../codec/base64.js';
 import { validateKid, validateMessage } from '../codec/validate.js';
-import { HemValidationError } from '../errors.js';
+import { HemError, HemValidationError } from '../errors.js';
 import type { CallOptions } from '../transport/transport.js';
-import { type BindingContext, type OperationSpec, invoke, optional, readBase64 } from './core.js';
+import { type BindingContext, type OperationSpec, invoke, optional, readBase64, readString } from './core.js';
 import { type KeyPeer, peerFields } from './peer.js';
 import { verified } from './verify.js';
 
@@ -108,8 +109,54 @@ export const CRYPTO_ECDH: OperationSpec = {
   required: ['ecdh'],
 };
 
+export const CRYPTO_MLKEM_ENCAPS: OperationSpec = {
+  name: 'crypto.mlkemEncaps',
+  group: 'crypto',
+  method: 'POST',
+  path: '/api/crypto/pqc/mlkem/encaps',
+  scope: 'keymgmt:use:{kid}',
+  tlsOnly: true,
+  required: ['alg', 'ss', 'ct'],
+};
+
+export const CRYPTO_MLKEM_DECAPS: OperationSpec = {
+  name: 'crypto.mlkemDecaps',
+  group: 'crypto',
+  method: 'POST',
+  path: '/api/crypto/pqc/mlkem/decaps',
+  scope: 'keymgmt:use:{kid}',
+  tlsOnly: true,
+  // `alg` is documented as required but holds an unrelated string on firmware 1.2.2 (quirk 2); it is neither required nor read.
+  required: ['ss'],
+};
+
+export const CRYPTO_MLDSA_SIGN: OperationSpec = {
+  name: 'crypto.mldsaSign',
+  group: 'crypto',
+  method: 'POST',
+  path: '/api/crypto/pqc/mldsa/sign',
+  scope: 'keymgmt:use:{kid}',
+  tlsOnly: true,
+  required: ['alg', 'sign'],
+};
+
+export const CRYPTO_MLDSA_VERIFY: OperationSpec = {
+  name: 'crypto.mldsaVerify',
+  group: 'crypto',
+  method: 'POST',
+  path: '/api/crypto/pqc/mldsa/verify',
+  scope: 'keymgmt:use:{kid}',
+  tlsOnly: true,
+  required: [],
+  emptyResponse: true,
+};
+
 /** Operations of this module. */
 export const CRYPTO_OPERATIONS: readonly OperationSpec[] = [
+  CRYPTO_MLKEM_ENCAPS,
+  CRYPTO_MLKEM_DECAPS,
+  CRYPTO_MLDSA_SIGN,
+  CRYPTO_MLDSA_VERIFY,
   CRYPTO_ECDH,
   CRYPTO_HMAC,
   CRYPTO_WRAP,
@@ -183,6 +230,86 @@ function addHmacMode(body: Record<string, unknown>, params: AgreedKeyParams & { 
     // ARCHITECTURE.md §6 quirk 10: with a stored key the device ignores alg; refusing it keeps callers from relying on it.
     throw new HemValidationError('Invalid alg: with a stored key its type decides the hash; alg applies to the agreed-key mode only', { parameter: 'alg' });
   }
+}
+
+/** ML-KEM ciphertext sizes in bytes, by parameter set (FIPS 203; ref/api/hem-api-1.2.2.yaml). */
+export const MLKEM_CIPHERTEXT_BYTES = Object.freeze({ MLKEM512: 768, MLKEM768: 1088, MLKEM1024: 1568 } as const);
+/** ML-DSA signature sizes in bytes, by parameter set (FIPS 204; ref/api/hem-api-1.2.2.yaml). */
+export const MLDSA_SIGNATURE_BYTES = Object.freeze({ MLDSA44: 2420, MLDSA65: 3309, MLDSA87: 4627 } as const);
+/** The shared secret of ML-KEM, in bytes. */
+export const MLKEM_SHARED_SECRET_BYTES = 32;
+
+/** Parameters of {@link CryptoApi.mlkemEncaps}. */
+export interface MlkemEncapsParams {
+  /** Stored ML-KEM key (device-generated). */
+  kid: string;
+}
+
+/** Result of {@link CryptoApi.mlkemEncaps}. */
+export interface MlkemEncapsulation {
+  /** Parameter-set name as the device reports it: `MLKEM512`, `MLKEM768` or `MLKEM1024`. */
+  readonly alg: string;
+  /** The 32-byte shared secret. */
+  readonly sharedSecret: Uint8Array;
+  /** The ciphertext to hand to the key's holder: 768, 1088 or 1568 bytes. */
+  readonly ciphertext: Uint8Array;
+}
+
+/** Parameters of {@link CryptoApi.mlkemDecaps}. */
+export interface MlkemDecapsParams {
+  /** Stored ML-KEM private key. */
+  kid: string;
+  /** Ciphertext from encapsulation; exactly 768, 1088 or 1568 bytes. */
+  ct: Uint8Array;
+}
+
+/** Parameters of {@link CryptoApi.mldsaSign}. */
+export interface MldsaSignParams {
+  /** Stored ML-DSA private key. */
+  kid: string;
+  /** Message, 1 to 2048 bytes. */
+  msg: Uint8Array;
+  /** Context, at most 255 bytes; the same context must be given at verification. */
+  ctx?: Uint8Array | undefined;
+}
+
+/** Result of {@link CryptoApi.mldsaSign}. */
+export interface MldsaSignature {
+  /** Parameter-set name as the device reports it: `MLDSA44`, `MLDSA65` or `MLDSA87`. */
+  readonly alg: string;
+  /** The signature: 2420, 3309 or 4627 bytes. */
+  readonly signature: Uint8Array;
+}
+
+/** Parameters of {@link CryptoApi.mldsaVerify}. */
+export interface MldsaVerifyParams extends MldsaSignParams {
+  /** The signature to check, at most 4627 bytes. */
+  sign: Uint8Array;
+}
+
+const MLKEM_CIPHERTEXT_SIZES: readonly number[] = Object.values(MLKEM_CIPHERTEXT_BYTES);
+
+/**
+ * ML-DSA verify (ARCHITECTURE.md §6 quirk 3): a failed verification puts a
+ * raw internal code into the HTTP status line, so any completed error
+ * response other than an authentication or authorisation failure means
+ * "invalid". A success or redirect status, and failures without a response
+ * (validation, TLS guard, transport), are never "invalid".
+ */
+// implements: REQ-OPS-014
+function isMldsaInvalid(error: unknown): boolean {
+  if (!(error instanceof HemError) || error.status === undefined) return false;
+  const { status } = error;
+  if (status === 401 || status === 403) return false;
+  return status < 200 || status >= 400;
+}
+
+function addPqcContext(body: Record<string, unknown>, ctx: unknown): void {
+  if (ctx === undefined) return;
+  if (!(ctx instanceof Uint8Array) || ctx.length > MAX_CONTEXT_BYTES) {
+    throw new HemValidationError(`Invalid ctx: must be at most ${MAX_CONTEXT_BYTES} bytes`, { parameter: 'ctx' });
+  }
+  body['ctx'] = bytesToBase64(ctx);
 }
 
 /** AES block size; also the IV, nonce and GCM tag size the device uses. */
@@ -558,6 +685,64 @@ export interface CryptoApi {
    * @remarks Token scope: `keymgmt:use:<kid>`. Introduced in M2.
    */
   ecdh(params: EcdhParams, options?: CallOptions): Promise<Uint8Array>;
+
+  /**
+   * ML-KEM encapsulation against a stored ML-KEM key: returns a fresh
+   * 32-byte shared secret and the ciphertext (768, 1088 or 1568 bytes for
+   * ML-KEM-512, -768 and -1024) that lets the key's holder recover it with
+   * {@link CryptoApi.mlkemDecaps}. A missing key or a key that is not an
+   * ML-KEM key raises `HemOperationFailedError` (406).
+   *
+   * Device call: `POST /api/crypto/pqc/mlkem/encaps`. HTTPS only.
+   *
+   * @remarks Token scope: `keymgmt:use:<kid>`. Introduced in M2.
+   */
+  mlkemEncaps(params: MlkemEncapsParams, options?: CallOptions): Promise<MlkemEncapsulation>;
+
+  /**
+   * ML-KEM decapsulation: the 32-byte shared secret for a ciphertext and a
+   * stored ML-KEM private key. The ciphertext must be exactly the size of
+   * the key's parameter set. The device's reply also carries an `alg`
+   * field, which on firmware 1.2.2 holds an unrelated internal string; it
+   * is not exposed. A missing key, a key of another type or a size mismatch
+   * raises `HemOperationFailedError` (406).
+   *
+   * Device call: `POST /api/crypto/pqc/mlkem/decaps`. HTTPS only.
+   *
+   * @remarks Token scope: `keymgmt:use:<kid>`. Introduced in M2.
+   */
+  mlkemDecaps(params: MlkemDecapsParams, options?: CallOptions): Promise<Uint8Array>;
+
+  /**
+   * ML-DSA signature (FIPS 204) of a message with a stored ML-DSA private
+   * key: 2420, 3309 or 4627 bytes for ML-DSA-44, -65 and -87. An optional
+   * context of up to 255 bytes selects the context variant; verification
+   * must present the same context. A missing key or a key that is not an
+   * ML-DSA key raises `HemOperationFailedError` (406).
+   *
+   * Device call: `POST /api/crypto/pqc/mldsa/sign`. HTTPS only.
+   *
+   * @remarks Token scope: `keymgmt:use:<kid>`. Introduced in M2.
+   */
+  mldsaSign(params: MldsaSignParams, options?: CallOptions): Promise<MldsaSignature>;
+
+  /**
+   * Check an ML-DSA signature with a stored ML-DSA key, on the device.
+   * Returns `true` when the device accepts it. Firmware 1.2.2 reports a
+   * failed verification with a raw internal code in the HTTP status line
+   * rather than 406, so every completed response that is neither a
+   * success nor an authentication (401) or authorisation (403) failure
+   * gives `false` — including a missing key, a key of the wrong type and
+   * an imported public-only key, which the device rejects. Failures without
+   * a response (validation, transport) raise. The request must fit the
+   * 7300-byte body limit: an ML-DSA-87 signature leaves room for roughly
+   * 800 message bytes.
+   *
+   * Device call: `POST /api/crypto/pqc/mldsa/verify`. HTTPS only.
+   *
+   * @remarks Token scope: `keymgmt:use:<kid>`. Introduced in M2.
+   */
+  mldsaVerify(params: MldsaVerifyParams, options?: CallOptions): Promise<boolean>;
 }
 
 /** @internal Implementation of {@link CryptoApi}. */
@@ -655,6 +840,47 @@ export class CryptoApiImpl implements CryptoApi {
     if (params.alg !== undefined) body['alg'] = validateHash(params.alg);
     const r = await invoke(this.#context, CRYPTO_ECDH, { params: { kid }, body }, options);
     return readBase64(CRYPTO_ECDH, r, 'ecdh');
+  }
+
+  // implements: REQ-OPS-011
+  async mlkemEncaps(params: MlkemEncapsParams, options?: CallOptions): Promise<MlkemEncapsulation> {
+    const kid = validateKid(params?.kid);
+    const spec = CRYPTO_MLKEM_ENCAPS;
+    const r = await invoke(this.#context, spec, { params: { kid }, body: { kid } }, options);
+    return { alg: readString(spec, r, 'alg'), sharedSecret: readBase64(spec, r, 'ss'), ciphertext: readBase64(spec, r, 'ct') };
+  }
+
+  // implements: REQ-OPS-012
+  async mlkemDecaps(params: MlkemDecapsParams, options?: CallOptions): Promise<Uint8Array> {
+    const kid = validateKid(params?.kid);
+    if (!(params.ct instanceof Uint8Array)) throw new HemValidationError('Invalid ct: must be a Uint8Array', { parameter: 'ct' });
+    if (!MLKEM_CIPHERTEXT_SIZES.includes(params.ct.length)) {
+      throw new HemValidationError(`Invalid ct: an ML-KEM ciphertext is ${MLKEM_CIPHERTEXT_SIZES.join(', ')} bytes`, { parameter: 'ct' });
+    }
+    const r = await invoke(this.#context, CRYPTO_MLKEM_DECAPS, { params: { kid }, body: { kid, ct: bytesToBase64(params.ct) } }, options);
+    // Only the secret: the alg field is unreliable on firmware 1.2.2 (quirk 2).
+    return readBase64(CRYPTO_MLKEM_DECAPS, r, 'ss');
+  }
+
+  // implements: REQ-OPS-013
+  async mldsaSign(params: MldsaSignParams, options?: CallOptions): Promise<MldsaSignature> {
+    const kid = validateKid(params?.kid);
+    const msg = validateMessage(params.msg);
+    const body: Record<string, unknown> = { kid, msg: bytesToBase64(msg) };
+    addPqcContext(body, params.ctx);
+    const spec = CRYPTO_MLDSA_SIGN;
+    const r = await invoke(this.#context, spec, { params: { kid }, body }, options);
+    return { alg: readString(spec, r, 'alg'), signature: readBase64(spec, r, 'sign') };
+  }
+
+  // implements: REQ-OPS-014
+  async mldsaVerify(params: MldsaVerifyParams, options?: CallOptions): Promise<boolean> {
+    const kid = validateKid(params?.kid);
+    const msg = validateMessage(params.msg);
+    const sign = requireNonEmptyBytes(params.sign, 'sign', MLDSA_SIGNATURE_BYTES.MLDSA87);
+    const body: Record<string, unknown> = { kid, msg: bytesToBase64(msg), sign: bytesToBase64(sign) };
+    addPqcContext(body, params.ctx);
+    return verified(() => invoke(this.#context, CRYPTO_MLDSA_VERIFY, { params: { kid }, body }, options), isMldsaInvalid);
   }
 
   // implements: REQ-OPS-002

@@ -84,10 +84,27 @@ export type {
   HashAlgorithm,
   HmacParams,
   HmacVerifyParams,
+  MldsaSignature,
+  MldsaSignParams,
+  MldsaVerifyParams,
+  MlkemDecapsParams,
+  MlkemEncapsParams,
+  MlkemEncapsulation,
   SignatureAlgorithm,
   SignParams,
   VerifyParams,
   WrapAlgorithm,
   WrapParams,
 } from './api/crypto.js';
-export { AES_BLOCK_BYTES, CIPHER_ALGORITHMS, HASH_ALGORITHMS, MAX_CONTEXT_BYTES, MAX_HKDF_CONTEXT_BYTES, MAX_MAC_BYTES, SIGNATURE_ALGORITHMS } from './api/crypto.js';
+export {
+  AES_BLOCK_BYTES,
+  CIPHER_ALGORITHMS,
+  HASH_ALGORITHMS,
+  MAX_CONTEXT_BYTES,
+  MAX_HKDF_CONTEXT_BYTES,
+  MAX_MAC_BYTES,
+  MLDSA_SIGNATURE_BYTES,
+  MLKEM_CIPHERTEXT_BYTES,
+  MLKEM_SHARED_SECRET_BYTES,
+  SIGNATURE_ALGORITHMS,
+} from './api/crypto.js';
