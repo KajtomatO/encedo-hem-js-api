@@ -94,7 +94,7 @@ describeDevice('ECDH and the agreed-key mode on the device', () => {
     const stored = /^[0-9a-f]{32}$/.test(imported) ? await attempt(() => client.crypto.ecdh({ kid: p384Kid, peer: { extKid: imported } })) : { ok: false, error: `import: ${imported}` };
     const deviceP384 = await keys.create({ type: 'SECP384R1', mode: 'ECDH' });
     const twoStored = await attempt(() => client.crypto.ecdh({ kid: p384Kid, peer: { extKid: deviceP384 } }));
-    const noMode384 = await attempt(async () => {
+    const libraryDefault384 = await attempt(async () => {
       const plain = await keys.create({ type: 'SECP384R1' });
       return client.crypto.ecdh({ kid: plain, peer: { pubkey: peer.compressed } });
     });
@@ -118,7 +118,7 @@ describeDevice('ECDH and the agreed-key mode on the device', () => {
       return client.crypto.ecdh({ kid: xKid, peer: { extKid: other } });
     });
     const types = Object.fromEntries((await client.keys.listAll()).filter((k) => keys.created.includes(k.kid)).map((k) => [k.kid.slice(0, 8), k.type.raw]));
-    log('P-384 raw', { keyWithEcdhMode: { compressedPeer: compressed, uncompressedPeer: uncompressed, storedLocalPeer: stored, twoDeviceKeys: twoStored }, keyWithoutMode: noMode384, p256WithoutMode: stored256, p256ExplicitEcdhMode: explicitMode256, curve448TwoDeviceKeys: curve448, x25519TwoDeviceKeys, listedTypes: types });
+    log('P-384 raw', { keyWithEcdhMode: { compressedPeer: compressed, uncompressedPeer: uncompressed, storedLocalPeer: stored, twoDeviceKeys: twoStored }, keyWithLibraryDefaultMode: libraryDefault384, p256LibraryDefaultMode: stored256, p256ExplicitEcdhMode: explicitMode256, curve448TwoDeviceKeys: curve448, x25519TwoDeviceKeys, listedTypes: types });
     expect(x25519TwoDeviceKeys.ok).toBe(true);
     expect(compressed.ok || stored.ok, 'a P-384 key created with mode ECDH agrees with a P-384 peer').toBe(true);
   }, 180_000);

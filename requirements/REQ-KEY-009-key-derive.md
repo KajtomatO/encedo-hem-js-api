@@ -32,10 +32,11 @@ a usage flag is unusable (user decision 2026-10-27, §6.2 impact analysis at
 STEP-M2B-075; revision 5). Introduced in M2.
 
 **Acceptance criteria:**
-- [ ] The body is `{kid, label, type}` plus one of `ext_kid` or `pubkey`,
+- [x] The body is `{kid, label, type}` plus one of `ext_kid` or `pubkey`,
       `descr` when given, and `mode` for a `SECP*` target — the caller's,
       else `ECDH` — and never for another type; the scope used is
-      `keymgmt:gen`.
+      `keymgmt:gen` — STEP-M2B-075 (2026-10-27), unit-tested over all 17
+      target types.
 - [x] Giving both peers, neither, or a target type outside the list raises
       `HemValidationError` before sending — `DERIVABLE_KEY_TYPES` is the
       create list without `MLKEM*`/`MLDSA*`.
@@ -53,4 +54,11 @@ STEP-M2B-075; revision 5). Introduced in M2.
       The library's guards (type list before sending, echoed id →
       `HemProtocolError`) cover both.
 - [ ] (M2B) a `SECP256R1` key derived without `mode` is listed with the
-      `ECDH` flag.
+      `ECDH` flag — **not observable on firmware 1.2.2-DIAG** (2026-10-27,
+      STEP-M2B-075): every `SECP*` derive target is refused with 406, with
+      no mode, `ECDH` or `ECDH,ExDSA`, from an X25519 or a P-256 source,
+      while a `CURVE25519` target from the same source derives and is
+      listed `PKEY,ECDH,CURVE25519` (quirk 21;
+      tests/integration/keys-secp-mode.test.ts records the refusal). Left
+      open for the user: drop the criterion, or carry it to a firmware that
+      derives `SECP*` keys.

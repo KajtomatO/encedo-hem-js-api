@@ -123,6 +123,11 @@ const pqOk = await hem.crypto.mldsaVerify({ kid: dsaKid, msg, sign: pq });
   too. ML-DSA verify is special: firmware 1.2.2 reports a failed check with
   a raw internal code in the HTTP status line, so every completed response
   other than a success or an authentication failure counts as `false`.
+- **`SECP*` keys need a usage mode.** The device gives a `SECP*` key created
+  without `mode` no usage at all (it can neither sign nor run ECDH), so
+  `keys.create`, `keys.import` and `keys.derive` send `mode: 'ECDH'` for
+  those types unless you pass one; a signing key needs `mode: 'ExDSA'` or
+  `'ECDH,ExDSA'`. Other types never get a mode.
 - **Agreed-key mode.** HMAC, HMAC verify, encrypt, decrypt, wrap and unwrap
   accept `peer: { extKid } | { pubkey }`: the device runs ECDH between your
   stored key and the peer and derives the working key itself (through

@@ -45,10 +45,19 @@ describe('keys.create', () => {
   });
 
   // verifies: REQ-KEY-001
-  it.each(KEY_TYPES)('accepts type %s', async (type) => {
+  it.each(KEY_TYPES)('accepts type %s, with mode ECDH by default for SECP* only', async (type) => {
     const fake = loginDevice().on('POST', '/api/keymgmt/create', { body: { kid: KID } });
     await loggedInClient(fake).keys.create({ label: 'k', type });
-    expect((operationRequests(fake)[0]?.json() as { type: string }).type).toBe(type);
+    const expected: Record<string, string> = { label: 'k', type };
+    if (type.startsWith('SECP')) expected['mode'] = 'ECDH';
+    expect(operationRequests(fake)[0]?.json()).toEqual(expected);
+  });
+
+  // verifies: REQ-KEY-001
+  it('keeps an explicit mode of a SECP* key', async () => {
+    const fake = loginDevice().on('POST', '/api/keymgmt/create', { body: { kid: KID } });
+    await loggedInClient(fake).keys.create({ label: 'k', type: 'SECP521R1', mode: 'ExDSA' });
+    expect(operationRequests(fake)[0]?.json()).toEqual({ label: 'k', type: 'SECP521R1', mode: 'ExDSA' });
   });
 
   // verifies: REQ-KEY-001, REQ-API-005

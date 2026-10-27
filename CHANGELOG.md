@@ -15,6 +15,9 @@ Milestone M2, daily usage and audit logs: implemented and unit-tested
   description clears it), `keys.import` (an external public key; returns
   its key id), `keys.derive` (ECDH + HKDF on the device from a stored key
   and a peer, `peer: { extKid } | { pubkey }`; returns the new key id).
+  `keys.create`, `keys.import` and `keys.derive` send `mode: ECDH` for a
+  `SECP*` type unless a mode is given (the device gives such a key no
+  usage otherwise); the optional field itself is unchanged.
 - **Signatures and MACs:** `crypto.sign` and `crypto.verify` (ECDSA with
   SHA-256/384/512, Ed25519, Ed25519ph, Ed25519ctx, Ed448, Ed448ph),
   `crypto.hmacVerify`. Verify operations return `true` or `false`; `false`

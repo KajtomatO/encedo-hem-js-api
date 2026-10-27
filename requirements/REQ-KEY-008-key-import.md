@@ -31,10 +31,10 @@ key create does (user decision 2026-10-27, §6.2 impact analysis at
 STEP-M2B-075; revision 4). Introduced in M2.
 
 **Acceptance criteria:**
-- [ ] The body is `{label, pubkey, type}` plus `descr` when given, and
+- [x] The body is `{label, pubkey, type}` plus `descr` when given, and
       `mode` for a `SECP*` type — the caller's, else `ECDH` — and never for
       another type; the scope used is `keymgmt:imp`; the result is the key
-      id.
+      id — STEP-M2B-075 (2026-10-27), unit-tested over all 14 types.
 - [x] A symmetric type raises `HemValidationError` — `IMPORTABLE_KEY_TYPES`
       holds the 14 asymmetric types of the reference.
 - [x] The library applies no size limit of its own to the public key beyond
@@ -46,5 +46,7 @@ STEP-M2B-075; revision 4). Introduced in M2.
       import of it is refused — live 2026-10-27 (STEP-M2B-010): imported
       as type `ECDH,CURVE25519` (no `PKEY` flag: public only); `keys.get`
       returned the same 32 bytes; the second import → 406.
-- [ ] (M2B) a local P-256 public key imported without `mode` serves as the
-      stored peer (`extKid`) of an ECDH.
+- [x] (M2B) a local P-256 public key imported without `mode` serves as the
+      stored peer (`extKid`) of an ECDH — live 2026-10-27 (STEP-M2B-075):
+      listed as `ECDH,SECP256R1`; the secret equals the one computed with
+      the same key given raw (tests/integration/keys-secp-mode.test.ts).

@@ -198,6 +198,17 @@ function validateMode(mode: unknown): KeyMode {
   return mode as KeyMode;
 }
 
+/**
+ * The `mode` to send with a key type: the caller's, validated; else `ECDH`
+ * for a `SECP*` type, because the device gives such a key no usage at all
+ * without one (ARCHITECTURE.md §6 quirk 11); else none.
+ */
+// implements: REQ-KEY-001, REQ-KEY-008, REQ-KEY-009
+function keyMode(type: string, mode: unknown): KeyMode | undefined {
+  if (mode !== undefined) return validateMode(mode);
+  return type.startsWith('SECP') ? 'ECDH' : undefined;
+}
+
 function bytesEqual(a: Uint8Array, b: Uint8Array): boolean {
   return a.length === b.length && a.every((byte, i) => byte === b[i]);
 }
@@ -241,7 +252,7 @@ export interface CreateKeyParams {
   label: string;
   /** Key type; `SHA*` types are HMAC keys. */
   type: KeyType;
-  /** Usage of a `SECP*` key: `ECDH` (the device default), `ExDSA`, or `ECDH,ExDSA`. Ignored by the device for other types. */
+  /** Usage of a `SECP*` key: `ECDH`, `ExDSA`, or `ECDH,ExDSA`; `ECDH` when omitted. Not sent for other types. */
   mode?: KeyMode | undefined;
   /** Binary description, at most 64 bytes; searchable with `keys.search`. */
   descr?: Uint8Array | undefined;
@@ -265,7 +276,7 @@ export interface ImportKeyParams {
   pubkey: Uint8Array;
   /** Key type of the public key; asymmetric types only. */
   type: ImportableKeyType;
-  /** Usage of a `SECP*` key: `ECDH`, `ExDSA`, or `ECDH,ExDSA`. Ignored by the device for other types. */
+  /** Usage of a `SECP*` key: `ECDH`, `ExDSA`, or `ECDH,ExDSA`; `ECDH` when omitted. Not sent for other types. */
   mode?: KeyMode | undefined;
   /** Binary description, at most 64 bytes. */
   descr?: Uint8Array | undefined;
@@ -281,7 +292,7 @@ export interface DeriveKeyParams {
   type: DerivableKeyType;
   /** The peer public key: a stored key id or raw bytes. */
   peer: KeyPeer;
-  /** Usage of a `SECP*` target: `ECDH`, `ExDSA`, or `ECDH,ExDSA`. */
+  /** Usage of a `SECP*` target: `ECDH`, `ExDSA`, or `ECDH,ExDSA`; `ECDH` when omitted. Not sent for other types. */
   mode?: KeyMode | undefined;
   /** Binary description of the new key, at most 64 bytes. */
   descr?: Uint8Array | undefined;
@@ -314,8 +325,10 @@ export interface KeysApi {
    * Generate a key on the device and return its key id (32 lower-case hex
    * characters). The key material never leaves the device.
    *
-   * A `SECP*` key is created for ECDH only unless `mode` includes `ExDSA`;
-   * such a key cannot sign. The mode literals are exact (`ExDSA,ECDH` is
+   * A `SECP*` key is created with mode `ECDH` unless `mode` is given: the
+   * device grants a key created without a mode no usage at all (it can
+   * neither sign nor run ECDH). A `SECP*` key signs only when its mode
+   * includes `ExDSA`. The mode literals are exact (`ExDSA,ECDH` is
    * rejected). Generating a post-quantum key (`MLKEM*`, `MLDSA*`) can take
    * longer than the default 30 s limit; pass a larger `timeoutMs` for it.
    *
@@ -373,7 +386,9 @@ export interface KeysApi {
    * key material, so importing the same key again is refused with
    * `HemOperationFailedError` (406) — as are an unknown type and a key of
    * the wrong length. The library applies no size limit of its own to the
-   * key beyond the 7300-byte request body.
+   * key beyond the 7300-byte request body. A `SECP*` key is imported with
+   * mode `ECDH` unless `mode` is given; without a mode the device stores a
+   * key that cannot serve as an ECDH peer.
    *
    * Device call: `POST /api/keymgmt/import`. HTTPS only.
    *
@@ -390,7 +405,9 @@ export interface KeysApi {
    * not ECDH-capable. Post-quantum target types are not supported.
    * Firmware 1.2.2 answers an unrecognised target type with the source key
    * id and creates nothing; the type is checked before sending, and such a
-   * reply raises `HemProtocolError`.
+   * reply raises `HemProtocolError`. A `SECP*` target gets mode `ECDH`
+   * unless `mode` is given; firmware 1.2.2 refuses every `SECP*` target
+   * with 406 (ARCHITECTURE.md §6 quirk 21).
    *
    * Device call: `POST /api/keymgmt/derive`. HTTPS only.
    *
@@ -458,7 +475,8 @@ export class KeysApiImpl implements KeysApi {
       throw new HemValidationError(`Invalid type: must be one of ${KEY_TYPES.join(', ')}`, { parameter: 'type' });
     }
     const body: Record<string, unknown> = { label, type: params.type };
-    if (params.mode !== undefined) body['mode'] = validateMode(params.mode);
+    const mode = keyMode(params.type, params.mode);
+    if (mode !== undefined) body['mode'] = mode;
     if (params.descr !== undefined) body['descr'] = bytesToBase64(validateDescription(params.descr));
     const r = await invoke(this.#context, KEY_CREATE, { body }, options);
     return readKid(KEY_CREATE, r);
@@ -507,7 +525,8 @@ export class KeysApiImpl implements KeysApi {
       throw new HemValidationError(`Invalid type: must be an asymmetric type, one of ${IMPORTABLE_KEY_TYPES.join(', ')}`, { parameter: 'type' });
     }
     const body: Record<string, unknown> = { label, pubkey: bytesToBase64(pubkey), type: params.type };
-    if (params.mode !== undefined) body['mode'] = validateMode(params.mode);
+    const mode = keyMode(params.type, params.mode);
+    if (mode !== undefined) body['mode'] = mode;
     if (params.descr !== undefined) body['descr'] = bytesToBase64(validateDescription(params.descr));
     try {
       return readKid(KEY_IMPORT, await invoke(this.#context, KEY_IMPORT, { body }, options));
@@ -527,7 +546,8 @@ export class KeysApiImpl implements KeysApi {
       throw new HemValidationError(`Invalid type: must be one of ${DERIVABLE_KEY_TYPES.join(', ')}`, { parameter: 'type' });
     }
     const body: Record<string, unknown> = { kid, label, type: params.type, ...peerFields(params.peer) };
-    if (params.mode !== undefined) body['mode'] = validateMode(params.mode);
+    const mode = keyMode(params.type, params.mode);
+    if (mode !== undefined) body['mode'] = mode;
     if (params.descr !== undefined) body['descr'] = bytesToBase64(validateDescription(params.descr));
     const derived = readKid(KEY_DERIVE, await invoke(this.#context, KEY_DERIVE, { body }, options));
     // Firmware 1.2.2 echoes the source key id for an unrecognised type without creating a key (ARCHITECTURE.md §6 quirk 4).

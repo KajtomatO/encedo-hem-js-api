@@ -71,7 +71,7 @@ describe('keys.import', () => {
     const [request] = operationRequests(fake);
     expect(request?.method).toBe('POST');
     expect(request?.url.href).toBe('https://my.ence.do/api/keymgmt/import');
-    expect(request?.json()).toEqual({ label: 'peer', pubkey: 'Aqq7', type: 'SECP256R1' });
+    expect(request?.json()).toEqual({ label: 'peer', pubkey: 'Aqq7', type: 'SECP256R1', mode: 'ECDH' });
   });
 
   // verifies: REQ-KEY-008
@@ -82,10 +82,12 @@ describe('keys.import', () => {
   });
 
   // verifies: REQ-KEY-008
-  it.each(IMPORTABLE_KEY_TYPES)('accepts type %s', async (type) => {
+  it.each(IMPORTABLE_KEY_TYPES)('accepts type %s, with mode ECDH by default for SECP* only', async (type) => {
     const fake = loginDevice().on('POST', '/api/keymgmt/import', { body: { kid: NEW_KID } });
     await loggedInClient(fake).keys.import({ label: 'k', pubkey: PUBKEY, type });
-    expect((operationRequests(fake)[0]?.json() as { type: string }).type).toBe(type);
+    const expected: Record<string, string> = { label: 'k', pubkey: 'Aqq7', type };
+    if (type.startsWith('SECP')) expected['mode'] = 'ECDH';
+    expect(operationRequests(fake)[0]?.json()).toEqual(expected);
   });
 
   // verifies: REQ-KEY-008
@@ -156,10 +158,12 @@ describe('keys.derive', () => {
   });
 
   // verifies: REQ-KEY-009
-  it.each(DERIVABLE_KEY_TYPES)('accepts target type %s', async (type) => {
+  it.each(DERIVABLE_KEY_TYPES)('accepts target type %s, with mode ECDH by default for SECP* only', async (type) => {
     const fake = loginDevice().on('POST', '/api/keymgmt/derive', { body: { kid: NEW_KID } });
     await loggedInClient(fake).keys.derive({ kid: KID, label: 'k', type, peer: { extKid: PEER_KID } });
-    expect((operationRequests(fake)[0]?.json() as { type: string }).type).toBe(type);
+    const expected: Record<string, string> = { kid: KID, label: 'k', type, ext_kid: PEER_KID };
+    if (type.startsWith('SECP')) expected['mode'] = 'ECDH';
+    expect(operationRequests(fake)[0]?.json()).toEqual(expected);
   });
 
   // verifies: REQ-KEY-009
