@@ -1,9 +1,9 @@
 ---
 id: REQ-NET-006
 title: Transport failures classified
-status: approved
+status: verified
 priority: must
-revision: 1
+revision: 5
 source: start_point G14
 depends_on: ["REQ-API-002", "REQ-NET-004", "REQ-NET-005"]
 supersedes: null
@@ -22,11 +22,23 @@ from a deliberate cancellation, so the three cases need separate error
 classes. Introduced in M1.
 
 **Acceptance criteria:**
-- [ ] A rejected `fetch` raises `HemUnreachableError` with the original
+- [x] A rejected `fetch` raises `HemUnreachableError` with the original
       error attached as its cause.
-- [ ] An elapsed time limit raises `HemTimeoutError`; a caller abort raises
+- [x] An elapsed time limit raises `HemTimeoutError`; a caller abort raises
       `HemAbortError`.
-- [ ] When the time limit and a caller abort race, the one that fired first
+- [x] When the time limit and a caller abort race, the one that fired first
       decides the error.
-- [ ] (M1B) what Node's `fetch` reports for a powered-off device, a name
+- [x] (M1B) what Node's `fetch` reports for a powered-off device, a name
       that does not resolve and an expired certificate is recorded.
+      2026-10-07, through the Node transport (REQ-NET-013): a name that does
+      not resolve → `HemUnreachableError` with cause `ENOTFOUND`
+      (`getaddrinfo ENOTFOUND no-such-host.invalid`); a certificate the
+      trust anchors cannot validate → cause
+      `UNABLE_TO_GET_ISSUER_CERT_LOCALLY`. An expired certificate was not
+      observable: the device's certificate was renewed that day (valid to
+      2027-01-05). Powered off, 2026-10-12: `HemUnreachableError` with
+      cause `ENETUNREACH` (`connect ENETUNREACH 192.168.7.1:443`) — the
+      device is the USB network adapter, so unplugging it removes the route.
+      The expired-certificate case needs an expired device certificate
+      and is **carried to M3B** (user decision 2026-10-20, at the gate):
+      TLS import lands in M3, where the case can be observed.

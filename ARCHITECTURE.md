@@ -15,11 +15,15 @@ Source tags used for device and API facts (REQUIREMENTS-MANAGEMENT.md §8):
 | **[C-SDK]** | https://github.com/KajtomatO/encedo-hem-c-api — device-verified C client, fw 1.2.2 |
 | **[YAML]** | `ref/api/hem-api-1.2.2.yaml` |
 | **[DOC]** | https://github.com/KajtomatO/encedo-hem-api-doc |
+| **[MGR]** | https://github.com/encedo/encedo-manager — Encedo's own web client |
 | **[BRIEF]** | `requirements/start_point/high-level-requirements.md` (items G1–G23, M1.1–M3.6, Q1–Q7) |
 
-Nothing in this document has been verified by this library against a device
-yet. Facts tagged [C-SDK] were verified by the C client; they are re-verified
-here in the B part of each milestone (§8, §10).
+M1 is verified by this library against the development device (M1B,
+2026-10-07 to 2026-10-20): every M1 operation, login and session, check-in,
+mobile approval with the paired phone, power cycle, parallel requests and a
+browser run. Facts tagged [C-SDK] were verified by the C client first; the
+B part of each milestone re-verifies the ones it covers (§8, §10), and a
+finding that differs is recorded next to the fact.
 
 ## [TLDR]
 
@@ -65,7 +69,9 @@ status is mapped to a typed error.
 **Key architectural decisions:**
 
 - **Built only on `fetch` and Web Crypto** — the same package runs in Node
-  and in browsers, with nothing to install or compile.
+  and in browsers, with nothing to install or compile. One exception,
+  forced by firmware quirk 18: on Node.js, device requests go through
+  `node:https` (D3, REQ-NET-013).
 - **The caller owns the network edge** — TLS trust, proxies and test
   doubles are all handled by passing a `fetch`; the library has no TLS
   settings of its own.
@@ -86,14 +92,14 @@ Decisions already made and not up for re-litigation. REQs cite these.
 |---|---|---|
 | D1 | Written in TypeScript; published as ESM JavaScript with type declarations. | [BRIEF] G1 |
 | D2 | No runtime dependencies, no native addons, no PKCS#11. | [BRIEF] G2 |
-| D3 | Only `fetch` and Web Crypto are used as platform APIs; `src/` imports nothing from `node:`. | [BRIEF] G3 |
+| D3 | Only `fetch` and Web Crypto are used as platform APIs; `src/` imports nothing from `node:` — except `src/transport/node-https.ts`, the Node.js device transport (REQ-NET-013), which imports `node:https` dynamically and is never loaded in a browser. Forced by firmware quirk 18 (§6). | [BRIEF] G3; exception: user decision 2026-10-07 |
 | D4 | Minimum Node.js version is 24. Browsers are supported wherever Web Crypto provides X25519. | user decision 2026-10-02 |
 | D5 | Toolchain: npm, `tsc` for the build, Vitest for unit tests (run in Node and in a headless browser). All of it is development-only. | user decision 2026-10-02 |
 | D6 | The login KDF is PBKDF2-HMAC-SHA256 only (600 000 iterations, 32-byte output, salt = the challenge `eid` as its raw string). Argon2 is not supported: the description of an Argon2 derivation attributed to Encedo Manager in [DOC] and in older [C-SDK] text is incorrect and is ignored. There is no KDF hook and no raw-secret credential. This exclusion is re-reviewed before M1B starts (§11, risk 14). | user decision 2026-10-02; parameters from [C-SDK] |
 | D7 | Default relays for the Encedo cloud (check-in backend and mobile-approval broker at `api.encedo.com`) ship with the library behind small interfaces, so a caller can replace or disable them. | user decision 2026-10-02 |
 | D8 | Each milestone is split into an **A** part (implementation and unit tests, no device) and a **B** part (tests and verification on hardware, with user interaction). Order is strict: M1A → M1B → M2A → M2B → M3A → M3B. | user decision 2026-10-02 |
 | D9 | Requirements for all three milestones are drafted at bootstrap; each stays `draft` until a human approves it. All 117 were approved on 2026-10-02. | user decision 2026-10-02 |
-| D10 | The hardware used in the B parts, and the policy for what tests may do to it, are defined just before M1B starts — not earlier. | user decision 2026-10-02 |
+| D10 | The hardware used in the B parts, and the policy for what tests may do to it, are defined just before M1B starts — not earlier. Done at the M1B decomposition (2026-10-06): REQ-TEST-005 (the device and the permitted actions) and REQ-TEST-006 (test-key hygiene). | user decision 2026-10-02 |
 | D11 | The library targets API version 1.2.2 as described by [YAML]. Out of scope: PKCS#11 and native code; endpoints that exist only in diagnostic firmware; endpoints not in the 1.2.2 reference; the Open Mercato integration itself; the device's static web dashboard. | [BRIEF] §1 |
 | D12 | Credentials and tokens are held in memory only; the library never logs or persists them and reads no configuration files or environment variables. | [BRIEF] G13 |
 | D13 | Each milestone ends in a usable, versioned release; later milestones add to the public API without breaking earlier ones. | [BRIEF] G4 |
@@ -141,6 +147,17 @@ Facts about the device that shape the design:
   control, attestation, firmware and dashboard upgrade [YAML].
 - **Login is deliberately slow.** Login responses are delayed to at least
   500 ms, and to 1500 ms after three consecutive failures [YAML].
+- **Header names are matched case-sensitively.** `Content-Length`,
+  `Content-Type` and `Authorization` are recognised only in that exact
+  spelling; a lowercase name counts as absent — 411 for a body without a
+  recognised length, 413 without a recognised type, a bearer silently
+  ignored. Node's built-in `fetch` writes its own `content-length` in
+  lowercase, so on Node.js the library sends through `node:https` (§7,
+  REQ-NET-013) [device, 2026-10-07].
+- **Keep-alive is advertised but not honoured.** Responses carry
+  `connection: keep-alive`, yet the device closes the socket after each
+  response; a client that reuses it fails its next request [device,
+  2026-10-07].
 
 Consumer constraints:
 
@@ -220,6 +237,7 @@ during M1A and then frozen by the additive-API rule (D13).
   | `HemProtocolError` | a success response is missing a required field or is not parseable |
   | `HemUnsupportedError` | the operation does not exist on this hardware, or the runtime lacks a required capability |
   | `HemApprovalRejectedError`, `HemApprovalTimeoutError` | mobile approval was denied, or not answered in time |
+  | `HemRelayError` | a cloud relay call failed: `api.encedo.com` (or the configured relay URL) answered with an unexpected status or reply, or could not be reached (user decision 2026-10-05) |
 
 - **Verify operations** return `true` or `false`; an invalid signature or
   MAC is a result, not an error [BRIEF M2.2].
@@ -312,6 +330,10 @@ All of the following is [C-SDK], live-proven there against firmware 1.2.2:
   `eid` it was derived for; the passphrase is not retained after
   derivation. `logout()` discards the credential and every cached token.
   Nothing is written to disk, storage or logs [BRIEF G13].
+- **Explicit login.** `auth.login(scope)` obtains (or reuses) the token for
+  a scope and reports `{ scope, role, expiresAt }`; the approval calls
+  report the same. The token itself never crosses the API (D12,
+  REQ-AUTH-027, REQ-AUTH-015).
 
 ### 5.3 Mobile approval
 
@@ -346,9 +368,15 @@ Recorded behaviour that callers must know [C-SDK]:
   without notice (§11).
 - The broker rejects a request whose `iat` is ahead of its own clock, so
   device clock drift breaks mobile approval within minutes; the remedy is
-  one check-in and a fresh request.
-- Tokens approved by the real Encedo app live 15 minutes. A
-  `keymgmt:use:<kid>` scope means one push notification per key.
+  one check-in and a fresh request. Seen three times in one attended
+  session on 2026-10-20; each recovery succeeded, and the refused
+  request is not visible on the phone.
+- Tokens approved by the real Encedo app lived 15 minutes when [C-SDK]
+  looked; on 2026-10-20 the device gave them 1 hour. A `keymgmt:use:<kid>`
+  scope means one push notification per key.
+- The app shows a push for a scope it does not know (observed with
+  `keymgmt:search`) as unknown, with nothing to reject: the wait times out
+  (quirk 20).
 - If no phone is paired, the request still succeeds and the wait simply
   times out.
 - The broker learns the caller's IP address and forwards its geolocation
@@ -373,7 +401,8 @@ and JSON body → ask the session engine for a token of its declared scope
 | system | config read (1) | `system:config` | M2 |
 | system | config write, attestation, provisioning certificate, selftest, reboot, shutdown, usbmode, firmware and dashboard upload/check/install (13) | `system:config`, `system:upgrade`, `system:shutdown`, or none on a factory-fresh device | M3 |
 | keymgmt | create, get, search, list ×3 (6) | `keymgmt:gen`, `keymgmt:use:<kid>`, `keymgmt:search`, `keymgmt:list` | M1 |
-| keymgmt | update, delete, import, derive (4) | `keymgmt:upd`, `keymgmt:del`, `keymgmt:imp`, `keymgmt:gen` | M2 |
+| keymgmt | delete (1) | `keymgmt:del` | M1 — implemented in M1B, moved from M2 so device tests can clean up (user decision 2026-10-06) |
+| keymgmt | update, import, derive (3) | `keymgmt:upd`, `keymgmt:imp`, `keymgmt:gen` | M2 |
 | crypto | HMAC hash, wrap, unwrap (3) | `keymgmt:use:<kid>` | M1 |
 | crypto | HMAC verify, ExDSA sign/verify, encrypt, decrypt, ECDH, ML-KEM encaps/decaps, ML-DSA sign/verify (10) | `keymgmt:use:<kid>` | M2 |
 | logger | key, list ×2, download (4) | `logger:get` | M2 |
@@ -412,7 +441,7 @@ Firmware quirks the bindings normalise or document [BRIEF G16]:
 | 5 | `POST /api/keymgmt/update` rewrites the whole record: omitting `descr` clears it. `label` is always required. | [C-SDK], [YAML] | The call takes both fields explicitly. |
 | 6 | The device accepts a 65-byte description on create and silently truncates it on read. | [C-SDK] | Descriptions over 64 bytes are rejected before sending. |
 | 7 | `GET /api/keymgmt/get/{kid}` never returns the label, and on fw 1.2.2 not the description either. | [C-SDK] | Documented; label and description come from list or search. |
-| 8 | Search matches against the base64 text of the stored description; no match is 200 with an empty list (older firmware: 404). | [C-SDK] | 404 is mapped to an empty result. |
+| 8 | No match is 200 with an empty list (older firmware: 404), and the reply's `total` is then the repository's record count, not 0. [C-SDK] described the matching as on base64 text; on the device the comparison is on the decoded bytes — a 1-byte prefix and an unaligned `contains` needle both match. | [C-SDK]; device (2026-10-09) | 404 is mapped to an empty result; paging stops at an empty page. |
 | 9 | Raw ECDH output is truncated to 32 bytes even for larger curves. | [C-SDK] | Documented. |
 | 10 | In HMAC with a stored key, `alg` is ignored; the key's type decides the hash. | [YAML], [C-SDK] | `alg` is not sent in stored-key mode. |
 | 11 | SECP keys are created ECDH-only unless `mode` asks for ExDSA; signing with them fails with 406. | [C-SDK] | Documented on create and sign. |
@@ -422,13 +451,19 @@ Firmware quirks the bindings normalise or document [BRIEF G16]:
 | 15 | Audit-log files are pipe-delimited text. | [C-SDK] | Returned verbatim; never parsed [BRIEF M2.3]. |
 | 16 | Firmware 1.2.2 acknowledges a certificate delivered by check-in but never installs it. | [C-SDK] | Documented; the working path is TLS import through config write (M3). |
 | 17 | The device clock runs about 8% fast and is unset after a cold boot. | [C-SDK] | Clock recovery (§5.2). |
+| 18 | Header names are matched case-sensitively: a lowercase `content-length` gets 411, `content-type` 413, `authorization` is ignored. Node's `fetch` cannot spell `content-length` any other way. | device (2026-10-07) | On Node.js the device transport is `node:https` with the names spelled as required (REQ-NET-013); browsers and libcurl spell them so already. |
+| 19 | Responses say `connection: keep-alive` but the socket is closed after each response. | device (2026-10-07) | One connection per request on the Node transport; undici copes by itself. |
+| 20 | The Encedo app accepts only the scopes it knows: a push for `keymgmt:search` is shown as unknown and cannot be rejected, so the wait times out. | device (2026-10-12) | Nothing; callers in mobile mode should ask for scopes the app knows (`keymgmt:list`, `keymgmt:use:<kid>`). |
 
 ## 7. Transport
 
-- **`fetch` injection.** The client uses `globalThis.fetch` unless the
-  caller passes its own. TLS trust for the device certificate, proxies,
-  connection settings and test doubles are all the caller's `fetch`
-  [BRIEF G6].
+- **`fetch` injection.** The client uses the caller's `fetch` when one is
+  passed; otherwise the library's own `node:https` transport on Node.js
+  (quirk 18 rules out Node's built-in `fetch`; REQ-NET-013) and
+  `globalThis.fetch` elsewhere. TLS trust for the device certificate,
+  proxies, connection settings and test doubles are all the caller's
+  `fetch` [BRIEF G6]; on Node.js `createNodeFetch({ ca, servername,
+  rejectUnauthorized })` builds one on the same transport.
 - **Address.** The device URL is required and may be a hostname or an IP
   address, `https:` or `http:` [BRIEF G5]. The library has no default
   address.
@@ -462,7 +497,11 @@ Firmware quirks the bindings normalise or document [BRIEF G16]:
   412 unless that origin is on its allow-list — the `origin` setting,
   given at provisioning and changeable through config write [YAML].
   Putting the calling origin on that list is the caller's job; the library
-  documents this and reports 412 as `HemOriginRejectedError`.
+  documents this and reports 412 as `HemOriginRejectedError`. Chromium's
+  Local Network Access also applies: a page from another origin reaches the
+  device's local address only after the user allows it; until then the
+  browser fails the request with no response [device and Chromium 153,
+  2026-10-12].
 
 ## 8. Testing policy
 
@@ -546,22 +585,32 @@ strict sequence (D8). Scope comes from [BRIEF] §3–§5.
   REQ-SYS-001…007, REQ-KEY-001…005, REQ-OPS-001…003, REQ-TEST-001…002,
   REQ-BUILD-001…005.
   **Gate:** A gate (§8); the login vector reproduces byte for byte.
-- **M1B — MVP: hardware verification.** Starts with two reviews: defining
-  the device and its test policy (D10) and drafting the requirement for it;
-  and re-reviewing the exclusion of Argon2 (D6; §11, risk 14). Then the
-  integration harness and live runs of everything in [BRIEF] §3 "Complete
-  when": unattended passphrase login; create a root key and find it by
-  description; HMAC; wrap and unwrap; health; check-in. Attended: approve,
-  reject and time out a mobile approval on the real phone; keep working
-  across a device reboot and a token expiry.
-  REQs: REQ-TEST-003…004, REQ-BUILD-006, and the `(M1B)` criteria of the
-  M1A REQs.
+- **M1B — MVP: hardware verification.** Its two opening reviews were
+  concluded at the decomposition (2026-10-06): the device and its test
+  policy are REQ-TEST-005 and REQ-TEST-006 (D10), and the exclusion of
+  Argon2 stands (D6; §11, risk 14). Key delete (REQ-KEY-007) is implemented
+  here, moved from M2A so that tests can delete the keys they create (user
+  decision 2026-10-06). Then the integration harness and live runs of
+  everything in [BRIEF] §3 "Complete when": unattended passphrase login;
+  create a root key and find it by description; HMAC; wrap and unwrap;
+  health; check-in. Attended: approve, reject and time out a mobile
+  approval on the real phone; keep working across a device reboot and a
+  token expiry; a browser page against the device's origin allow-list; the
+  parallel-request probe. The four public-surface changes deferred at the
+  M1A review land before the release (user decision 2026-10-06).
+  REQs: REQ-TEST-003…006, REQ-BUILD-006, REQ-KEY-007, and the `(M1B)`
+  criteria of the M1A REQs.
   **Gate:** B gate (§8); findings for Q1–Q6 recorded in §11; version 0.1.0.
+  **Passed 2026-10-20** (STEP-M1B-140): integration suite green on the
+  device, attended checks performed, the expired-certificate case of
+  REQ-NET-006 and the master role of REQ-AUTH-010 carried to M3B; 0.1.0
+  cut as `@kajtomato/encedo-hem-sdk` (STEP-M1B-150).
 - **M2A — daily usage and audit logs: implementation and unit tests.**
-  Key update, delete, import, derive; every remaining crypto operation
-  with all key modes; config read; audit-log key, listing and download;
+  Key update, import, derive; every remaining crypto operation with all
+  key modes; config read; audit-log key, listing and download;
   mass-storage-only handling.
-  REQs: REQ-API-011, REQ-KEY-006…009, REQ-OPS-004…015, REQ-SYS-008…011.
+  REQs: REQ-API-011, REQ-KEY-006, REQ-KEY-008…009, REQ-OPS-004…015,
+  REQ-SYS-008…011.
   **Gate:** A gate.
 - **M2B — daily usage and audit logs: hardware verification.** Live run
   of every M2 operation on the device, including the firmware-quirk probes
@@ -589,11 +638,11 @@ strict sequence (D8). Scope comes from [BRIEF] §3–§5.
 
 | # | Question | State | Resolution |
 |---|---|---|---|
-| Q1 | Login secret and session key derivation | RESOLVED (2026-10-02) | §5.1, from [C-SDK]; PBKDF2 only (D6). Re-verified by this library at M1B. |
+| Q1 | Login secret and session key derivation | RESOLVED (2026-10-02) | §5.1, from [C-SDK]; PBKDF2 only (D6). Re-verified by this library at M1B (2026-10-07: the first live login succeeded with the vector derivation). |
 | Q2 | How a mobile-approval request reaches the app and returns | RESOLVED (2026-10-02) | Through the cloud broker at `api.encedo.com/notify`, relayed by the client (§5.3) [C-SDK]. Default relay ships (D7). |
 | Q3 | Check-in backend and its interface | RESOLVED (2026-10-02) | `https://api.encedo.com/checkin`; the device's reply is posted to it and its reply is posted back to the device (§6) [C-SDK]. Default relay ships (D7). |
-| Q4 | How the device's TLS certificate is trusted | RESOLVED for the dev device (2026-10-02) | Public-CA certificate for `my.ence.do` [C-SDK]; no TLS setting in the library; other cases through the caller's `fetch` (§7). |
-| Q5 | Throughput, concurrent connections, token limits | PARTIALLY RESOLVED (2026-10-02) | No limit is documented in any source. Known: TCP closed per response, stalls under sustained load, up to 8 paired apps [C-SDK]. Parallel requests are untested, so the client serialises (§7). Open for M1B. |
+| Q4 | How the device's TLS certificate is trusted | RESOLVED for the dev device (2026-10-02) | Public-CA certificate for `my.ence.do` [C-SDK]; no TLS setting in the library; other cases through the caller's `fetch` (§7). M1B (2026-10-07): the public certificate validated with Node's default trust; custom trust goes through `createNodeFetch` (REQ-NET-013, D3 exception). |
+| Q5 | Throughput, concurrent connections, token limits | RESOLVED for M1 (2026-10-12) | No limit is documented in any source. Known: TCP closed per response, stalls under sustained load, up to 8 paired apps [C-SDK]. Measured by this library: two parallel requests are served at once (~400 ms each); with four, the third and fourth are answered about one TCP connect retry later (~1.4 s); the M1 suite needs no pacing (30/30 unpaced); tokens up to 7 days are issued as requested (REQ-AUTH-006). The client still serialises (§7). |
 | Q6 | Who is responsible for the CORS allow-list | RESOLVED (2026-10-02) | The caller configures the device; the library documents it and reports 412 distinctly (§7). Fixed by the approval of REQ-NET-011. |
 | Q7 | Which endpoints diagnostic firmware adds | RESOLVED (2026-10-02) | Everything under `/api/diag/`, present only on firmware whose version ends in `-DIAG`. [DOC] names seven endpoints; [C-SDK] counts nine. The exclusion is stated by path prefix, so the difference does not matter. |
 
@@ -611,12 +660,20 @@ strict sequence (D8). Scope comes from [BRIEF] §3–§5.
    a transport error.
 3. **Connection reuse.** The device closes TCP after each response
    [C-SDK]. Whether Node's `fetch` then fails on a reused connection is
-   unknown. *Resolved by:* M1B.
+   unknown. *Resolved by:* M1B. **RESOLVED (2026-10-07):** Node's `fetch`
+   (undici) copes with the close by itself (10 of 10 consecutive calls);
+   the device also advertises keep-alive while closing (quirk 19), which
+   breaks a reusing `https.Agent` — so the Node transport of REQ-NET-013
+   opens one connection per request.
 4. **Cloud dependency for unattended operation.** After a cold boot the
    clock is unset and login needs a check-in, which needs
    `api.encedo.com` reachable from the client. Whether a soft reboot also
    clears the clock is unknown. *Resolved by:* M1B; the consumer needs to
-   allow that outbound connection.
+   allow that outbound connection. **RESOLVED (2026-10-12):** a soft reboot
+   clears the clock as well. After any restart the first login needs one
+   check-in, which the library runs by itself (3–4 s in total); so does a
+   clock drifted by the ~8 % fast rate. The consumer must allow outbound
+   HTTPS to `api.encedo.com`.
 5. **Undocumented broker.** The mobile-approval broker API was
    reconstructed and can change server-side [C-SDK]. Containment: it is
    isolated behind the approval relay interface.
@@ -627,23 +684,43 @@ strict sequence (D8). Scope comes from [BRIEF] §3–§5.
    delivered by check-in (quirk 16), and TLS import arrives only in M3.
    Until then an expired device certificate needs a relaxed-trust `fetch`
    or an external tool. The last certificate recorded by [C-SDK] for the
-   dev device is valid until 2026-10-06.
+   dev device was valid until 2026-10-06; the user renewed it outside this
+   library on 2026-10-07 (valid to 2027-01-05). The risk stays until TLS
+   import lands in M3; custom trust is available through `createNodeFetch`
+   (REQ-NET-013).
 8. **Largest token lifetime unknown.** 8 hours works [C-SDK]; nothing
    above was tested and no maximum is documented. *Resolved by:* M1B probe.
+   **RESOLVED (2026-10-09):** the device copies whatever lifetime is
+   requested: 24 hours and 7 days were issued as asked, with no cap found
+   up to 7 days (REQ-AUTH-006).
 9. **Master login unverified.** [YAML] defines the master role; no source
    has exercised a master login, and how a device's master key was derived
    depends on how it was provisioned. *Resolved by:* M1B if the device's
-   master passphrase is available, otherwise M3B.
+   master passphrase is available, otherwise M3B. No master passphrase
+   exists for the M1B device (user, 2026-10-06), so the check is carried to
+   M3B.
 10. **Description search alignment.** Matching happens on base64 text
     (quirk 8), so a byte prefix whose length is not a multiple of three may
     not match as expected. This is an inference, not a recorded fact.
-    *Resolved by:* M1B probe.
+    *Resolved by:* M1B probe. **RESOLVED (2026-10-09): not a risk.** The
+    device compares decoded bytes: prefix needles of 1, 2 and 3 bytes and a
+    `contains` needle at an unaligned offset all matched, including cases a
+    text comparison would miss (quirk 8).
 11. **Browser access to the cloud relays** depends on `api.encedo.com`
     allowing cross-origin requests; unverified. *Resolved by:* M1B.
+    **RESOLVED (2026-10-12):** both relays accept browser origins (check-in
+    and broker session from headless Chromium). The real obstacle in a
+    browser is Local Network Access: the user must allow the page to reach
+    the device's local address (§7).
 12. **Package name and publishing** are undecided. *Resolved by:* user
     decision before the 0.1.0 release.
-13. **Node 24 is not installed on the development machine** (2026-10-02).
-    M1A cannot build or test until it is.
+    **RESOLVED (2026-10-20):** the package is `@kajtomato/encedo-hem-sdk`
+    (user decision at STEP-M1B-150). Tagging and publishing stay with the
+    user; the library never pushes or publishes by itself.
+13. **Node 24 on the development machine.** RESOLVED (2026-10-05): Node.js
+    v24.21.0 is installed (npm 11.19.0), and M1A was built and tested with it
+    (TypeScript 7.0.2, Vitest 5.0.3, headless Chromium through Playwright
+    1.63). It was not installed when this risk was raised on 2026-10-02.
 14. **The exclusion of Argon2 is to be re-reviewed.** D6 rests on the
     user's statement of 2026-10-02 that Encedo Manager does not use Argon2,
     while [DOC] and older [C-SDK] text describe such a derivation; the
@@ -651,4 +728,14 @@ strict sequence (D8). Scope comes from [BRIEF] §3–§5.
     request 2026-10-02): confirm how the M1B test device was initialised,
     and whether any device this library has to support needs a derivation
     other than PBKDF2. If one does, REQ-AUTH-003 changes through the §6.2
-    impact analysis.
+    impact analysis. **RESOLVED (2026-10-06, at the M1B decomposition):**
+    D6 stands. [C-SDK] closed the same question that day: the current
+    Encedo Manager derives with PBKDF2-HMAC-SHA256 (600 000 iterations, salt
+    = the `eid` string), and a Manager login to the M1B test device with the
+    same passphrase succeeded, so the device was initialised with the PBKDF2
+    derivation; the Argon2 text in [DOC] and older [C-SDK] documents
+    described legacy Manager files that no longer run. No device this
+    library has to support needs another derivation; REQ-AUTH-003 is
+    unchanged. A device initialised by an older, Argon2-deriving Manager
+    would reject this library's login — supporting one would be a new
+    decision through §6.2.

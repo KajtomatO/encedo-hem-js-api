@@ -1,0 +1,287 @@
+ApprovalCheck	export type ApprovalCheck={readonly status:'pending';}|{readonly status:'approved';readonly authreply:string;}|{readonly status:'rejected';}|{readonly status:'expired';}
+ApprovalDetails	export interface ApprovalDetails
+ApprovalDetails.ctx	ctx?:string|undefined
+ApprovalDetails.note	note?:string|undefined
+ApprovalPoll	export type ApprovalPoll={readonly status:'pending';}|{readonly status:'approved';readonly token:string;}
+ApprovalRelay	export interface ApprovalRelay
+ApprovalRelay.check	check(handle:string,options?:RelayCallOptions):Promise<ApprovalCheck>
+ApprovalRelay.getKey	getKey(options?:RelayCallOptions):Promise<string>
+ApprovalRelay.submit	submit(submission:ApprovalSubmission,options?:RelayCallOptions):Promise<string>
+ApprovalRequest	export interface ApprovalRequest
+ApprovalRequest.authreq	readonly authreq:string
+ApprovalRequest.epk	readonly epk:string
+ApprovalRequestParams	export interface ApprovalRequestParams
+ApprovalRequestParams.ctx	ctx?:string|undefined
+ApprovalRequestParams.epk	epk:string
+ApprovalRequestParams.note	note?:string|undefined
+ApprovalRequestParams.scope	scope:string
+ApprovalSubmission	export interface ApprovalSubmission
+ApprovalSubmission.authreq	readonly authreq:string
+ApprovalSubmission.epk	readonly epk:string
+AuthApi	export interface AuthApi
+AuthApi.approvalRelay	readonly approvalRelay:ApprovalRelay|null
+AuthApi.approve	approve(scope:string,details?:ApprovalDetails,options?:WaitOptions):Promise<SessionInfo>
+AuthApi.beginApproval	beginApproval(scope:string,details?:ApprovalDetails,options?:CallOptions):Promise<PendingApproval>
+AuthApi.login	login(scope:string,options?:CallOptions):Promise<SessionInfo>
+AuthApi.logout	logout():void
+AuthApi.pollApproval	pollApproval(pending:PendingApproval,options?:CallOptions):Promise<{status:'pending';}|{status:'approved';session:SessionInfo;}>
+AuthApi.redeemApproval	redeemApproval(params:RedeemApprovalParams,options?:CallOptions):Promise<SessionInfo>
+AuthApi.requestApproval	requestApproval(params:ApprovalRequestParams,options?:CallOptions):Promise<ApprovalRequest>
+AuthApi.role	readonly role:Role|undefined
+AuthApi.waitForApproval	waitForApproval(pending:PendingApproval,options?:WaitOptions):Promise<SessionInfo>
+CallOptions	export interface CallOptions
+CallOptions.signal	signal?:AbortSignal|undefined
+CallOptions.timeoutMs	timeoutMs?:number|undefined
+CheckinRelay	export interface CheckinRelay
+CheckinRelay.exchange	exchange(check:string,options?:RelayCallOptions):Promise<string>
+CheckinResult	export interface CheckinResult
+CheckinResult.newcrt	readonly newcrt?:string
+CheckinResult.newfws	readonly newfws?:string
+CheckinResult.newuis	readonly newuis?:string
+CheckinResult.status	readonly status:string
+Clock	export type Clock=()=>number
+CreateKeyParams	export interface CreateKeyParams
+CreateKeyParams.descr	descr?:Uint8Array|undefined
+CreateKeyParams.label	label:string
+CreateKeyParams.mode	mode?:KeyMode|undefined
+CreateKeyParams.type	type:KeyType
+CryptoApi	export interface CryptoApi
+CryptoApi.hmac	hmac(params:HmacParams,options?:CallOptions):Promise<Uint8Array>
+CryptoApi.unwrap	unwrap(params:WrapParams,options?:CallOptions):Promise<Uint8Array>
+CryptoApi.wrap	wrap(params:WrapParams,options?:CallOptions):Promise<Uint8Array>
+DescriptionMatch	export type DescriptionMatch='prefix'|'suffix'|'contains'
+ENCEDO_CHECKIN_URL	export declare const ENCEDO_CHECKIN_URL="https://api.encedo.com/checkin"
+ENCEDO_NOTIFY_URL	export declare const ENCEDO_NOTIFY_URL="https://api.encedo.com/notify"
+EncedoApprovalRelay	export declare class EncedoApprovalRelay implements ApprovalRelay
+EncedoApprovalRelay.check	check(handle:string,options?:RelayCallOptions):Promise<ApprovalCheck>
+EncedoApprovalRelay.constructor	constructor(options?:EncedoApprovalRelayOptions)
+EncedoApprovalRelay.getKey	getKey(options?:RelayCallOptions):Promise<string>
+EncedoApprovalRelay.submit	submit(submission:ApprovalSubmission,options?:RelayCallOptions):Promise<string>
+EncedoApprovalRelay.url	readonly url:string
+EncedoApprovalRelayOptions	export interface EncedoApprovalRelayOptions
+EncedoApprovalRelayOptions.fetch	fetch?:FetchFunction|undefined
+EncedoApprovalRelayOptions.timeoutMs	timeoutMs?:number|undefined
+EncedoApprovalRelayOptions.url	url?:string|undefined
+EncedoCheckinRelay	export declare class EncedoCheckinRelay implements CheckinRelay
+EncedoCheckinRelay.constructor	constructor(options?:EncedoCheckinRelayOptions)
+EncedoCheckinRelay.exchange	exchange(check:string,options?:RelayCallOptions):Promise<string>
+EncedoCheckinRelay.url	readonly url:string
+EncedoCheckinRelayOptions	export interface EncedoCheckinRelayOptions
+EncedoCheckinRelayOptions.fetch	fetch?:FetchFunction|undefined
+EncedoCheckinRelayOptions.timeoutMs	timeoutMs?:number|undefined
+EncedoCheckinRelayOptions.url	url?:string|undefined
+FetchFunction	export type FetchFunction=(input:string,init:RequestInit)=>Promise<Response>
+HEM_API_VERSION	export declare const HEM_API_VERSION="1.2.2"
+HealthReport	export interface HealthReport
+HealthReport.clockSet	readonly clockSet:boolean
+HealthReport.error	readonly error?:HemError
+HealthReport.healthy	readonly healthy:boolean
+HealthReport.initialised	readonly initialised:boolean
+HealthReport.reachable	readonly reachable:boolean
+HealthReport.selfTestOk	readonly selfTestOk:boolean
+HealthReport.status	readonly status?:SystemStatus
+HemAbortError	export declare class HemAbortError extends HemError
+HemAbortError.constructor	constructor(message:string,options?:HemErrorOptions)
+HemAbortError.name	name:string
+HemApprovalRejectedError	export declare class HemApprovalRejectedError extends HemError
+HemApprovalRejectedError.constructor	constructor(message:string,options?:HemErrorOptions)
+HemApprovalRejectedError.name	name:string
+HemApprovalTimeoutError	export declare class HemApprovalTimeoutError extends HemError
+HemApprovalTimeoutError.constructor	constructor(message:string,options?:HemErrorOptions)
+HemApprovalTimeoutError.name	name:string
+HemBadRequestError	export declare class HemBadRequestError extends HemError
+HemBadRequestError.constructor	constructor(message:string,options?:HemErrorOptions)
+HemBadRequestError.name	name:string
+HemClient	export declare class HemClient
+HemClient.auth	readonly auth:AuthApi
+HemClient.constructor	constructor(options:HemClientOptions)
+HemClient.crypto	readonly crypto:CryptoApi
+HemClient.keys	readonly keys:KeysApi
+HemClient.system	readonly system:SystemApi
+HemClientOptions	export interface HemClientOptions
+HemClientOptions.approvalRelay	approvalRelay?:ApprovalRelay|null|undefined
+HemClientOptions.checkinRelay	checkinRelay?:CheckinRelay|null|undefined
+HemClientOptions.clockRecovery	clockRecovery?:boolean|undefined
+HemClientOptions.fetch	fetch?:FetchFunction|undefined
+HemClientOptions.minIntervalMs	minIntervalMs?:number|undefined
+HemClientOptions.mobileApproval	mobileApproval?:true|MobileApprovalOptions|undefined
+HemClientOptions.now	now?:Clock|undefined
+HemClientOptions.passphrase	passphrase?:string|undefined
+HemClientOptions.timeoutMs	timeoutMs?:number|undefined
+HemClientOptions.tokenLifetimeSeconds	tokenLifetimeSeconds?:number|undefined
+HemClientOptions.url	url:string|URL
+HemDeviceError	export declare class HemDeviceError extends HemError
+HemDeviceError.constructor	constructor(message:string,options?:HemErrorOptions)
+HemDeviceError.name	name:string
+HemDeviceStateError	export declare class HemDeviceStateError extends HemError
+HemDeviceStateError.constructor	constructor(message:string,options?:HemErrorOptions)
+HemDeviceStateError.name	name:string
+HemError	export declare class HemError extends Error
+HemError.body	readonly body:unknown
+HemError.bodyText	readonly bodyText:string|undefined
+HemError.code	readonly code:HemErrorCode
+HemError.constructor	constructor(code:HemErrorCode,message:string,options?:HemErrorOptions)
+HemError.name	name:string
+HemError.operation	readonly operation:string|undefined
+HemError.status	readonly status:number|undefined
+HemError.toJSON	toJSON():Record<string,unknown>
+HemErrorCode	export type HemErrorCode='BAD_REQUEST'|'UNAUTHENTICATED'|'FORBIDDEN'|'OPERATION_FAILED'|'DEVICE_STATE'|'ORIGIN_REJECTED'|'PAYLOAD_TOO_LARGE'|'TLS_REQUIRED'|'DEVICE_ERROR'|'TIMEOUT'|'UNREACHABLE'|'ABORTED'|'VALIDATION'|'PROTOCOL'|'UNSUPPORTED'|'APPROVAL_REJECTED'|'APPROVAL_TIMEOUT'|'RELAY'
+HemErrorOptions	export interface HemErrorOptions
+HemErrorOptions.body	body?:unknown
+HemErrorOptions.bodyText	bodyText?:string
+HemErrorOptions.cause	cause?:unknown
+HemErrorOptions.operation	operation?:string
+HemErrorOptions.status	status?:number
+HemForbiddenError	export declare class HemForbiddenError extends HemError
+HemForbiddenError.constructor	constructor(message:string,options?:HemErrorOptions)
+HemForbiddenError.name	name:string
+HemOperationFailedError	export declare class HemOperationFailedError extends HemError
+HemOperationFailedError.constructor	constructor(message:string,options?:HemErrorOptions)
+HemOperationFailedError.name	name:string
+HemOriginRejectedError	export declare class HemOriginRejectedError extends HemError
+HemOriginRejectedError.constructor	constructor(message:string,options?:HemErrorOptions)
+HemOriginRejectedError.name	name:string
+HemPayloadTooLargeError	export declare class HemPayloadTooLargeError extends HemError
+HemPayloadTooLargeError.constructor	constructor(message:string,options?:HemErrorOptions)
+HemPayloadTooLargeError.name	name:string
+HemProtocolError	export declare class HemProtocolError extends HemError
+HemProtocolError.constructor	constructor(message:string,options?:HemErrorOptions)
+HemProtocolError.name	name:string
+HemRelayError	export declare class HemRelayError extends HemError
+HemRelayError.constructor	constructor(message:string,options?:HemErrorOptions)
+HemRelayError.name	name:string
+HemTimeoutError	export declare class HemTimeoutError extends HemError
+HemTimeoutError.constructor	constructor(message:string,options?:HemErrorOptions)
+HemTimeoutError.name	name:string
+HemTlsRequiredError	export declare class HemTlsRequiredError extends HemError
+HemTlsRequiredError.constructor	constructor(message:string,options?:HemErrorOptions)
+HemTlsRequiredError.name	name:string
+HemUnauthenticatedError	export declare class HemUnauthenticatedError extends HemError
+HemUnauthenticatedError.constructor	constructor(message:string,options?:HemErrorOptions)
+HemUnauthenticatedError.name	name:string
+HemUnreachableError	export declare class HemUnreachableError extends HemError
+HemUnreachableError.constructor	constructor(message:string,options?:HemErrorOptions)
+HemUnreachableError.name	name:string
+HemUnsupportedError	export declare class HemUnsupportedError extends HemError
+HemUnsupportedError.constructor	constructor(message:string,options?:HemErrorOptions)
+HemUnsupportedError.name	name:string
+HemValidationError	export declare class HemValidationError extends HemError
+HemValidationError.constructor	constructor(message:string,options?:HemErrorOptions&{parameter?:string;})
+HemValidationError.name	name:string
+HemValidationError.parameter	readonly parameter:string|undefined
+HmacParams	export interface HmacParams
+HmacParams.kid	kid:string
+HmacParams.msg	msg:Uint8Array
+KEY_ALGORITHMS	export declare const KEY_ALGORITHMS:readonly string[]
+KEY_FLAGS	export declare const KEY_FLAGS:readonly["ATT","PKEY","ECDH","ExDSA","CERT","PQC"]
+KEY_MODES	export declare const KEY_MODES:readonly["ECDH","ExDSA","ECDH,ExDSA"]
+KEY_TYPES	export declare const KEY_TYPES:readonly["SECP256R1","SECP384R1","SECP521R1","SECP256K1","CURVE25519","CURVE448","ED25519","ED448","SHA2-256","SHA2-384","SHA2-512","SHA3-256","SHA3-384","SHA3-512","AES128","AES192","AES256","MLKEM512","MLKEM768","MLKEM1024","MLDSA44","MLDSA65","MLDSA87"]
+KeyDetails	export interface KeyDetails
+KeyDetails.der	readonly der?:Uint8Array
+KeyDetails.descr	readonly descr?:Uint8Array
+KeyDetails.pubkey	readonly pubkey?:Uint8Array
+KeyDetails.type	readonly type?:KeyTypeInfo
+KeyDetails.updated	readonly updated:number
+KeyEntry	export interface KeyEntry
+KeyEntry.created	readonly created:number
+KeyEntry.descr	readonly descr?:Uint8Array
+KeyEntry.kid	readonly kid:string
+KeyEntry.label	readonly label:string
+KeyEntry.type	readonly type:KeyTypeInfo
+KeyEntry.updated	readonly updated:number
+KeyFlag	export type KeyFlag=(typeof KEY_FLAGS)[number]
+KeyMode	export type KeyMode=(typeof KEY_MODES)[number]
+KeyPage	export interface KeyPage
+KeyPage.deleted	readonly deleted:number
+KeyPage.keys	readonly keys:readonly KeyEntry[]
+KeyPage.listed	readonly listed:number
+KeyPage.offset	readonly offset:number
+KeyPage.total	readonly total:number
+KeyType	export type KeyType=(typeof KEY_TYPES)[number]
+KeyTypeInfo	export interface KeyTypeInfo
+KeyTypeInfo.algorithm	readonly algorithm:string|undefined
+KeyTypeInfo.flags	readonly flags:readonly KeyFlag[]
+KeyTypeInfo.raw	readonly raw:string
+KeyTypeInfo.unknown	readonly unknown:readonly string[]
+KeysApi	export interface KeysApi
+KeysApi.create	create(params:CreateKeyParams,options?:CallOptions):Promise<string>
+KeysApi.delete	delete(kid:string,options?:CallOptions):Promise<void>
+KeysApi.findByDescription	findByDescription(descr:Uint8Array,options?:CallOptions):Promise<KeyEntry[]>
+KeysApi.get	get(kid:string,options?:CallOptions):Promise<KeyDetails>
+KeysApi.list	list(params?:ListKeysParams,options?:CallOptions):Promise<KeyPage>
+KeysApi.listAll	listAll(options?:CallOptions):Promise<KeyEntry[]>
+KeysApi.search	search(params:SearchKeysParams,options?:CallOptions):Promise<KeyPage>
+ListKeysParams	export interface ListKeysParams
+ListKeysParams.count	count?:number|undefined
+ListKeysParams.offset	offset?:number|undefined
+MobileApprovalOptions	export interface MobileApprovalOptions
+MobileApprovalOptions.ctx	ctx?:string|undefined
+MobileApprovalOptions.intervalMs	intervalMs?:number|undefined
+MobileApprovalOptions.note	note?:string|undefined
+MobileApprovalOptions.timeoutMs	timeoutMs?:number|undefined
+NodeFetchOptions	export interface NodeFetchOptions
+NodeFetchOptions.ca	ca?:string|Uint8Array|readonly(string|Uint8Array)[]|undefined
+NodeFetchOptions.rejectUnauthorized	rejectUnauthorized?:boolean|undefined
+NodeFetchOptions.servername	servername?:string|undefined
+PendingApproval	export interface PendingApproval
+PendingApproval.handle	readonly handle:string
+PendingApproval.scope	readonly scope:string
+RedeemApprovalParams	export interface RedeemApprovalParams
+RedeemApprovalParams.authreply	authreply:string
+RedeemApprovalParams.scope	scope:string
+RelayCallOptions	export interface RelayCallOptions
+RelayCallOptions.signal	signal?:AbortSignal|undefined
+Role	export type Role={readonly kind:'user';}|{readonly kind:'master';}|{readonly kind:'app';readonly id:string;}
+SearchKeysParams	export interface SearchKeysParams
+SearchKeysParams.descr	descr:Uint8Array
+SearchKeysParams.limit	limit?:number|undefined
+SearchKeysParams.match	match?:DescriptionMatch|undefined
+SearchKeysParams.offset	offset?:number|undefined
+SessionInfo	export interface SessionInfo
+SessionInfo.expiresAt	readonly expiresAt:number
+SessionInfo.role	readonly role:Role|undefined
+SessionInfo.scope	readonly scope:string
+SystemApi	export interface SystemApi
+SystemApi.checkin	checkin(options?:CallOptions):Promise<CheckinResult>
+SystemApi.getCheckin	getCheckin(options?:CallOptions):Promise<string>
+SystemApi.health	health(options?:CallOptions):Promise<HealthReport>
+SystemApi.postCheckin	postCheckin(checked:string,options?:CallOptions):Promise<CheckinResult>
+SystemApi.status	status(options?:CallOptions):Promise<SystemStatus>
+SystemApi.version	version(options?:CallOptions):Promise<SystemVersion>
+SystemStatus	export interface SystemStatus
+SystemStatus.clockSet	readonly clockSet:boolean
+SystemStatus.ctx	readonly ctx:number
+SystemStatus.flsState	readonly flsState:number
+SystemStatus.format	readonly format?:string
+SystemStatus.fwUpgrade	readonly fwUpgrade:boolean
+SystemStatus.hostname	readonly hostname?:string
+SystemStatus.https	readonly https?:boolean
+SystemStatus.initialised	readonly initialised:boolean
+SystemStatus.storage	readonly storage?:readonly string[]
+SystemStatus.temp	readonly temp:number
+SystemStatus.time	readonly time?:number
+SystemStatus.trustedTime	readonly trustedTime:boolean
+SystemStatus.ts	readonly ts?:string
+SystemStatus.uptime	readonly uptime:number
+SystemVersion	export interface SystemVersion
+SystemVersion.blk	readonly blk?:Uint8Array
+SystemVersion.bls	readonly bls?:Uint8Array
+SystemVersion.blv	readonly blv?:string
+SystemVersion.fwk	readonly fwk:Uint8Array
+SystemVersion.fws	readonly fws:Uint8Array
+SystemVersion.fwv	readonly fwv:string
+SystemVersion.hwv	readonly hwv:string
+SystemVersion.sdCid	readonly sdCid?:Uint8Array
+SystemVersion.sdCsd	readonly sdCsd?:Uint8Array
+SystemVersion.uis	readonly uis?:Uint8Array
+WaitOptions	export interface WaitOptions
+WaitOptions.intervalMs	intervalMs?:number|undefined
+WaitOptions.signal	signal?:AbortSignal|undefined
+WaitOptions.timeoutMs	timeoutMs?:number|undefined
+WrapAlgorithm	export type WrapAlgorithm='AES128'|'AES192'|'AES256'
+WrapParams	export interface WrapParams
+WrapParams.alg	alg?:WrapAlgorithm|undefined
+WrapParams.iv	iv?:Uint8Array|undefined
+WrapParams.kid	kid:string
+WrapParams.msg	msg:Uint8Array
+createNodeFetch	export declare function createNodeFetch(options?:NodeFetchOptions):FetchFunction

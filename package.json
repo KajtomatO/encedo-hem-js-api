@@ -1,0 +1,42 @@
+{
+  "name": "@kajtomato/encedo-hem-sdk",
+  "version": "0.1.0",
+  "description": "TypeScript client for the Encedo HEM REST API",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "npm run clean && tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "npm run build && vitest run",
+    "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
+    "test:node": "vitest run --project node",
+    "test:browser": "vitest run --project browser",
+    "test:unit": "vitest run",
+    "check": "npm run build && npm run typecheck && vitest run",
+    "surface:update": "npm run build && HEM_UPDATE_SURFACE=1 vitest run --project node tests/unit/surface.node.test.ts",
+    "test:integration": "vitest run --config vitest.integration.config.ts --project integration",
+    "test:attended": "vitest run --config vitest.integration.config.ts --project attended"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.1",
+    "@vitest/browser-playwright": "5.0.3",
+    "playwright": "1.63.0",
+    "typescript": "7.0.2",
+    "vitest": "5.0.3"
+  },
+  "//": "implements: REQ-BUILD-001, REQ-BUILD-002, REQ-BUILD-004, REQ-BUILD-006, REQ-TEST-003 — version 0.1.0 cut at the M1B gate; ESM with types, no runtime dependencies or install scripts, Node >= 24; device tests run only through test:integration and test:attended"
+}

@@ -1,9 +1,9 @@
 ---
 id: REQ-AUTH-006
 title: Requested token lifetime
-status: approved
+status: verified
 priority: must
-revision: 1
+revision: 4
 source: start_point G11; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: ["REQ-AUTH-002"]
 supersedes: null
@@ -27,12 +27,17 @@ client did, yields 60-second tokens and a login before almost every call.
 Introduced in M1.
 
 **Acceptance criteria:**
-- [ ] By default `exp − iat` in the proof is 28 800.
-- [ ] A configured lifetime is used instead.
-- [ ] With a challenge whose `exp` is 60 seconds ahead, the proof still
+- [x] By default `exp − iat` in the proof is 28 800.
+- [x] A configured lifetime is used instead.
+- [x] With a challenge whose `exp` is 60 seconds ahead, the proof still
       carries the full lifetime.
-- [ ] A lifetime that is zero, negative or not an integer raises
+- [x] A lifetime that is zero, negative or not an integer raises
       `HemValidationError`.
-- [ ] (M1B) the device issues a token of about 8 hours for the default.
-- [ ] (M1B) a lifetime above 8 hours is probed and the device's reaction
-      recorded (ARCHITECTURE.md §11, risk 8).
+- [x] (M1B) the device issues a token of about 8 hours for the default —
+      2026-10-09, clock synced first: `exp − iat` in the issued token was
+      exactly 28 800; the device copies the requested `exp`.
+- [x] (M1B) a lifetime above 8 hours is probed and the device's reaction
+      recorded (ARCHITECTURE.md §11, risk 8) — 2026-10-09: 86 400 s
+      requested → token issued for 86 400 s; 604 800 s requested → issued
+      for 604 799 s. No cap was found up to 7 days; the device copies the
+      requested expiry as given. A 90 s lifetime was copied as well.

@@ -1,9 +1,9 @@
 ---
 id: REQ-SYS-001
 title: Device status
-status: approved
+status: verified
 priority: must
-revision: 1
+revision: 4
 source: start_point §3; ref/api/hem-api-1.2.2.yaml
 depends_on: ["REQ-API-006"]
 supersedes: null
@@ -29,11 +29,18 @@ device in any state, which makes it the basis for health checks. Introduced
 in M1.
 
 **Acceptance criteria:**
-- [ ] No `Authorization` header is sent.
-- [ ] The always-present fields `ctx`, `uptime`, `temp` and `fls_state` are
+- [x] No `Authorization` header is sent.
+- [x] The always-present fields `ctx`, `uptime`, `temp` and `fls_state` are
       required; their absence raises `HemProtocolError`.
-- [ ] The result reports initialised as true unless `inited` is false, and
+- [x] The result reports initialised as true unless `inited` is false, and
       clock-set as true exactly when `ts` or `time` is present.
-- [ ] `storage` and `format`, present only on mass-storage hardware, are
+- [x] `storage` and `format`, present only on mass-storage hardware, are
       passed through when present.
-- [ ] (M1B) the live response of the test device is recorded and parses.
+- [x] (M1B) the live response of the test device is recorded and parses —
+      2026-10-07, fw 1.2.2-DIAG, clock set:
+      `{"ctx":0,"uptime":2955,"ts":"2026-10-07T14:51:38Z","time":1791384698,"storage":["8388607:ro","234364924:-"],"temp":36,"fls_state":0}`.
+      No `inited` (initialised), no `https` (over HTTPS), `ts`/`time`
+      present (clock set), `storage` present (mass-storage hardware) — as
+      §6 quirk 14 describes. Parsed: initialised true, clockSet true,
+      trustedTime true, fwUpgrade false. After a cold boot the same call
+      answered without `ts`/`time` (clock unset).

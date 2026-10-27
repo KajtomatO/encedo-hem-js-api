@@ -1,10 +1,10 @@
 ---
 id: REQ-AUTH-015
 title: Mobile approval step 2 — redeem the reply
-status: approved
+status: verified
 priority: must
-revision: 1
-source: start_point M1.2; ref/api/hem-api-1.2.2.yaml; https://github.com/KajtomatO/encedo-hem-c-api
+revision: 5
+source: start_point M1.2; ref/api/hem-api-1.2.2.yaml; https://github.com/KajtomatO/encedo-hem-c-api; criterion 1 rewording approved by the user 2026-10-12
 depends_on: ["REQ-AUTH-004", "REQ-API-002"]
 supersedes: null
 superseded_by: null
@@ -21,13 +21,18 @@ a mobile app's reply for a bearer token.
 first it needs no token [YAML]. Introduced in M1.
 
 **Acceptance criteria:**
-- [ ] The body is `{authreply}`; no `Authorization` header is sent; the
-      result is the token.
-- [ ] The token is cached under the scope that was originally requested,
+- [x] The body is `{authreply}`; no `Authorization` header is sent; the
+      token is cached under the requested scope, and the call resolves with
+      `{ scope, role, expiresAt }` — the token itself is never returned
+      (reworded 2026-10-12, STEP-M1B-130; was "the result is the token").
+- [x] The token is cached under the scope that was originally requested,
       with the expiry taken from its `exp` claim.
-- [ ] A 401 (reply invalid, expired or already used) raises
+- [x] A 401 (reply invalid, expired or already used) raises
       `HemUnauthenticatedError`; a 406 (unknown pairing or undecryptable
       scope) raises `HemOperationFailedError`.
-- [ ] (M1B) attended: a token obtained through approval on the real phone is
+- [x] (M1B) attended: a token obtained through approval on the real phone is
       accepted by the device; its lifetime is recorded ([C-SDK] observed 15
-      minutes with the Encedo app).
+      minutes with the Encedo app) — 2026-10-20 [device]: `keys.list` with
+      the approved token succeeded; the token's `exp` was 3597 s ahead
+      (about 1 hour, not 15 minutes); the role reported is
+      `{kind: "app", id: …}`.

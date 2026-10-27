@@ -1,9 +1,9 @@
 ---
 id: REQ-API-005
 title: Inputs validated against the documented hard limits before sending
-status: approved
+status: verified
 priority: must
-revision: 1
+revision: 6
 source: start_point G17; ref/api/hem-api-1.2.2.yaml; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: ["REQ-API-002"]
 supersedes: null
@@ -26,12 +26,13 @@ Failing early gives the caller a precise error and spares the device a
 pointless request. Introduced in M1.
 
 **Acceptance criteria:**
-- [ ] Each violation raises `HemValidationError` naming the offending
+- [x] Each violation raises `HemValidationError` naming the offending
       parameter, with zero `fetch` calls.
-- [ ] Boundary values are accepted: a 32-character label, a 64-byte
+- [x] Boundary values are accepted: a 32-character label, a 64-byte
       description, a 2048-byte message, a 7300-byte body.
-- [ ] A key id given in upper-case hex is accepted and sent in lower case.
-- [ ] An empty message is rejected for operations where the reference
+- [x] A key id given in upper-case hex is accepted and sent in lower case.
+- [x] An empty message is rejected for operations where the reference
       requires one.
-- [ ] (M1B) the device accepts a 32-character label and a 64-byte
-      description and returns them unchanged.
+- [x] (M1B) the device accepts a 32-character label and a 64-byte
+      description and returns them unchanged — 2026-10-09: both came back
+      byte for byte in the listing.

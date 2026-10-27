@@ -1,9 +1,9 @@
 ---
 id: REQ-AUTH-018
 title: Approval attempts end as approved, rejected or timed out
-status: approved
+status: verified
 priority: must
-revision: 1
+revision: 4
 source: start_point §3; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: ["REQ-AUTH-014", "REQ-AUTH-015", "REQ-AUTH-016"]
 supersedes: null
@@ -28,13 +28,18 @@ phone. The consumer has to treat those differently: proceed, stop, or ask
 again. Introduced in M1.
 
 **Acceptance criteria:**
-- [ ] Approved: the token is cached under the requested scope and the wait
+- [x] Approved: the token is cached under the requested scope and the wait
       resolves.
-- [ ] Rejected: `HemApprovalRejectedError` is raised and `ext/token` is
+- [x] Rejected: `HemApprovalRejectedError` is raised and `ext/token` is
       never called.
-- [ ] No answer within the limit, or the relay reporting the request as
+- [x] No answer within the limit, or the relay reporting the request as
       expired: `HemApprovalTimeoutError`.
-- [ ] A transport error during one poll does not end the wait.
-- [ ] An `AbortSignal` cancels the wait.
-- [ ] (M1B) attended: approving, rejecting and ignoring the request on the
-      real phone produce the three outcomes.
+- [x] A transport error during one poll does not end the wait.
+- [x] An `AbortSignal` cancels the wait.
+- [x] (M1B) attended: approving, rejecting and ignoring the request on the
+      real phone produce the three outcomes — 2026-10-20 [device]: approved
+      after 9 s, `HemApprovalRejectedError` after 5 s, `HemApprovalTimeoutError`
+      61 s after the submit with a 60 s limit. Observed 2026-10-12: the Encedo
+      app shows a push for a scope it does not know (`keymgmt:search`) as
+      unknown and offers no reject, so such a wait always times out; the
+      attended test uses `keymgmt:list` for all three outcomes.

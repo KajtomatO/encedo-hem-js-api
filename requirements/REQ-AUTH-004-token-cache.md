@@ -1,9 +1,9 @@
 ---
 id: REQ-AUTH-004
 title: One cached token per scope
-status: approved
+status: verified
 priority: must
-revision: 1
+revision: 3
 source: start_point G10; ARCHITECTURE.md §5; ref/api/hem-api-1.2.2.yaml
 depends_on: ["REQ-AUTH-001"]
 supersedes: null
@@ -24,11 +24,11 @@ scope keeps the number of logins equal to the number of distinct scopes in
 use. Introduced in M1.
 
 **Acceptance criteria:**
-- [ ] Two calls needing the same scope cause one login.
-- [ ] Calls needing different scopes obtain separate tokens.
-- [ ] The cache key is the exact string: `keymgmt:use:<kid A>` and
+- [x] Two calls needing the same scope cause one login.
+- [x] Calls needing different scopes obtain separate tokens.
+- [x] The cache key is the exact string: `keymgmt:use:<kid A>` and
       `keymgmt:use:<kid B>` are different entries, and a `keymgmt:list`
       token is not used for `keymgmt:search`.
-- [ ] The expiry is read from the token's own `exp` claim, falling back to
+- [x] The expiry is read from the token's own `exp` claim, falling back to
       the requested expiry when the token cannot be decoded.
-- [ ] The cache belongs to one client instance and exists only in memory.
+- [x] The cache belongs to one client instance and exists only in memory.
