@@ -3,7 +3,7 @@ id: REQ-KEY-008
 title: Import an external public key
 status: approved
 priority: must
-revision: 1
+revision: 2
 source: start_point §4; ref/api/hem-api-1.2.2.yaml; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: ["REQ-AUTH-005", "REQ-API-005"]
 supersedes: null
@@ -27,12 +27,15 @@ importing the same key twice is refused with 406 [YAML], [C-SDK]. Introduced
 in M2.
 
 **Acceptance criteria:**
-- [ ] The body is `{label, pubkey, type}` plus `mode` and `descr` when
-      given; the scope used is `keymgmt:imp`; the result is the key id.
-- [ ] A symmetric type raises `HemValidationError`.
-- [ ] The library applies no size limit of its own to the public key beyond
-      the JSON body limit (an 800-byte ML-KEM key imports [C-SDK]).
-- [ ] A 406 raises `HemOperationFailedError` whose message names a duplicate
+- [x] The body is `{label, pubkey, type}` plus `mode` and `descr` when
+      given; the scope used is `keymgmt:imp`; the result is the key id —
+      `keys.import`, STEP-M2A-010 (2026-10-27).
+- [x] A symmetric type raises `HemValidationError` — `IMPORTABLE_KEY_TYPES`
+      holds the 14 asymmetric types of the reference.
+- [x] The library applies no size limit of its own to the public key beyond
+      the JSON body limit (an 800-byte ML-KEM key imports [C-SDK]) — unit
+      test sends an 800-byte key.
+- [x] A 406 raises `HemOperationFailedError` whose message names a duplicate
       key among the possible causes.
 - [ ] (M2B) a freshly generated X25519 public key is imported, and a second
       import of it is refused.

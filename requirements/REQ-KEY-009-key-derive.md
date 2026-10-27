@@ -3,7 +3,7 @@ id: REQ-KEY-009
 title: Derive a key by ECDH and HKDF
 status: approved
 priority: must
-revision: 1
+revision: 2
 source: start_point §4; start_point G16; ref/api/hem-api-1.2.2.yaml; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: ["REQ-AUTH-005", "REQ-API-005"]
 supersedes: null
@@ -29,11 +29,14 @@ reproduced outside the device, and repeating it is refused with 406 [C-SDK].
 Introduced in M2.
 
 **Acceptance criteria:**
-- [ ] The body is `{kid, label, type}` plus one of `ext_kid` or `pubkey`,
-      and `mode` and `descr` when given; the scope used is `keymgmt:gen`.
-- [ ] Giving both peers, neither, or a target type outside the list raises
-      `HemValidationError` before sending.
-- [ ] A reply whose key id equals the source key id raises
+- [x] The body is `{kid, label, type}` plus one of `ext_kid` or `pubkey`,
+      and `mode` and `descr` when given; the scope used is `keymgmt:gen` —
+      `keys.derive` with a `peer: { extKid } | { pubkey }` parameter,
+      STEP-M2A-010 (2026-10-27).
+- [x] Giving both peers, neither, or a target type outside the list raises
+      `HemValidationError` before sending — `DERIVABLE_KEY_TYPES` is the
+      create list without `MLKEM*`/`MLDSA*`.
+- [x] A reply whose key id equals the source key id raises
       `HemProtocolError`.
 - [ ] (M2B) a key is derived on the test device from two X25519 keys and
       appears in the list.

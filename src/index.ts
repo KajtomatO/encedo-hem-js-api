@@ -56,7 +56,20 @@ export type { RelayCallOptions } from './relay/http.js';
 export type { CallOptions, FetchFunction } from './transport/transport.js';
 export { createNodeFetch } from './transport/node-https.js';
 export type { NodeFetchOptions } from './transport/node-https.js';
-export type { CreateKeyParams, DescriptionMatch, KeyDetails, KeyEntry, KeyPage, KeysApi, ListKeysParams, SearchKeysParams } from './api/keymgmt.js';
-export { KEY_ALGORITHMS, KEY_FLAGS, KEY_MODES, KEY_TYPES } from './api/key-type.js';
-export type { KeyFlag, KeyMode, KeyType, KeyTypeInfo } from './api/key-type.js';
+export type {
+  CreateKeyParams,
+  DeriveKeyParams,
+  DescriptionMatch,
+  ImportKeyParams,
+  KeyDetails,
+  KeyEntry,
+  KeyPage,
+  KeysApi,
+  ListKeysParams,
+  SearchKeysParams,
+  UpdateKeyParams,
+} from './api/keymgmt.js';
+export type { KeyPeer } from './api/peer.js';
+export { DERIVABLE_KEY_TYPES, IMPORTABLE_KEY_TYPES, KEY_ALGORITHMS, KEY_FLAGS, KEY_MODES, KEY_TYPES } from './api/key-type.js';
+export type { DerivableKeyType, ImportableKeyType, KeyFlag, KeyMode, KeyType, KeyTypeInfo } from './api/key-type.js';
 export type { CryptoApi, HmacParams, WrapAlgorithm, WrapParams } from './api/crypto.js';

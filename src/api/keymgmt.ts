@@ -1,11 +1,12 @@
 /**
- * Key-management bindings (M1): create and get; list and search; delete.
+ * Key-management bindings: create and get; list and search; delete (M1);
+ * update, import and derive (M2).
  *
  * @packageDocumentation
  */
 import { bytesToBase64 } from '../codec/base64.js';
 import { validateDescription, validateKid, validateLabel } from '../codec/validate.js';
-import { HemDeviceError, HemProtocolError, HemValidationError } from '../errors.js';
+import { HemDeviceError, HemOperationFailedError, HemProtocolError, HemValidationError, copyError } from '../errors.js';
 import type { CallOptions } from '../transport/transport.js';
 import {
   type BindingContext,
@@ -17,7 +18,19 @@ import {
   readInteger,
   readString,
 } from './core.js';
-import { KEY_MODES, KEY_TYPES, type KeyMode, type KeyType, type KeyTypeInfo, parseKeyType } from './key-type.js';
+import {
+  DERIVABLE_KEY_TYPES,
+  type DerivableKeyType,
+  IMPORTABLE_KEY_TYPES,
+  type ImportableKeyType,
+  KEY_MODES,
+  KEY_TYPES,
+  type KeyMode,
+  type KeyType,
+  type KeyTypeInfo,
+  parseKeyType,
+} from './key-type.js';
+import { type KeyPeer, peerFields, validatePubkey } from './peer.js';
 
 export const KEY_CREATE: OperationSpec = {
   name: 'keys.create',
@@ -72,6 +85,37 @@ export const KEY_DELETE: OperationSpec = {
   tlsOnly: true,
   required: [],
   emptyResponse: true,
+};
+
+export const KEY_UPDATE: OperationSpec = {
+  name: 'keys.update',
+  group: 'keymgmt',
+  method: 'POST',
+  path: '/api/keymgmt/update',
+  scope: 'keymgmt:upd',
+  tlsOnly: true,
+  required: [],
+  emptyResponse: true,
+};
+
+export const KEY_IMPORT: OperationSpec = {
+  name: 'keys.import',
+  group: 'keymgmt',
+  method: 'POST',
+  path: '/api/keymgmt/import',
+  scope: 'keymgmt:imp',
+  tlsOnly: true,
+  required: ['kid'],
+};
+
+export const KEY_DERIVE: OperationSpec = {
+  name: 'keys.derive',
+  group: 'keymgmt',
+  method: 'POST',
+  path: '/api/keymgmt/derive',
+  scope: 'keymgmt:gen',
+  tlsOnly: true,
+  required: ['kid'],
 };
 
 /** Largest page the device returns. */
@@ -147,6 +191,13 @@ function validatePageSize(value: unknown, parameter: string): number {
   return value;
 }
 
+function validateMode(mode: unknown): KeyMode {
+  if (!(KEY_MODES as readonly string[]).includes(mode as string)) {
+    throw new HemValidationError(`Invalid mode: must be exactly one of ${KEY_MODES.join(', ')}`, { parameter: 'mode' });
+  }
+  return mode as KeyMode;
+}
+
 function bytesEqual(a: Uint8Array, b: Uint8Array): boolean {
   return a.length === b.length && a.every((byte, i) => byte === b[i]);
 }
@@ -193,6 +244,46 @@ export interface CreateKeyParams {
   /** Usage of a `SECP*` key: `ECDH` (the device default), `ExDSA`, or `ECDH,ExDSA`. Ignored by the device for other types. */
   mode?: KeyMode | undefined;
   /** Binary description, at most 64 bytes; searchable with `keys.search`. */
+  descr?: Uint8Array | undefined;
+}
+
+/** Parameters of {@link KeysApi.update}. */
+export interface UpdateKeyParams {
+  /** Key id, 32 hexadecimal characters. */
+  kid: string;
+  /** New label, 1 to 32 printable ASCII characters; always required. */
+  label: string;
+  /** New description, at most 64 bytes. An empty array clears the description. */
+  descr: Uint8Array;
+}
+
+/** Parameters of {@link KeysApi.import}. */
+export interface ImportKeyParams {
+  /** 1 to 32 printable ASCII characters. */
+  label: string;
+  /** The public key: compressed X9.63 for `SECP*` types, raw bytes for the others. */
+  pubkey: Uint8Array;
+  /** Key type of the public key; asymmetric types only. */
+  type: ImportableKeyType;
+  /** Usage of a `SECP*` key: `ECDH`, `ExDSA`, or `ECDH,ExDSA`. Ignored by the device for other types. */
+  mode?: KeyMode | undefined;
+  /** Binary description, at most 64 bytes. */
+  descr?: Uint8Array | undefined;
+}
+
+/** Parameters of {@link KeysApi.derive}. */
+export interface DeriveKeyParams {
+  /** Stored private key capable of ECDH; the source of the derivation. */
+  kid: string;
+  /** Label of the new key, 1 to 32 printable ASCII characters. */
+  label: string;
+  /** Type of the new key: any creatable type except the post-quantum ones. */
+  type: DerivableKeyType;
+  /** The peer public key: a stored key id or raw bytes. */
+  peer: KeyPeer;
+  /** Usage of a `SECP*` target: `ECDH`, `ExDSA`, or `ECDH,ExDSA`. */
+  mode?: KeyMode | undefined;
+  /** Binary description of the new key, at most 64 bytes. */
   descr?: Uint8Array | undefined;
 }
 
@@ -263,6 +354,51 @@ export interface KeysApi {
   delete(kid: string, options?: CallOptions): Promise<void>;
 
   /**
+   * Change a key's label and description. The device rewrites the whole
+   * record, so both are stated: `descr` is the new description, and an
+   * empty array clears it (the field is then left out of the request, which
+   * is how the device clears it). An unknown key id raises
+   * `HemOperationFailedError` (406).
+   *
+   * Device call: `POST /api/keymgmt/update`. HTTPS only.
+   *
+   * @remarks Token scope: `keymgmt:upd`. Introduced in M2.
+   */
+  update(params: UpdateKeyParams, options?: CallOptions): Promise<void>;
+
+  /**
+   * Store an external public key and return its key id (32 lower-case hex
+   * characters). Asymmetric types only; `SECP*` keys are given in
+   * compressed X9.63 form, the others raw. The key id is derived from the
+   * key material, so importing the same key again is refused with
+   * `HemOperationFailedError` (406) — as are an unknown type and a key of
+   * the wrong length. The library applies no size limit of its own to the
+   * key beyond the 7300-byte request body.
+   *
+   * Device call: `POST /api/keymgmt/import`. HTTPS only.
+   *
+   * @remarks Token scope: `keymgmt:imp`. Introduced in M2.
+   */
+  import(params: ImportKeyParams, options?: CallOptions): Promise<string>;
+
+  /**
+   * Derive a new stored key from a stored private key and a peer public
+   * key: the device runs ECDH, then HKDF-SHA256, and stores the result.
+   * Returns the new key id. The derivation cannot be reproduced outside the
+   * device, and deriving the same key again is refused with
+   * `HemOperationFailedError` (406), as is a source key that is missing or
+   * not ECDH-capable. Post-quantum target types are not supported.
+   * Firmware 1.2.2 answers an unrecognised target type with the source key
+   * id and creates nothing; the type is checked before sending, and such a
+   * reply raises `HemProtocolError`.
+   *
+   * Device call: `POST /api/keymgmt/derive`. HTTPS only.
+   *
+   * @remarks Token scope: `keymgmt:gen`. Introduced in M2.
+   */
+  derive(params: DeriveKeyParams, options?: CallOptions): Promise<string>;
+
+  /**
    * One page of the key repository, at most 15 keys. Labels and
    * descriptions are available here (key get does not return them).
    *
@@ -322,12 +458,7 @@ export class KeysApiImpl implements KeysApi {
       throw new HemValidationError(`Invalid type: must be one of ${KEY_TYPES.join(', ')}`, { parameter: 'type' });
     }
     const body: Record<string, unknown> = { label, type: params.type };
-    if (params.mode !== undefined) {
-      if (!(KEY_MODES as readonly string[]).includes(params.mode)) {
-        throw new HemValidationError(`Invalid mode: must be exactly one of ${KEY_MODES.join(', ')}`, { parameter: 'mode' });
-      }
-      body['mode'] = params.mode;
-    }
+    if (params.mode !== undefined) body['mode'] = validateMode(params.mode);
     if (params.descr !== undefined) body['descr'] = bytesToBase64(validateDescription(params.descr));
     const r = await invoke(this.#context, KEY_CREATE, { body }, options);
     return readKid(KEY_CREATE, r);
@@ -355,6 +486,55 @@ export class KeysApiImpl implements KeysApi {
     await invoke(this.#context, KEY_DELETE, { params: { kid: id } }, options);
     // The key is gone, so a token scoped to it is useless.
     this.#context.tokens.forget(`keymgmt:use:${id}`);
+  }
+
+  // implements: REQ-KEY-006
+  async update(params: UpdateKeyParams, options?: CallOptions): Promise<void> {
+    const kid = validateKid(params?.kid);
+    const label = validateLabel(params.label);
+    const descr = validateDescription(params.descr);
+    const body: Record<string, unknown> = { kid, label };
+    // The device clears the description when the field is absent (ARCHITECTURE.md §6 quirk 5).
+    if (descr.length > 0) body['descr'] = bytesToBase64(descr);
+    await invoke(this.#context, KEY_UPDATE, { body }, options);
+  }
+
+  // implements: REQ-KEY-008
+  async import(params: ImportKeyParams, options?: CallOptions): Promise<string> {
+    const label = validateLabel(params?.label);
+    const pubkey = validatePubkey(params.pubkey);
+    if (!(IMPORTABLE_KEY_TYPES as readonly string[]).includes(params.type)) {
+      throw new HemValidationError(`Invalid type: must be an asymmetric type, one of ${IMPORTABLE_KEY_TYPES.join(', ')}`, { parameter: 'type' });
+    }
+    const body: Record<string, unknown> = { label, pubkey: bytesToBase64(pubkey), type: params.type };
+    if (params.mode !== undefined) body['mode'] = validateMode(params.mode);
+    if (params.descr !== undefined) body['descr'] = bytesToBase64(validateDescription(params.descr));
+    try {
+      return readKid(KEY_IMPORT, await invoke(this.#context, KEY_IMPORT, { body }, options));
+    } catch (error) {
+      if (error instanceof HemOperationFailedError) {
+        throw copyError(error, {}, `${error.message}: unknown type, wrong key length, a duplicate of a key already stored, or a repository failure`);
+      }
+      throw error;
+    }
+  }
+
+  // implements: REQ-KEY-009
+  async derive(params: DeriveKeyParams, options?: CallOptions): Promise<string> {
+    const kid = validateKid(params?.kid);
+    const label = validateLabel(params.label);
+    if (!(DERIVABLE_KEY_TYPES as readonly string[]).includes(params.type)) {
+      throw new HemValidationError(`Invalid type: must be one of ${DERIVABLE_KEY_TYPES.join(', ')}`, { parameter: 'type' });
+    }
+    const body: Record<string, unknown> = { kid, label, type: params.type, ...peerFields(params.peer) };
+    if (params.mode !== undefined) body['mode'] = validateMode(params.mode);
+    if (params.descr !== undefined) body['descr'] = bytesToBase64(validateDescription(params.descr));
+    const derived = readKid(KEY_DERIVE, await invoke(this.#context, KEY_DERIVE, { body }, options));
+    // Firmware 1.2.2 echoes the source key id for an unrecognised type without creating a key (ARCHITECTURE.md §6 quirk 4).
+    if (derived === kid) {
+      throw new HemProtocolError(`${KEY_DERIVE.name}: the device returned the source key id; no key was derived`, { operation: KEY_DERIVE.name });
+    }
+    return derived;
   }
 
   // implements: REQ-KEY-004
@@ -423,4 +603,4 @@ export class KeysApiImpl implements KeysApi {
 }
 
 /** Operations of this module. */
-export const KEYMGMT_OPERATIONS: readonly OperationSpec[] = [KEY_CREATE, KEY_GET, KEY_LIST, KEY_LIST_OFFSET, KEY_LIST_PAGE, KEY_SEARCH, KEY_DELETE];
+export const KEYMGMT_OPERATIONS: readonly OperationSpec[] = [KEY_CREATE, KEY_GET, KEY_LIST, KEY_LIST_OFFSET, KEY_LIST_PAGE, KEY_SEARCH, KEY_DELETE, KEY_UPDATE, KEY_IMPORT, KEY_DERIVE];

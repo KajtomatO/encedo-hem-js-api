@@ -35,6 +35,51 @@ export const KEY_TYPES = Object.freeze([
 /** A key type that can be created. */
 export type KeyType = (typeof KEY_TYPES)[number];
 
+/** Asymmetric key types whose public key `keys.import` accepts (ref/api/hem-api-1.2.2.yaml). */
+export const IMPORTABLE_KEY_TYPES = Object.freeze([
+  'SECP256R1',
+  'SECP384R1',
+  'SECP521R1',
+  'SECP256K1',
+  'CURVE25519',
+  'CURVE448',
+  'ED25519',
+  'ED448',
+  'MLKEM512',
+  'MLKEM768',
+  'MLKEM1024',
+  'MLDSA44',
+  'MLDSA65',
+  'MLDSA87',
+] as const);
+
+/** A key type that can be imported. */
+export type ImportableKeyType = (typeof IMPORTABLE_KEY_TYPES)[number];
+
+/** Key types `keys.derive` can produce: the creatable types without the post-quantum ones (ref/api/hem-api-1.2.2.yaml). */
+export const DERIVABLE_KEY_TYPES = Object.freeze([
+  'SECP256R1',
+  'SECP384R1',
+  'SECP521R1',
+  'SECP256K1',
+  'CURVE25519',
+  'CURVE448',
+  'ED25519',
+  'ED448',
+  'SHA2-256',
+  'SHA2-384',
+  'SHA2-512',
+  'SHA3-256',
+  'SHA3-384',
+  'SHA3-512',
+  'AES128',
+  'AES192',
+  'AES256',
+] as const);
+
+/** A key type that can be derived. */
+export type DerivableKeyType = (typeof DERIVABLE_KEY_TYPES)[number];
+
 /** Usage modes of `SECP*` keys; the literals are exact. */
 export const KEY_MODES = Object.freeze(['ECDH', 'ExDSA', 'ECDH,ExDSA'] as const);
 

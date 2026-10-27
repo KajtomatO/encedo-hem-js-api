@@ -49,6 +49,15 @@ CryptoApi	export interface CryptoApi
 CryptoApi.hmac	hmac(params:HmacParams,options?:CallOptions):Promise<Uint8Array>
 CryptoApi.unwrap	unwrap(params:WrapParams,options?:CallOptions):Promise<Uint8Array>
 CryptoApi.wrap	wrap(params:WrapParams,options?:CallOptions):Promise<Uint8Array>
+DERIVABLE_KEY_TYPES	export declare const DERIVABLE_KEY_TYPES:readonly["SECP256R1","SECP384R1","SECP521R1","SECP256K1","CURVE25519","CURVE448","ED25519","ED448","SHA2-256","SHA2-384","SHA2-512","SHA3-256","SHA3-384","SHA3-512","AES128","AES192","AES256"]
+DerivableKeyType	export type DerivableKeyType=(typeof DERIVABLE_KEY_TYPES)[number]
+DeriveKeyParams	export interface DeriveKeyParams
+DeriveKeyParams.descr	descr?:Uint8Array|undefined
+DeriveKeyParams.kid	kid:string
+DeriveKeyParams.label	label:string
+DeriveKeyParams.mode	mode?:KeyMode|undefined
+DeriveKeyParams.peer	peer:KeyPeer
+DeriveKeyParams.type	type:DerivableKeyType
 DescriptionMatch	export type DescriptionMatch='prefix'|'suffix'|'contains'
 ENCEDO_CHECKIN_URL	export declare const ENCEDO_CHECKIN_URL="https://api.encedo.com/checkin"
 ENCEDO_NOTIFY_URL	export declare const ENCEDO_NOTIFY_URL="https://api.encedo.com/notify"
@@ -172,6 +181,14 @@ HemValidationError.parameter	readonly parameter:string|undefined
 HmacParams	export interface HmacParams
 HmacParams.kid	kid:string
 HmacParams.msg	msg:Uint8Array
+IMPORTABLE_KEY_TYPES	export declare const IMPORTABLE_KEY_TYPES:readonly["SECP256R1","SECP384R1","SECP521R1","SECP256K1","CURVE25519","CURVE448","ED25519","ED448","MLKEM512","MLKEM768","MLKEM1024","MLDSA44","MLDSA65","MLDSA87"]
+ImportKeyParams	export interface ImportKeyParams
+ImportKeyParams.descr	descr?:Uint8Array|undefined
+ImportKeyParams.label	label:string
+ImportKeyParams.mode	mode?:KeyMode|undefined
+ImportKeyParams.pubkey	pubkey:Uint8Array
+ImportKeyParams.type	type:ImportableKeyType
+ImportableKeyType	export type ImportableKeyType=(typeof IMPORTABLE_KEY_TYPES)[number]
 KEY_ALGORITHMS	export declare const KEY_ALGORITHMS:readonly string[]
 KEY_FLAGS	export declare const KEY_FLAGS:readonly["ATT","PKEY","ECDH","ExDSA","CERT","PQC"]
 KEY_MODES	export declare const KEY_MODES:readonly["ECDH","ExDSA","ECDH,ExDSA"]
@@ -197,6 +214,7 @@ KeyPage.keys	readonly keys:readonly KeyEntry[]
 KeyPage.listed	readonly listed:number
 KeyPage.offset	readonly offset:number
 KeyPage.total	readonly total:number
+KeyPeer	export type KeyPeer={readonly extKid:string;readonly pubkey?:undefined;}|{readonly pubkey:Uint8Array;readonly extKid?:undefined;}
 KeyType	export type KeyType=(typeof KEY_TYPES)[number]
 KeyTypeInfo	export interface KeyTypeInfo
 KeyTypeInfo.algorithm	readonly algorithm:string|undefined
@@ -206,11 +224,14 @@ KeyTypeInfo.unknown	readonly unknown:readonly string[]
 KeysApi	export interface KeysApi
 KeysApi.create	create(params:CreateKeyParams,options?:CallOptions):Promise<string>
 KeysApi.delete	delete(kid:string,options?:CallOptions):Promise<void>
+KeysApi.derive	derive(params:DeriveKeyParams,options?:CallOptions):Promise<string>
 KeysApi.findByDescription	findByDescription(descr:Uint8Array,options?:CallOptions):Promise<KeyEntry[]>
 KeysApi.get	get(kid:string,options?:CallOptions):Promise<KeyDetails>
+KeysApi.import	import(params:ImportKeyParams,options?:CallOptions):Promise<string>
 KeysApi.list	list(params?:ListKeysParams,options?:CallOptions):Promise<KeyPage>
 KeysApi.listAll	listAll(options?:CallOptions):Promise<KeyEntry[]>
 KeysApi.search	search(params:SearchKeysParams,options?:CallOptions):Promise<KeyPage>
+KeysApi.update	update(params:UpdateKeyParams,options?:CallOptions):Promise<void>
 ListKeysParams	export interface ListKeysParams
 ListKeysParams.count	count?:number|undefined
 ListKeysParams.offset	offset?:number|undefined
@@ -274,6 +295,10 @@ SystemVersion.hwv	readonly hwv:string
 SystemVersion.sdCid	readonly sdCid?:Uint8Array
 SystemVersion.sdCsd	readonly sdCsd?:Uint8Array
 SystemVersion.uis	readonly uis?:Uint8Array
+UpdateKeyParams	export interface UpdateKeyParams
+UpdateKeyParams.descr	descr:Uint8Array
+UpdateKeyParams.kid	kid:string
+UpdateKeyParams.label	label:string
 WaitOptions	export interface WaitOptions
 WaitOptions.intervalMs	intervalMs?:number|undefined
 WaitOptions.signal	signal?:AbortSignal|undefined

@@ -10,6 +10,7 @@ import { loginVector as v } from '../support/vectors.js';
 
 const KID = '0123456789abcdef0123456789abcdef';
 const UPPER_KID = KID.toUpperCase();
+const NEW_KID = '00112233445566778899aabbccddeeff';
 const EPK = 'AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE=';
 const APP_TOKEN = fakeToken({ sub: 'YXBw', exp: v.iat + 900 });
 const STATUS = { ctx: 0, uptime: 1, temp: 30, fls_state: 0 };
@@ -35,6 +36,9 @@ function device(): FakeFetch {
     .always('GET', /^\/api\/keymgmt\/list/, { body: ENVELOPE })
     .always('POST', '/api/keymgmt/search', { body: ENVELOPE })
     .always('DELETE', `/api/keymgmt/delete/${KID}`, { status: 200 })
+    .always('POST', '/api/keymgmt/update', { status: 200 })
+    .always('POST', '/api/keymgmt/import', { body: { kid: NEW_KID } })
+    .always('POST', '/api/keymgmt/derive', { body: { kid: NEW_KID } })
     .always('POST', '/api/crypto/hmac/hash', { body: { mac: 'BQY=' } })
     .always('POST', '/api/crypto/cipher/wrap', { body: { wrapped: 'BwgJ' } })
     .always('POST', '/api/crypto/cipher/unwrap', { body: { unwrapped: 'CgsM' } });
@@ -111,6 +115,24 @@ const samples: Record<string, Sample> = {
     result: PAGE_RESULT,
   },
   'keys.delete /api/keymgmt/delete/{kid}': { run: (c) => c.keys.delete(UPPER_KID), path: `/api/keymgmt/delete/${KID}`, body: undefined, result: undefined },
+  'keys.update /api/keymgmt/update': {
+    run: (c) => c.keys.update({ kid: UPPER_KID, label: 'k', descr: Uint8Array.from([1]) }),
+    path: '/api/keymgmt/update',
+    body: { kid: KID, label: 'k', descr: 'AQ==' },
+    result: undefined,
+  },
+  'keys.import /api/keymgmt/import': {
+    run: (c) => c.keys.import({ label: 'k', pubkey: Uint8Array.from([2, 3]), type: 'ED25519' }),
+    path: '/api/keymgmt/import',
+    body: { label: 'k', pubkey: 'AgM=', type: 'ED25519' },
+    result: NEW_KID,
+  },
+  'keys.derive /api/keymgmt/derive': {
+    run: (c) => c.keys.derive({ kid: UPPER_KID, label: 'k', type: 'AES256', peer: { pubkey: Uint8Array.from([2, 3]) } }),
+    path: '/api/keymgmt/derive',
+    body: { kid: KID, label: 'k', type: 'AES256', pubkey: 'AgM=' },
+    result: NEW_KID,
+  },
   'crypto.hmac /api/crypto/hmac/hash': {
     run: (c) => c.crypto.hmac({ kid: UPPER_KID, msg: Uint8Array.from([1]) }),
     path: '/api/crypto/hmac/hash',
@@ -146,6 +168,9 @@ const ARCHITECTURE_SCOPES: Record<string, string | null> = {
   'keys.search': 'keymgmt:search',
   'keys.list': 'keymgmt:list',
   'keys.delete': 'keymgmt:del',
+  'keys.update': 'keymgmt:upd',
+  'keys.import': 'keymgmt:imp',
+  'keys.derive': 'keymgmt:gen',
   'crypto.hmac': `keymgmt:use:${KID}`,
   'crypto.wrap': `keymgmt:use:${KID}`,
   'crypto.unwrap': `keymgmt:use:${KID}`,
@@ -271,6 +296,13 @@ const LIMITS: Limit[] = [
   { name: 'label: 32 characters, not 33', parameter: 'label', atLimit: (c) => c.keys.create({ label: chars(32), type: 'AES256' }), pastLimit: (c) => c.keys.create({ label: chars(33), type: 'AES256' }) },
   { name: 'label: printable ASCII only', parameter: 'label', atLimit: (c) => c.keys.create({ label: ' ~', type: 'AES256' }), pastLimit: (c) => c.keys.create({ label: 'k\u0007', type: 'AES256' }) },
   { name: 'descr on create: 64 bytes, not 65', parameter: 'descr', atLimit: (c) => c.keys.create({ label: 'k', type: 'AES256', descr: bytes(64) }), pastLimit: (c) => c.keys.create({ label: 'k', type: 'AES256', descr: bytes(65) }) },
+  { name: 'descr on update: 64 bytes, not 65', parameter: 'descr', atLimit: (c) => c.keys.update({ kid: KID, label: 'k', descr: bytes(64) }), pastLimit: (c) => c.keys.update({ kid: KID, label: 'k', descr: bytes(65) }) },
+  { name: 'label on update: 32 characters, not 33', parameter: 'label', atLimit: (c) => c.keys.update({ kid: KID, label: chars(32), descr: bytes(0) }), pastLimit: (c) => c.keys.update({ kid: KID, label: chars(33), descr: bytes(0) }) },
+  { name: 'import pubkey: 1 byte, not 0', parameter: 'pubkey', atLimit: (c) => c.keys.import({ label: 'k', pubkey: bytes(1), type: 'ED25519' }), pastLimit: (c) => c.keys.import({ label: 'k', pubkey: bytes(0), type: 'ED25519' }) },
+  { name: 'import descr: 64 bytes, not 65', parameter: 'descr', atLimit: (c) => c.keys.import({ label: 'k', pubkey: bytes(1), type: 'ED25519', descr: bytes(64) }), pastLimit: (c) => c.keys.import({ label: 'k', pubkey: bytes(1), type: 'ED25519', descr: bytes(65) }) },
+  { name: 'derive peer: one form, not both', parameter: 'peer', atLimit: (c) => c.keys.derive({ kid: KID, label: 'k', type: 'AES256', peer: { extKid: KID } }), pastLimit: (c) => c.keys.derive({ kid: KID, label: 'k', type: 'AES256', peer: { extKid: KID, pubkey: bytes(1) } as never }) },
+  { name: 'derive peer pubkey: 1 byte, not 0', parameter: 'peer.pubkey', atLimit: (c) => c.keys.derive({ kid: KID, label: 'k', type: 'AES256', peer: { pubkey: bytes(1) } }), pastLimit: (c) => c.keys.derive({ kid: KID, label: 'k', type: 'AES256', peer: { pubkey: bytes(0) } }) },
+  { name: 'derive peer extKid: 32 hex characters, not 33', parameter: 'peer.extKid', atLimit: (c) => c.keys.derive({ kid: KID, label: 'k', type: 'AES256', peer: { extKid: UPPER_KID } }), pastLimit: (c) => c.keys.derive({ kid: KID, label: 'k', type: 'AES256', peer: { extKid: `${KID}0` } }) },
   { name: 'descr on search: 64 bytes, not 65', parameter: 'descr', atLimit: (c) => c.keys.search({ descr: bytes(64) }), pastLimit: (c) => c.keys.search({ descr: bytes(65) }) },
   { name: 'search limit: 1, not 0', parameter: 'limit', atLimit: (c) => c.keys.search({ descr: bytes(1), limit: 1 }), pastLimit: (c) => c.keys.search({ descr: bytes(1), limit: 0 }) },
   { name: 'search limit: 15, not 16', parameter: 'limit', atLimit: (c) => c.keys.search({ descr: bytes(1), limit: 15 }), pastLimit: (c) => c.keys.search({ descr: bytes(1), limit: 16 }) },
@@ -314,6 +346,6 @@ describe('documented limits', () => {
 
   it('covers every validated parameter at least once', () => {
     const parameters = new Set(LIMITS.map((limit) => limit.parameter));
-    expect([...parameters].sort()).toEqual(['authreply', 'count', 'ctx', 'descr', 'epk', 'iv', 'kid', 'label', 'limit', 'msg', 'note', 'offset', 'scope']);
+    expect([...parameters].sort()).toEqual(['authreply', 'count', 'ctx', 'descr', 'epk', 'iv', 'kid', 'label', 'limit', 'msg', 'note', 'offset', 'peer', 'peer.extKid', 'peer.pubkey', 'pubkey', 'scope']);
   });
 });
