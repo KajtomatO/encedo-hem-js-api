@@ -3,7 +3,7 @@ id: REQ-BUILD-007
 title: Releases are published from CI on a version tag
 status: approved
 priority: must
-revision: 2
+revision: 3
 source: user decision 2026-10-27; approved 2026-10-27
 depends_on: ["REQ-BUILD-005", "REQ-BUILD-006"]
 supersedes: null
@@ -31,22 +31,27 @@ registry. Introduced after M1B; implemented in M2A, first exercised at the
 0.2.0 release (M2B).
 
 **Acceptance criteria:**
-- [ ] `.github/workflows/release.yml` runs on `push` of tags `v*` only, plus
-      a manual `workflow_dispatch` dry run that stops before publishing.
-- [ ] Before any publish step the job runs the same install, Playwright
-      install and `npm run check` steps as `ci.yml`.
-- [ ] The job fails if the tag name is not `v` followed by the
+- [x] `.github/workflows/release.yml` runs on `push` of tags `v*` only, plus
+      a manual `workflow_dispatch` dry run that stops before publishing —
+      STEP-M2A-080 (2026-10-27); a manual run needs no input, it is always
+      a dry run.
+- [x] Before any publish step the job runs the same install, Playwright
+      install and `npm run check` steps as `ci.yml` — the test compares the
+      first three run steps with `ci.yml`.
+- [x] The job fails if the tag name is not `v` followed by the
       `package.json` version.
-- [ ] `npm publish` runs with `permissions: id-token: write` and the workflow
+- [x] `npm publish` runs with `permissions: id-token: write` and the workflow
       holds no npm token (`NODE_AUTH_TOKEN`, `NPM_TOKEN` or any other
-      registry secret).
-- [ ] A GitHub Release named after the tag is created with the matching
+      registry secret) — a step also fails the job if the runner's npm is
+      older than 11.5.1.
+- [x] A GitHub Release named after the tag is created with the matching
       `CHANGELOG.md` section as its notes, using the workflow's own
-      `GITHUB_TOKEN` (`contents: write`).
-- [ ] The workflow holds no device credentials and runs no integration or
+      `GITHUB_TOKEN` (`contents: write`) — the section is cut by an awk
+      program that the unit test runs against the 0.1.0 entry.
+- [x] The workflow holds no device credentials and runs no integration or
       attended test (as REQ-BUILD-005).
-- [ ] A unit test in the style of `tests/unit/ci.node.test.ts` checks the
-      workflow file for the criteria above.
+- [x] A unit test in the style of `tests/unit/ci.node.test.ts` checks the
+      workflow file for the criteria above — `tests/unit/release.node.test.ts`.
 - [ ] (user) The trusted publisher for `@kajtomato/encedo-hem-sdk` is
       configured on npmjs.com: GitHub Actions, owner `KajtomatO`, repository
       `encedo-hem-js-api`, workflow filename `release.yml`.

@@ -1,0 +1,51 @@
+# Publish to npm and create a GitHub Release when a version tag (v<version>) is pushed.
+# implements: REQ-BUILD-007
+# The tag must equal "v" + the package.json version. Publishing uses npm trusted
+# publishing (OIDC) — no npm token is stored anywhere. A manual run performs the
+# same checks and a publish dry run only; it never publishes.
+# As ci.yml: unit tests only, no integration or attended runs, no device credentials.
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run check
+      - name: npm supports trusted publishing (11.5.1 or later)
+        run: node -e "const [a,b,c]=require('child_process').execSync('npm --version').toString().trim().split('.').map(Number); if (a<11||(a===11&&(b<5||(b===5&&c<1)))) { console.error('npm too old for trusted publishing'); process.exit(1) }"
+      - name: Tag matches the package version
+        if: github.event_name == 'push'
+        run: test "$GITHUB_REF_NAME" = "v$(node -p "require('./package.json').version")"
+      - name: Publish dry run (manual run)
+        if: github.event_name != 'push'
+        run: npm publish --dry-run
+      - name: Publish to npm
+        if: github.event_name == 'push'
+        run: npm publish
+      - name: GitHub Release with the CHANGELOG section
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          awk -v v="$version" '$0 ~ "^## " v "( |$)" { p = 1; next } /^## / { p = 0 } p' CHANGELOG.md > release-notes.md
+          test -s release-notes.md
+          gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file release-notes.md
