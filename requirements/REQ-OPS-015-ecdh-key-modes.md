@@ -1,7 +1,7 @@
 ---
 id: REQ-OPS-015
 title: ECDH-agreed keys for HMAC, cipher and wrap
-status: approved
+status: verified
 priority: must
 revision: 2
 source: start_point M2.1; ref/api/hem-api-1.2.2.yaml; https://github.com/KajtomatO/encedo-hem-c-api
