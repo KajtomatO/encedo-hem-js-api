@@ -7,9 +7,9 @@ traces:
   architecture: ["ARCHITECTURE.md#6-protocol-bindings"]
 depends_on: []
 evidence:
-  commits: []
-  tests: []
-  notes: null
+  commits: ["8d18947"]
+  tests: ["verifies: REQ-SYS-009 (tests/unit/logger.test.ts)", "verifies: REQ-SYS-010 (tests/unit/logger.test.ts)", "verifies: REQ-SYS-011 (tests/unit/logger.test.ts)", "verifies: REQ-API-011 (tests/unit/logger.test.ts, tests/unit/operation-docs.node.test.ts, tests/unit/doc-check.test.ts)"]
+  notes: "npm run check on 2026-10-27: 98 files, 2097 tests passed in Node v24.21.0 and headless Chromium. New module src/api/logger.ts, namespace client.logger (key, list, download). Binding core: invoke() now wraps invokeRaw(), which returns the transport response unparsed; OperationSpec gained mscOnly, and unsupportedOn404() maps a 404 of such an operation to HemUnsupportedError (download adds the unknown-file-id cause). The doc checker requires 'mass-storage hardware' in the TSDoc of every mscOnly operation. Logger operations are not TLS-only (the reference lists no 418 for them). REQ-API-011's first two criteria stay open on purpose: their storage, attestation and upgrade parts are M3A, and the REQ reaches implemented only when the M3A steps that list it are done. Key-material lengths (32/32/64) are not enforced; M2B records them. Surface snapshot: 20 additions."
 reopened: []
 cancelled: null
 ---
@@ -40,24 +40,24 @@ cancelled: null
   of REQ-API-011 are M3A; tick only the audit-log criteria here.
 
 **Definition of done**
-- [ ] Key: scope `logger:get`; result bytes of 32/32/64.
-- [ ] List: offset 0 and non-zero each build the right path; result
+- [x] Key: scope `logger:get`; result bytes of 32/32/64.
+- [x] List: offset 0 and non-zero each build the right path; result
       `{ total, ids }`; bad offset raises `HemValidationError`; TSDoc notes
       `total` semantics and mass-storage hardware.
-- [ ] Download: bytes unmodified with a text view; bad file id raises
+- [x] Download: bytes unmodified with a text view; bad file id raises
       `HemValidationError`; 406 raises `HemOperationFailedError`; TSDoc
       notes mass-storage hardware.
-- [ ] 404 from list or download raises `HemUnsupportedError`; the download
+- [x] 404 from list or download raises `HemUnsupportedError`; the download
       message names both causes.
-- [ ] The doc check requires the mass-storage note for operations flagged
+- [x] The doc check requires the mass-storage note for operations flagged
       so, and `client.logger` is covered by the operation-docs and
       conformance tests.
-- [ ] Each operation has unit tests asserting method, path, headers, body
+- [x] Each operation has unit tests asserting method, path, headers, body
       and response mapping (Node 24 and the browser run), and TSDoc stating
       scope and milestone (`Introduced in M2.`).
-- [ ] Each operation raises `HemTlsRequiredError` on an `http:` client with
+- [x] Each operation raises `HemTlsRequiredError` on an `http:` client with
       zero `fetch` calls.
-- [ ] `implements:` and `verifies:` tags exist for the REQs above; the
+- [x] `implements:` and `verifies:` tags exist for the REQs above; the
       non-`(M2B)` acceptance boxes this step closes are ticked in the REQ
       files (revision bumped).
-- [ ] `npm run surface:update` adds entries only; `npm run check` passes.
+- [x] `npm run surface:update` adds entries only; `npm run check` passes.
