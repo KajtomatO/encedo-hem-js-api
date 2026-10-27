@@ -7,9 +7,9 @@ traces:
   architecture: ["ARCHITECTURE.md#6-protocol-bindings"]
 depends_on: ["STEP-M2A-020", "STEP-M2A-030"]
 evidence:
-  commits: []
-  tests: []
-  notes: null
+  commits: ["89b5c28"]
+  tests: ["verifies: REQ-OPS-010 (tests/unit/crypto-ecdh.test.ts)", "verifies: REQ-OPS-015 (tests/unit/crypto-ecdh.test.ts)"]
+  notes: "npm run check on 2026-10-27: 92 files, 1831 tests passed in Node v24.21.0 and headless Chromium. The peer and ctx fields are declared on each params interface rather than through `extends AgreedKeyParams`: the surface test compares interface headers textually and reported the extends clause on HmacParams and WrapParams (0.1.0 entries) as a change; the exported AgreedKeyParams interface documents the mode. Surface snapshot: 23 additions, no change. HMAC in agreed mode requires alg (raw ECDH secret as key); with a stored key alg is refused rather than silently dropped. ctx is refused without a peer and on HMAC. ECDH response field: ecdh. Device-side facts (raw secret truncated to 32 bytes, HKDF info strings) are from the reference and the C SDK; the (M2B) boxes check them live."
 reopened: []
 cancelled: null
 ---
@@ -33,21 +33,21 @@ cancelled: null
   only.
 
 **Definition of done**
-- [ ] ECDH: body `{kid}` plus one peer and `alg` when given; scope
+- [x] ECDH: body `{kid}` plus one peer and `alg` when given; scope
       `keymgmt:use:<kid>`; both peers or neither raises
       `HemValidationError`; result is the secret as bytes; truncation is
       documented.
-- [ ] HMAC hash and verify, encrypt, decrypt, wrap and unwrap accept a peer
+- [x] HMAC hash and verify, encrypt, decrypt, wrap and unwrap accept a peer
       and send it as `ext_kid` or `pubkey`; both forms raise; HMAC without
       `alg` in this mode raises; a context over 64 bytes raises.
-- [ ] The token scope in agreed-key mode is `keymgmt:use:<kid>` of the
+- [x] The token scope in agreed-key mode is `keymgmt:use:<kid>` of the
       primary key (conformance test).
-- [ ] Each operation has unit tests asserting method, path, headers, body
+- [x] Each operation has unit tests asserting method, path, headers, body
       and response mapping (Node 24 and the browser run), and TSDoc stating
       scope and milestone (`Introduced in M2.`).
-- [ ] Each operation raises `HemTlsRequiredError` on an `http:` client with
+- [x] Each operation raises `HemTlsRequiredError` on an `http:` client with
       zero `fetch` calls.
-- [ ] `implements:` and `verifies:` tags exist for the REQs above; the
+- [x] `implements:` and `verifies:` tags exist for the REQs above; the
       non-`(M2B)` acceptance boxes this step closes are ticked in the REQ
       files (revision bumped).
-- [ ] `npm run surface:update` adds entries only; `npm run check` passes.
+- [x] `npm run surface:update` adds entries only; `npm run check` passes.
