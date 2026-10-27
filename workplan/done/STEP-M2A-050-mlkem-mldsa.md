@@ -7,9 +7,9 @@ traces:
   architecture: ["ARCHITECTURE.md#6-protocol-bindings", "ARCHITECTURE.md#11-risks--open-questions"]
 depends_on: ["STEP-M2A-020"]
 evidence:
-  commits: []
-  tests: []
-  notes: null
+  commits: ["700ef48"]
+  tests: ["verifies: REQ-OPS-011 (tests/unit/crypto-pqc.test.ts)", "verifies: REQ-OPS-012 (tests/unit/crypto-pqc.test.ts)", "verifies: REQ-OPS-013 (tests/unit/crypto-pqc.test.ts)", "verifies: REQ-OPS-014 (tests/unit/crypto-pqc.test.ts)"]
+  notes: "npm run check on 2026-10-27: 94 files, 1957 tests passed in Node v24.21.0 and headless Chromium. Names: crypto.mlkemEncaps / mlkemDecaps / mldsaSign / mldsaVerify. Finding: the WHATWG Response constructor accepts statuses 200–599 only, so a 795 status cannot be faked with `new Response`; FakeFetch now serves such a status as a Response-like object (tests/support/fake-fetch.ts), which is what src/transport/node-https.ts already does for the real device (its unit test passes 795 through). How a browser's fetch surfaces such a status stays the (M2B) probe. The ML-DSA invalid rule (src/api/crypto.ts isMldsaInvalid): HemError with a status that is not 401/403 and not 2xx/3xx → false; redirects, validation and transport failures raise. Decaps does not require the reply's alg (unreliable, quirk 2). Verify caps the signature at 4627 bytes; the 7300-byte body limit is now reachable through a real operation, so the conformance limits table covers parameter 'body'. Surface snapshot: 25 additions."
 reopened: []
 cancelled: null
 ---
@@ -39,22 +39,22 @@ cancelled: null
   tests only fix the mapping for a response that does arrive.
 
 **Definition of done**
-- [ ] Encaps: body `{kid}`; result fields as bytes; 406 raises
+- [x] Encaps: body `{kid}`; result fields as bytes; 406 raises
       `HemOperationFailedError`.
-- [ ] Decaps: body `{kid, ct}`; wrong ciphertext length raises
+- [x] Decaps: body `{kid, ct}`; wrong ciphertext length raises
       `HemValidationError`; the result has no algorithm field whatever the
       response contains.
-- [ ] ML-DSA sign: body `{kid, msg}` plus `ctx`; a context over 255 bytes
+- [x] ML-DSA sign: body `{kid, msg}` plus `ctx`; a context over 255 bytes
       raises `HemValidationError`.
-- [ ] ML-DSA verify: 200 → `true`; 401/403 raise; a response with status
+- [x] ML-DSA verify: 200 → `true`; 401/403 raise; a response with status
       795 (and with 406) → `false`; an over-size body raises
       `HemValidationError` before sending.
-- [ ] Each operation has unit tests asserting method, path, headers, body
+- [x] Each operation has unit tests asserting method, path, headers, body
       and response mapping (Node 24 and the browser run), and TSDoc stating
       scope and milestone (`Introduced in M2.`).
-- [ ] Each operation raises `HemTlsRequiredError` on an `http:` client with
+- [x] Each operation raises `HemTlsRequiredError` on an `http:` client with
       zero `fetch` calls.
-- [ ] `implements:` and `verifies:` tags exist for the REQs above; the
+- [x] `implements:` and `verifies:` tags exist for the REQs above; the
       non-`(M2B)` acceptance boxes this step closes are ticked in the REQ
       files (revision bumped).
-- [ ] `npm run surface:update` adds entries only; `npm run check` passes.
+- [x] `npm run surface:update` adds entries only; `npm run check` passes.
