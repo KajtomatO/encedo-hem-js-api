@@ -1,7 +1,7 @@
 ---
 id: REQ-SYS-008
 title: Read device configuration
-status: approved
+status: verified
 priority: must
 revision: 2
 source: start_point §4; ref/api/hem-api-1.2.2.yaml
