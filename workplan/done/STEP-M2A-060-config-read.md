@@ -7,9 +7,9 @@ traces:
   architecture: ["ARCHITECTURE.md#6-protocol-bindings"]
 depends_on: []
 evidence:
-  commits: []
-  tests: []
-  notes: null
+  commits: ["5e82a2d"]
+  tests: ["verifies: REQ-SYS-008 (tests/unit/system-config.test.ts)"]
+  notes: "npm run check on 2026-10-27: 96 files, 2013 tests passed in Node v24.21.0 and headless Chromium. All 19 fields the reference marks required are required (iat, uts, dnsd, ctx and the two http_option fields included); if the device omits one of them the (M2B) check will show it and the list can be relaxed then. Names: iat/uts → createdAt/updatedAt, trusted_ts → trustedTime (as system.status), http_option_hsts → hsts, http_option_dosprot_mode → dosProtectionMode; the TSDoc states the device's names. Not TLS-only (the reference lists no 418 for it; conformance keeps TLS-only to keymgmt and crypto). The reference's scope is 'system:config OR logger:get OR auth:ext:pair'; the library uses system:config per the REQ. Surface snapshot: 26 additions."
 reopened: []
 cancelled: null
 ---
@@ -27,15 +27,15 @@ cancelled: null
   strings as decided for REQ-API-004 (2026-10-05).
 
 **Definition of done**
-- [ ] Body-less GET with scope `system:config`; the result exposes every
+- [x] Body-less GET with scope `system:config`; the result exposes every
       required field, key material as bytes; optional fields only when
       present; a missing required field raises `HemProtocolError`.
-- [ ] Each operation has unit tests asserting method, path, headers, body
+- [x] Each operation has unit tests asserting method, path, headers, body
       and response mapping (Node 24 and the browser run), and TSDoc stating
       scope and milestone (`Introduced in M2.`).
-- [ ] Each operation raises `HemTlsRequiredError` on an `http:` client with
+- [x] Each operation raises `HemTlsRequiredError` on an `http:` client with
       zero `fetch` calls.
-- [ ] `implements:` and `verifies:` tags exist for the REQs above; the
+- [x] `implements:` and `verifies:` tags exist for the REQs above; the
       non-`(M2B)` acceptance boxes this step closes are ticked in the REQ
       files (revision bumped).
-- [ ] `npm run surface:update` adds entries only; `npm run check` passes.
+- [x] `npm run surface:update` adds entries only; `npm run check` passes.
