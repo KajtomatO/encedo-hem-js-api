@@ -7,9 +7,9 @@ traces:
   architecture: ["ARCHITECTURE.md#6-protocol-bindings"]
 depends_on: ["STEP-M2B-050"]
 evidence:
-  commits: []
-  tests: []
-  notes: null
+  commits: ["598bc60", "7d104a8"]
+  tests: ["verifies: REQ-SYS-008, REQ-SYS-009, REQ-SYS-010, REQ-SYS-011, REQ-API-011 (tests/integration/config-logger.test.ts, live 2026-10-27)"]
+  notes: "Live 2026-10-27 against my.ence.do: 3/3 passed in 6.3 s, read-only. Config: all 19 required fields and all 5 optional ones present (mass-storage build); key material 32 bytes each; email empty. Hardware: PPA rev 2.2, FW v1.2.2-DIAG, two storage slots. Logger key 32/32/64; nonce identical on two calls within a second (time-based). 64 log files; the current boot's file → 406 (being written), the previous one downloaded: text/plain, 10329 bytes, 162 CRLF lines, '#' firmware banner then pipe-delimited records; unknown id → HemUnsupportedError 404 naming both causes. No key created, nothing changed."
 reopened: []
 cancelled: null
 ---
@@ -34,13 +34,13 @@ cancelled: null
   presence, not values.
 
 **Definition of done**
-- [ ] Configuration read; presence of optional fields and the hardware
+- [x] Configuration read; presence of optional fields and the hardware
       build recorded in REQ-SYS-008 and REQ-API-011.
-- [ ] Logger key lengths recorded (REQ-SYS-009).
-- [ ] Log files listed and one downloaded, content type and format sample
+- [x] Logger key lengths recorded (REQ-SYS-009).
+- [x] Log files listed and one downloaded, content type and format sample
       recorded (REQ-SYS-010, REQ-SYS-011) — or the no-mass-storage finding.
-- [ ] The integration test passes live; the summary (counts, time) is in
+- [x] The integration test passes live; the summary (counts, time) is in
       `evidence.notes`.
-- [ ] Every `(M2B)` box of the REQs above is ticked with its finding, or
+- [x] Every `(M2B)` box of the REQs above is ticked with its finding, or
       carried forward by a recorded user decision; revisions bumped.
-- [ ] No `EHEMTEST` key remains on the device.
+- [x] No `EHEMTEST` key remains on the device.
