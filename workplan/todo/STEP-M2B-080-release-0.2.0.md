@@ -5,7 +5,7 @@ milestone: M2B
 implements: ["REQ-BUILD-006", "REQ-BUILD-007"]
 traces:
   architecture: ["ARCHITECTURE.md#4-public-api--conventions", "ARCHITECTURE.md#10-milestones"]
-depends_on: ["STEP-M2B-070"]
+depends_on: ["STEP-M2B-075"]
 evidence:
   commits: []
   tests: []
