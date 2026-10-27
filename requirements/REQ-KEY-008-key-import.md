@@ -1,7 +1,7 @@
 ---
 id: REQ-KEY-008
 title: Import an external public key
-status: needs-reverify
+status: verified
 priority: must
 revision: 4
 source: start_point §4; ref/api/hem-api-1.2.2.yaml; https://github.com/KajtomatO/encedo-hem-c-api

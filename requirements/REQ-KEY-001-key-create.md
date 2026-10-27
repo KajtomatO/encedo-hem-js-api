@@ -1,7 +1,7 @@
 ---
 id: REQ-KEY-001
 title: Generate a key on the device
-status: needs-reverify
+status: verified
 priority: must
 revision: 6
 source: start_point §3; ref/api/hem-api-1.2.2.yaml; https://github.com/KajtomatO/encedo-hem-c-api
