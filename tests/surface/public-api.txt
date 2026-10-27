@@ -1,3 +1,4 @@
+AES_BLOCK_BYTES	export declare const AES_BLOCK_BYTES=16
 ApprovalCheck	export type ApprovalCheck={readonly status:'pending';}|{readonly status:'approved';readonly authreply:string;}|{readonly status:'rejected';}|{readonly status:'expired';}
 ApprovalDetails	export interface ApprovalDetails
 ApprovalDetails.ctx	ctx?:string|undefined
@@ -29,6 +30,7 @@ AuthApi.redeemApproval	redeemApproval(params:RedeemApprovalParams,options?:CallO
 AuthApi.requestApproval	requestApproval(params:ApprovalRequestParams,options?:CallOptions):Promise<ApprovalRequest>
 AuthApi.role	readonly role:Role|undefined
 AuthApi.waitForApproval	waitForApproval(pending:PendingApproval,options?:WaitOptions):Promise<SessionInfo>
+CIPHER_ALGORITHMS	export declare const CIPHER_ALGORITHMS:readonly["AES128-ECB","AES128-CBC","AES128-GCM","AES192-ECB","AES192-CBC","AES192-GCM","AES256-ECB","AES256-CBC","AES256-GCM"]
 CallOptions	export interface CallOptions
 CallOptions.signal	signal?:AbortSignal|undefined
 CallOptions.timeoutMs	timeoutMs?:number|undefined
@@ -39,6 +41,8 @@ CheckinResult.newcrt	readonly newcrt?:string
 CheckinResult.newfws	readonly newfws?:string
 CheckinResult.newuis	readonly newuis?:string
 CheckinResult.status	readonly status:string
+CipherAlgorithm	export type CipherAlgorithm=(typeof CIPHER_ALGORITHMS)[number]
+CipherMode	export type CipherMode='ECB'|'CBC'|'GCM'
 Clock	export type Clock=()=>number
 CreateKeyParams	export interface CreateKeyParams
 CreateKeyParams.descr	descr?:Uint8Array|undefined
@@ -46,6 +50,8 @@ CreateKeyParams.label	label:string
 CreateKeyParams.mode	mode?:KeyMode|undefined
 CreateKeyParams.type	type:KeyType
 CryptoApi	export interface CryptoApi
+CryptoApi.decrypt	decrypt(params:DecryptParams,options?:CallOptions):Promise<Uint8Array>
+CryptoApi.encrypt	encrypt(params:EncryptParams,options?:CallOptions):Promise<EncryptResult>
 CryptoApi.hmac	hmac(params:HmacParams,options?:CallOptions):Promise<Uint8Array>
 CryptoApi.hmacVerify	hmacVerify(params:HmacVerifyParams,options?:CallOptions):Promise<boolean>
 CryptoApi.sign	sign(params:SignParams,options?:CallOptions):Promise<Uint8Array>
@@ -53,6 +59,13 @@ CryptoApi.unwrap	unwrap(params:WrapParams,options?:CallOptions):Promise<Uint8Arr
 CryptoApi.verify	verify(params:VerifyParams,options?:CallOptions):Promise<boolean>
 CryptoApi.wrap	wrap(params:WrapParams,options?:CallOptions):Promise<Uint8Array>
 DERIVABLE_KEY_TYPES	export declare const DERIVABLE_KEY_TYPES:readonly["SECP256R1","SECP384R1","SECP521R1","SECP256K1","CURVE25519","CURVE448","ED25519","ED448","SHA2-256","SHA2-384","SHA2-512","SHA3-256","SHA3-384","SHA3-512","AES128","AES192","AES256"]
+DecryptParams	export interface DecryptParams
+DecryptParams.aad	aad?:Uint8Array|undefined
+DecryptParams.alg	alg:CipherAlgorithm
+DecryptParams.iv	iv?:Uint8Array|undefined
+DecryptParams.kid	kid:string
+DecryptParams.msg	msg:Uint8Array
+DecryptParams.tag	tag?:Uint8Array|undefined
 DerivableKeyType	export type DerivableKeyType=(typeof DERIVABLE_KEY_TYPES)[number]
 DeriveKeyParams	export interface DeriveKeyParams
 DeriveKeyParams.descr	descr?:Uint8Array|undefined
@@ -82,6 +95,15 @@ EncedoCheckinRelayOptions	export interface EncedoCheckinRelayOptions
 EncedoCheckinRelayOptions.fetch	fetch?:FetchFunction|undefined
 EncedoCheckinRelayOptions.timeoutMs	timeoutMs?:number|undefined
 EncedoCheckinRelayOptions.url	url?:string|undefined
+EncryptParams	export interface EncryptParams
+EncryptParams.aad	aad?:Uint8Array|undefined
+EncryptParams.alg	alg:CipherAlgorithm
+EncryptParams.kid	kid:string
+EncryptParams.msg	msg:Uint8Array
+EncryptResult	export interface EncryptResult
+EncryptResult.ciphertext	readonly ciphertext:Uint8Array
+EncryptResult.iv	readonly iv?:Uint8Array
+EncryptResult.tag	readonly tag?:Uint8Array
 FetchFunction	export type FetchFunction=(input:string,init:RequestInit)=>Promise<Response>
 HEM_API_VERSION	export declare const HEM_API_VERSION="1.2.2"
 HealthReport	export interface HealthReport

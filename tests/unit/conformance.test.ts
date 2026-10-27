@@ -11,6 +11,7 @@ import { loginVector as v } from '../support/vectors.js';
 const KID = '0123456789abcdef0123456789abcdef';
 const UPPER_KID = KID.toUpperCase();
 const NEW_KID = '00112233445566778899aabbccddeeff';
+const IV16 = 'AQEBAQEBAQEBAQEBAQEBAQ==';
 const EPK = 'AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE=';
 const APP_TOKEN = fakeToken({ sub: 'YXBw', exp: v.iat + 900 });
 const STATUS = { ctx: 0, uptime: 1, temp: 30, fls_state: 0 };
@@ -44,7 +45,9 @@ function device(): FakeFetch {
     .always('POST', '/api/crypto/cipher/unwrap', { body: { unwrapped: 'CgsM' } })
     .always('POST', '/api/crypto/hmac/verify', { status: 200 })
     .always('POST', '/api/crypto/exdsa/sign', { body: { sign: 'DQ4=' } })
-    .always('POST', '/api/crypto/exdsa/verify', { status: 200 });
+    .always('POST', '/api/crypto/exdsa/verify', { status: 200 })
+    .always('POST', '/api/crypto/cipher/encrypt', { body: { ciphertext: 'Dw==', iv: IV16, tag: IV16 } })
+    .always('POST', '/api/crypto/cipher/decrypt', { body: { plaintext: 'EA==' } });
 }
 
 interface Sample {
@@ -166,6 +169,18 @@ const samples: Record<string, Sample> = {
     body: { kid: KID, msg: 'AQ==', alg: 'Ed25519' },
     result: Uint8Array.from([13, 14]),
   },
+  'crypto.encrypt /api/crypto/cipher/encrypt': {
+    run: (c) => c.crypto.encrypt({ kid: UPPER_KID, msg: Uint8Array.from([1]), alg: 'AES256-GCM' }),
+    path: '/api/crypto/cipher/encrypt',
+    body: { kid: KID, msg: 'AQ==', alg: 'AES256-GCM' },
+    result: { ciphertext: Uint8Array.from([15]), iv: new Uint8Array(16).fill(1), tag: new Uint8Array(16).fill(1) },
+  },
+  'crypto.decrypt /api/crypto/cipher/decrypt': {
+    run: (c) => c.crypto.decrypt({ kid: UPPER_KID, msg: Uint8Array.from([15]), alg: 'AES256-GCM', iv: new Uint8Array(16).fill(1), tag: new Uint8Array(16).fill(1) }),
+    path: '/api/crypto/cipher/decrypt',
+    body: { kid: KID, msg: 'Dw==', alg: 'AES256-GCM', iv: IV16, tag: IV16 },
+    result: Uint8Array.from([16]),
+  },
   'crypto.verify /api/crypto/exdsa/verify': {
     run: (c) => c.crypto.verify({ kid: UPPER_KID, msg: Uint8Array.from([1]), sign: Uint8Array.from([13, 14]), alg: 'Ed25519' }),
     path: '/api/crypto/exdsa/verify',
@@ -198,6 +213,8 @@ const ARCHITECTURE_SCOPES: Record<string, string | null> = {
   'crypto.hmacVerify': `keymgmt:use:${KID}`,
   'crypto.sign': `keymgmt:use:${KID}`,
   'crypto.verify': `keymgmt:use:${KID}`,
+  'crypto.encrypt': `keymgmt:use:${KID}`,
+  'crypto.decrypt': `keymgmt:use:${KID}`,
 };
 
 const operations = ALL_OPERATIONS.map((spec) => ({ spec, key: `${spec.name} ${spec.path}` }));
@@ -350,6 +367,12 @@ const LIMITS: Limit[] = [
   { name: 'sign msg: 2048 bytes, not 2049', parameter: 'msg', atLimit: (c) => c.crypto.sign({ kid: KID, msg: bytes(2048), alg: 'Ed25519' }), pastLimit: (c) => c.crypto.sign({ kid: KID, msg: bytes(2049), alg: 'Ed25519' }) },
   { name: 'verify sign: 1 byte, not 0', parameter: 'sign', atLimit: (c) => c.crypto.verify({ kid: KID, msg: bytes(1), sign: bytes(1), alg: 'Ed25519' }), pastLimit: (c) => c.crypto.verify({ kid: KID, msg: bytes(1), sign: bytes(0), alg: 'Ed25519' }) },
   { name: 'verify ctx: 255 bytes, not 256', parameter: 'ctx', atLimit: (c) => c.crypto.verify({ kid: KID, msg: bytes(1), sign: bytes(1), alg: 'Ed25519ctx', ctx: bytes(255) }), pastLimit: (c) => c.crypto.verify({ kid: KID, msg: bytes(1), sign: bytes(1), alg: 'Ed25519ctx', ctx: bytes(256) }) },
+  { name: 'encrypt msg: 2048 bytes, not 2049', parameter: 'msg', atLimit: (c) => c.crypto.encrypt({ kid: KID, msg: bytes(2048), alg: 'AES256-CBC' }), pastLimit: (c) => c.crypto.encrypt({ kid: KID, msg: bytes(2049), alg: 'AES256-CBC' }) },
+  { name: 'encrypt ECB msg: a multiple of 16', parameter: 'msg', atLimit: (c) => c.crypto.encrypt({ kid: KID, msg: bytes(32), alg: 'AES256-ECB' }), pastLimit: (c) => c.crypto.encrypt({ kid: KID, msg: bytes(24), alg: 'AES256-ECB' }) },
+  { name: 'decrypt iv: 16 bytes, not 15', parameter: 'iv', atLimit: (c) => c.crypto.decrypt({ kid: KID, msg: bytes(16), alg: 'AES256-CBC', iv: bytes(16) }), pastLimit: (c) => c.crypto.decrypt({ kid: KID, msg: bytes(16), alg: 'AES256-CBC', iv: bytes(15) }) },
+  { name: 'decrypt iv: 16 bytes, not 17', parameter: 'iv', atLimit: (c) => c.crypto.decrypt({ kid: KID, msg: bytes(16), alg: 'AES256-CBC', iv: bytes(16) }), pastLimit: (c) => c.crypto.decrypt({ kid: KID, msg: bytes(16), alg: 'AES256-CBC', iv: bytes(17) }) },
+  { name: 'decrypt tag: 16 bytes, not 15', parameter: 'tag', atLimit: (c) => c.crypto.decrypt({ kid: KID, msg: bytes(16), alg: 'AES256-GCM', iv: bytes(16), tag: bytes(16) }), pastLimit: (c) => c.crypto.decrypt({ kid: KID, msg: bytes(16), alg: 'AES256-GCM', iv: bytes(16), tag: bytes(15) }) },
+  { name: 'decrypt msg: 1 byte, not 0', parameter: 'msg', atLimit: (c) => c.crypto.decrypt({ kid: KID, msg: bytes(1), alg: 'AES256-GCM', iv: bytes(16), tag: bytes(16) }), pastLimit: (c) => c.crypto.decrypt({ kid: KID, msg: bytes(0), alg: 'AES256-GCM', iv: bytes(16), tag: bytes(16) }) },
   { name: 'approval scope: 1023 characters, not 1024', parameter: 'scope', atLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: chars(1023) }), pastLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: chars(1024) }) },
   { name: 'approval scope: 1 character, not 0', parameter: 'scope', atLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: 'k' }), pastLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: '' }) },
   { name: 'approval ctx: 64 characters, not 65', parameter: 'ctx', atLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: 'k', ctx: chars(64) }), pastLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: 'k', ctx: chars(65) }) },
@@ -377,6 +400,6 @@ describe('documented limits', () => {
 
   it('covers every validated parameter at least once', () => {
     const parameters = new Set(LIMITS.map((limit) => limit.parameter));
-    expect([...parameters].sort()).toEqual(['authreply', 'count', 'ctx', 'descr', 'epk', 'iv', 'kid', 'label', 'limit', 'mac', 'msg', 'note', 'offset', 'peer', 'peer.extKid', 'peer.pubkey', 'pubkey', 'scope', 'sign']);
+    expect([...parameters].sort()).toEqual(['authreply', 'count', 'ctx', 'descr', 'epk', 'iv', 'kid', 'label', 'limit', 'mac', 'msg', 'note', 'offset', 'peer', 'peer.extKid', 'peer.pubkey', 'pubkey', 'scope', 'sign', 'tag']);
   });
 });

@@ -3,7 +3,7 @@ id: REQ-OPS-008
 title: AES encryption
 status: approved
 priority: must
-revision: 1
+revision: 2
 source: start_point §4; ref/api/hem-api-1.2.2.yaml; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: ["REQ-AUTH-005", "REQ-API-005", "REQ-NET-003"]
 supersedes: null
@@ -26,11 +26,13 @@ has to be a multiple of 16 bytes.
 has to carry everything decryption will need. Introduced in M2.
 
 **Acceptance criteria:**
-- [ ] The body is `{kid, msg, alg}` plus `aad` for GCM when given; the scope
-      used is `keymgmt:use:<kid>`.
-- [ ] The result contains the ciphertext, the IV for CBC and GCM, and the
-      tag for GCM, all as bytes.
-- [ ] An unknown algorithm, ECB input that is not a multiple of 16 bytes, or
+- [x] The body is `{kid, msg, alg}` plus `aad` for GCM when given; the scope
+      used is `keymgmt:use:<kid>` — `crypto.encrypt`, STEP-M2A-030
+      (2026-10-27).
+- [x] The result contains the ciphertext, the IV for CBC and GCM, and the
+      tag for GCM, all as bytes — `EncryptResult`; a reply without the IV
+      or tag its mode produces raises `HemProtocolError`.
+- [x] An unknown algorithm, ECB input that is not a multiple of 16 bytes, or
       associated data given with a mode other than GCM, raises
       `HemValidationError`.
 - [ ] (M2B) each of the three modes is run on the test device with an

@@ -3,7 +3,7 @@ id: REQ-OPS-009
 title: AES decryption
 status: approved
 priority: must
-revision: 1
+revision: 2
 source: start_point §4; ref/api/hem-api-1.2.2.yaml
 depends_on: ["REQ-AUTH-005", "REQ-API-005", "REQ-NET-003"]
 supersedes: null
@@ -21,12 +21,14 @@ decrypts a message with a stored AES key in ECB, CBC or GCM mode.
 encrypt returned. Introduced in M2.
 
 **Acceptance criteria:**
-- [ ] The body is `{kid, msg, alg}` plus `iv`, `tag` and `aad` as the mode
+- [x] The body is `{kid, msg, alg}` plus `iv`, `tag` and `aad` as the mode
       requires; the scope used is `keymgmt:use:<kid>`; the result is the
-      plaintext as bytes.
-- [ ] An IV or tag that is not exactly 16 bytes, or one missing where the
-      mode requires it, raises `HemValidationError`.
-- [ ] A 406 (decryption or authentication failure) raises
+      plaintext as bytes — `crypto.decrypt`, STEP-M2A-030 (2026-10-27).
+- [x] An IV or tag that is not exactly 16 bytes, or one missing where the
+      mode requires it, raises `HemValidationError` — so does an IV with
+      ECB, a tag outside GCM, or `aad` outside GCM (library decision: a
+      value the mode cannot use is a caller mistake, not noise).
+- [x] A 406 (decryption or authentication failure) raises
       `HemOperationFailedError`.
 - [ ] (M2B) the outputs of REQ-OPS-008 decrypt on the test device to the
       original message; a GCM message with an altered tag fails.
