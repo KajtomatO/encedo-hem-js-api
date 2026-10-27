@@ -7,9 +7,9 @@ traces:
   architecture: ["ARCHITECTURE.md#4-public-api--conventions", "ARCHITECTURE.md#10-milestones"]
 depends_on: ["STEP-M2B-075"]
 evidence:
-  commits: []
-  tests: []
-  notes: null
+  commits: ["ac796c0"]
+  tests: ["tests/unit/pack-install.node.test.ts", "tests/unit/package.node.test.ts", "tests/unit/release.node.test.ts"]
+  notes: "2026-10-27: version 0.2.0; CHANGELOG 0.2.0 entry dated with the M2 operations and the device findings of STEP-M2B-010…075 (SECP mode default, no SECP derive, 32-byte ECDH secrets, AES IV/tag, ML-DSA 795, generation times, locked current log file, the device hang); README status for 0.2.0, M3 next; REQ-BUILD-006 rev 3. Full check: 99 files, 2107 tests; the pack-and-install test packed kajtomato-encedo-hem-sdk-0.2.0.tgz and imported it. Waiting for the user: trusted publisher on npmjs.com, then the v0.2.0 tag; the workflow result closes REQ-BUILD-007 and this step."
 reopened: []
 cancelled: null
 ---
@@ -30,9 +30,9 @@ cancelled: null
 - Never push (CLAUDE.md).
 
 **Definition of done**
-- [ ] `package.json` is 0.2.0; the changelog entry is dated and lists the
+- [x] `package.json` is 0.2.0; the changelog entry is dated and lists the
       M2 operations and device findings; README status updated.
-- [ ] Pack-and-install test and `npm run check` pass.
+- [x] Pack-and-install test and `npm run check` pass.
 - [ ] REQ-BUILD-006: the 0.2.0 criterion noted; REQ-BUILD-007 `(M2B)` box
       ticked with the workflow's result, or the failure recorded and a
       fix step proposed.
