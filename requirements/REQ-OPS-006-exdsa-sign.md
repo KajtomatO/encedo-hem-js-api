@@ -1,7 +1,7 @@
 ---
 id: REQ-OPS-006
 title: ECDSA and EdDSA signature
-status: approved
+status: verified
 priority: must
 revision: 2
 source: start_point §4; ref/api/hem-api-1.2.2.yaml; https://github.com/KajtomatO/encedo-hem-c-api
