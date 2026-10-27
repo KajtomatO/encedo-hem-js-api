@@ -7,9 +7,9 @@ traces:
   architecture: ["ARCHITECTURE.md#6-protocol-bindings"]
 depends_on: []
 evidence:
-  commits: []
-  tests: []
-  notes: null
+  commits: ["30b1825"]
+  tests: ["verifies: REQ-OPS-004 (tests/unit/crypto-sign-verify.test.ts)", "verifies: REQ-OPS-005 (tests/unit/crypto-sign-verify.test.ts)", "verifies: REQ-OPS-006 (tests/unit/crypto-sign-verify.test.ts)", "verifies: REQ-OPS-007 (tests/unit/crypto-sign-verify.test.ts)"]
+  notes: "npm run check on 2026-10-27: 88 files, 1635 tests passed in Node v24.21.0 and headless Chromium. Public names: crypto.hmacVerify, crypto.sign, crypto.verify (the ML-DSA pair in STEP-M2A-050 gets prefixed names). Verify helper verified(run, isInvalid) in src/api/verify.ts; the default isInvalid is a 406 (HemOperationFailedError). Library decision: a ctx given with Ed25519 or an ECDSA algorithm is refused (the reference says those variants ignore it; dropping a context silently would mislead a verifier). The signature length limit of the reference (148 bytes, 'nominal') is not enforced; only emptiness and the body limit are. Surface snapshot: 18 additions, no change."
 reopened: []
 cancelled: null
 ---
@@ -39,23 +39,23 @@ cancelled: null
 - Message limits as for HMAC hash unless the reference says otherwise.
 
 **Definition of done**
-- [ ] A verify helper maps 200 → `true` and the device's mismatch response
+- [x] A verify helper maps 200 → `true` and the device's mismatch response
       → `false`; other statuses and transport failures raise; tested once
       for each verify operation of this step.
-- [ ] HMAC verify: body `{kid, msg, mac}`, scope `keymgmt:use:<kid>`; a MAC
+- [x] HMAC verify: body `{kid, msg, mac}`, scope `keymgmt:use:<kid>`; a MAC
       longer than 64 bytes raises `HemValidationError`.
-- [ ] ExDSA sign: body `{kid, msg, alg}` plus `ctx`; an algorithm outside
+- [x] ExDSA sign: body `{kid, msg, alg}` plus `ctx`; an algorithm outside
       the list or a context over 255 bytes raises `HemValidationError`; the
       result is the signature as bytes; TSDoc states the encoding per key
       family and the `ExDSA` mode note.
-- [ ] ExDSA verify: body `{kid, msg, sign, alg}` plus `ctx`; result per
+- [x] ExDSA verify: body `{kid, msg, sign, alg}` plus `ctx`; result per
       REQ-OPS-004.
-- [ ] Each operation has unit tests asserting method, path, headers, body
+- [x] Each operation has unit tests asserting method, path, headers, body
       and response mapping (Node 24 and the browser run), and TSDoc stating
       scope and milestone (`Introduced in M2.`).
-- [ ] Each operation raises `HemTlsRequiredError` on an `http:` client with
+- [x] Each operation raises `HemTlsRequiredError` on an `http:` client with
       zero `fetch` calls.
-- [ ] `implements:` and `verifies:` tags exist for the REQs above; the
+- [x] `implements:` and `verifies:` tags exist for the REQs above; the
       non-`(M2B)` acceptance boxes this step closes are ticked in the REQ
       files (revision bumped).
-- [ ] `npm run surface:update` adds entries only; `npm run check` passes.
+- [x] `npm run surface:update` adds entries only; `npm run check` passes.
