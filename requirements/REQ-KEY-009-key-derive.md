@@ -3,7 +3,7 @@ id: REQ-KEY-009
 title: Derive a key by ECDH and HKDF
 status: verified
 priority: must
-revision: 2
+revision: 3
 source: start_point §4; start_point G16; ref/api/hem-api-1.2.2.yaml; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: ["REQ-AUTH-005", "REQ-API-005"]
 supersedes: null
@@ -38,7 +38,8 @@ Introduced in M2.
       create list without `MLKEM*`/`MLDSA*`.
 - [x] A reply whose key id equals the source key id raises
       `HemProtocolError`.
-- [ ] (M2B) a key is derived on the test device from two X25519 keys and
-      appears in the list.
+- [x] (M2B) a key is derived on the test device from two X25519 keys and
+      appears in the list — live 2026-10-27 (STEP-M2B-010): type `AES256`,
+      listed with its label; deriving the same key again → 406 (quirk 12).
 - [ ] (M2B) the echo behaviour is probed with an unrecognised type sent
       outside the library's validation, and the result recorded.

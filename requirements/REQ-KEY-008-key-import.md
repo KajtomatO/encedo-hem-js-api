@@ -3,7 +3,7 @@ id: REQ-KEY-008
 title: Import an external public key
 status: verified
 priority: must
-revision: 2
+revision: 3
 source: start_point §4; ref/api/hem-api-1.2.2.yaml; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: ["REQ-AUTH-005", "REQ-API-005"]
 supersedes: null
@@ -37,5 +37,7 @@ in M2.
       test sends an 800-byte key.
 - [x] A 406 raises `HemOperationFailedError` whose message names a duplicate
       key among the possible causes.
-- [ ] (M2B) a freshly generated X25519 public key is imported, and a second
-      import of it is refused.
+- [x] (M2B) a freshly generated X25519 public key is imported, and a second
+      import of it is refused — live 2026-10-27 (STEP-M2B-010): imported
+      as type `ECDH,CURVE25519` (no `PKEY` flag: public only); `keys.get`
+      returned the same 32 bytes; the second import → 406.
