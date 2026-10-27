@@ -11,7 +11,7 @@ evidence:
   tests: []
   notes: null
 reopened: []
-cancelled: null
+cancelled: "Replaced by STEP-M2B-010…080 at the M2B decomposition (approved 2026-10-27)."
 ---
 
 **Goal:** Stand-in for the detailed M2B steps: everything in the M2B entry of
@@ -27,4 +27,4 @@ ARCHITECTURE.md §10, ending in the B gate and version 0.2.0.
   so that they can reach `implemented` and `verified` in the A part (§5.5).
 
 **Definition of done**
-- [ ] Cancelled and replaced by the detailed M2B steps.
+- [x] Cancelled and replaced by the detailed M2B steps (2026-10-27).
