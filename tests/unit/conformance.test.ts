@@ -47,7 +47,8 @@ function device(): FakeFetch {
     .always('POST', '/api/crypto/exdsa/sign', { body: { sign: 'DQ4=' } })
     .always('POST', '/api/crypto/exdsa/verify', { status: 200 })
     .always('POST', '/api/crypto/cipher/encrypt', { body: { ciphertext: 'Dw==', iv: IV16, tag: IV16 } })
-    .always('POST', '/api/crypto/cipher/decrypt', { body: { plaintext: 'EA==' } });
+    .always('POST', '/api/crypto/cipher/decrypt', { body: { plaintext: 'EA==' } })
+    .always('POST', '/api/crypto/ecdh', { body: { ecdh: 'ERI=' } });
 }
 
 interface Sample {
@@ -181,6 +182,12 @@ const samples: Record<string, Sample> = {
     body: { kid: KID, msg: 'Dw==', alg: 'AES256-GCM', iv: IV16, tag: IV16 },
     result: Uint8Array.from([16]),
   },
+  'crypto.ecdh /api/crypto/ecdh': {
+    run: (c) => c.crypto.ecdh({ kid: UPPER_KID, peer: { extKid: NEW_KID.toUpperCase() } }),
+    path: '/api/crypto/ecdh',
+    body: { kid: KID, ext_kid: NEW_KID },
+    result: Uint8Array.from([17, 18]),
+  },
   'crypto.verify /api/crypto/exdsa/verify': {
     run: (c) => c.crypto.verify({ kid: UPPER_KID, msg: Uint8Array.from([1]), sign: Uint8Array.from([13, 14]), alg: 'Ed25519' }),
     path: '/api/crypto/exdsa/verify',
@@ -215,6 +222,7 @@ const ARCHITECTURE_SCOPES: Record<string, string | null> = {
   'crypto.verify': `keymgmt:use:${KID}`,
   'crypto.encrypt': `keymgmt:use:${KID}`,
   'crypto.decrypt': `keymgmt:use:${KID}`,
+  'crypto.ecdh': `keymgmt:use:${KID}`,
 };
 
 const operations = ALL_OPERATIONS.map((spec) => ({ spec, key: `${spec.name} ${spec.path}` }));
@@ -373,6 +381,8 @@ const LIMITS: Limit[] = [
   { name: 'decrypt iv: 16 bytes, not 17', parameter: 'iv', atLimit: (c) => c.crypto.decrypt({ kid: KID, msg: bytes(16), alg: 'AES256-CBC', iv: bytes(16) }), pastLimit: (c) => c.crypto.decrypt({ kid: KID, msg: bytes(16), alg: 'AES256-CBC', iv: bytes(17) }) },
   { name: 'decrypt tag: 16 bytes, not 15', parameter: 'tag', atLimit: (c) => c.crypto.decrypt({ kid: KID, msg: bytes(16), alg: 'AES256-GCM', iv: bytes(16), tag: bytes(16) }), pastLimit: (c) => c.crypto.decrypt({ kid: KID, msg: bytes(16), alg: 'AES256-GCM', iv: bytes(16), tag: bytes(15) }) },
   { name: 'decrypt msg: 1 byte, not 0', parameter: 'msg', atLimit: (c) => c.crypto.decrypt({ kid: KID, msg: bytes(1), alg: 'AES256-GCM', iv: bytes(16), tag: bytes(16) }), pastLimit: (c) => c.crypto.decrypt({ kid: KID, msg: bytes(0), alg: 'AES256-GCM', iv: bytes(16), tag: bytes(16) }) },
+  { name: 'agreed-key ctx: 64 bytes, not 65', parameter: 'ctx', atLimit: (c) => c.crypto.wrap({ kid: KID, msg: bytes(16), peer: { extKid: NEW_KID }, ctx: bytes(64) }), pastLimit: (c) => c.crypto.wrap({ kid: KID, msg: bytes(16), peer: { extKid: NEW_KID }, ctx: bytes(65) }) },
+  { name: 'ecdh peer: one form, not both', parameter: 'peer', atLimit: (c) => c.crypto.ecdh({ kid: KID, peer: { pubkey: bytes(1) } }), pastLimit: (c) => c.crypto.ecdh({ kid: KID, peer: { extKid: NEW_KID, pubkey: bytes(1) } as never }) },
   { name: 'approval scope: 1023 characters, not 1024', parameter: 'scope', atLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: chars(1023) }), pastLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: chars(1024) }) },
   { name: 'approval scope: 1 character, not 0', parameter: 'scope', atLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: 'k' }), pastLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: '' }) },
   { name: 'approval ctx: 64 characters, not 65', parameter: 'ctx', atLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: 'k', ctx: chars(64) }), pastLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: 'k', ctx: chars(65) }) },

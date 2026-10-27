@@ -1,4 +1,7 @@
 AES_BLOCK_BYTES	export declare const AES_BLOCK_BYTES=16
+AgreedKeyParams	export interface AgreedKeyParams
+AgreedKeyParams.ctx	ctx?:Uint8Array|undefined
+AgreedKeyParams.peer	peer?:KeyPeer|undefined
 ApprovalCheck	export type ApprovalCheck={readonly status:'pending';}|{readonly status:'approved';readonly authreply:string;}|{readonly status:'rejected';}|{readonly status:'expired';}
 ApprovalDetails	export interface ApprovalDetails
 ApprovalDetails.ctx	ctx?:string|undefined
@@ -51,6 +54,7 @@ CreateKeyParams.mode	mode?:KeyMode|undefined
 CreateKeyParams.type	type:KeyType
 CryptoApi	export interface CryptoApi
 CryptoApi.decrypt	decrypt(params:DecryptParams,options?:CallOptions):Promise<Uint8Array>
+CryptoApi.ecdh	ecdh(params:EcdhParams,options?:CallOptions):Promise<Uint8Array>
 CryptoApi.encrypt	encrypt(params:EncryptParams,options?:CallOptions):Promise<EncryptResult>
 CryptoApi.hmac	hmac(params:HmacParams,options?:CallOptions):Promise<Uint8Array>
 CryptoApi.hmacVerify	hmacVerify(params:HmacVerifyParams,options?:CallOptions):Promise<boolean>
@@ -62,9 +66,11 @@ DERIVABLE_KEY_TYPES	export declare const DERIVABLE_KEY_TYPES:readonly["SECP256R1
 DecryptParams	export interface DecryptParams
 DecryptParams.aad	aad?:Uint8Array|undefined
 DecryptParams.alg	alg:CipherAlgorithm
+DecryptParams.ctx	ctx?:Uint8Array|undefined
 DecryptParams.iv	iv?:Uint8Array|undefined
 DecryptParams.kid	kid:string
 DecryptParams.msg	msg:Uint8Array
+DecryptParams.peer	peer?:KeyPeer|undefined
 DecryptParams.tag	tag?:Uint8Array|undefined
 DerivableKeyType	export type DerivableKeyType=(typeof DERIVABLE_KEY_TYPES)[number]
 DeriveKeyParams	export interface DeriveKeyParams
@@ -77,6 +83,10 @@ DeriveKeyParams.type	type:DerivableKeyType
 DescriptionMatch	export type DescriptionMatch='prefix'|'suffix'|'contains'
 ENCEDO_CHECKIN_URL	export declare const ENCEDO_CHECKIN_URL="https://api.encedo.com/checkin"
 ENCEDO_NOTIFY_URL	export declare const ENCEDO_NOTIFY_URL="https://api.encedo.com/notify"
+EcdhParams	export interface EcdhParams
+EcdhParams.alg	alg?:HashAlgorithm|undefined
+EcdhParams.kid	kid:string
+EcdhParams.peer	peer:KeyPeer
 EncedoApprovalRelay	export declare class EncedoApprovalRelay implements ApprovalRelay
 EncedoApprovalRelay.check	check(handle:string,options?:RelayCallOptions):Promise<ApprovalCheck>
 EncedoApprovalRelay.constructor	constructor(options?:EncedoApprovalRelayOptions)
@@ -98,14 +108,18 @@ EncedoCheckinRelayOptions.url	url?:string|undefined
 EncryptParams	export interface EncryptParams
 EncryptParams.aad	aad?:Uint8Array|undefined
 EncryptParams.alg	alg:CipherAlgorithm
+EncryptParams.ctx	ctx?:Uint8Array|undefined
 EncryptParams.kid	kid:string
 EncryptParams.msg	msg:Uint8Array
+EncryptParams.peer	peer?:KeyPeer|undefined
 EncryptResult	export interface EncryptResult
 EncryptResult.ciphertext	readonly ciphertext:Uint8Array
 EncryptResult.iv	readonly iv?:Uint8Array
 EncryptResult.tag	readonly tag?:Uint8Array
 FetchFunction	export type FetchFunction=(input:string,init:RequestInit)=>Promise<Response>
+HASH_ALGORITHMS	export declare const HASH_ALGORITHMS:readonly["SHA2-256","SHA2-384","SHA2-512","SHA3-256","SHA3-384","SHA3-512"]
 HEM_API_VERSION	export declare const HEM_API_VERSION="1.2.2"
+HashAlgorithm	export type HashAlgorithm=(typeof HASH_ALGORITHMS)[number]
 HealthReport	export interface HealthReport
 HealthReport.clockSet	readonly clockSet:boolean
 HealthReport.error	readonly error?:HemError
@@ -204,12 +218,18 @@ HemValidationError.constructor	constructor(message:string,options?:HemErrorOptio
 HemValidationError.name	name:string
 HemValidationError.parameter	readonly parameter:string|undefined
 HmacParams	export interface HmacParams
+HmacParams.alg	alg?:HashAlgorithm|undefined
+HmacParams.ctx	ctx?:undefined
 HmacParams.kid	kid:string
 HmacParams.msg	msg:Uint8Array
+HmacParams.peer	peer?:KeyPeer|undefined
 HmacVerifyParams	export interface HmacVerifyParams
+HmacVerifyParams.alg	alg?:HashAlgorithm|undefined
+HmacVerifyParams.ctx	ctx?:undefined
 HmacVerifyParams.kid	kid:string
 HmacVerifyParams.mac	mac:Uint8Array
 HmacVerifyParams.msg	msg:Uint8Array
+HmacVerifyParams.peer	peer?:KeyPeer|undefined
 IMPORTABLE_KEY_TYPES	export declare const IMPORTABLE_KEY_TYPES:readonly["SECP256R1","SECP384R1","SECP521R1","SECP256K1","CURVE25519","CURVE448","ED25519","ED448","MLKEM512","MLKEM768","MLKEM1024","MLDSA44","MLDSA65","MLDSA87"]
 ImportKeyParams	export interface ImportKeyParams
 ImportKeyParams.descr	descr?:Uint8Array|undefined
@@ -265,6 +285,7 @@ ListKeysParams	export interface ListKeysParams
 ListKeysParams.count	count?:number|undefined
 ListKeysParams.offset	offset?:number|undefined
 MAX_CONTEXT_BYTES	export declare const MAX_CONTEXT_BYTES=255
+MAX_HKDF_CONTEXT_BYTES	export declare const MAX_HKDF_CONTEXT_BYTES=64
 MAX_MAC_BYTES	export declare const MAX_MAC_BYTES=64
 MobileApprovalOptions	export interface MobileApprovalOptions
 MobileApprovalOptions.ctx	ctx?:string|undefined
@@ -346,7 +367,9 @@ WaitOptions.timeoutMs	timeoutMs?:number|undefined
 WrapAlgorithm	export type WrapAlgorithm='AES128'|'AES192'|'AES256'
 WrapParams	export interface WrapParams
 WrapParams.alg	alg?:WrapAlgorithm|undefined
+WrapParams.ctx	ctx?:Uint8Array|undefined
 WrapParams.iv	iv?:Uint8Array|undefined
 WrapParams.kid	kid:string
 WrapParams.msg	msg:Uint8Array
+WrapParams.peer	peer?:KeyPeer|undefined
 createNodeFetch	export declare function createNodeFetch(options?:NodeFetchOptions):FetchFunction

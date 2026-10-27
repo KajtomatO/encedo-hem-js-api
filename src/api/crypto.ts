@@ -1,7 +1,8 @@
 /**
  * Cryptographic operations with stored keys: HMAC, AES key wrap and unwrap
- * (M1); HMAC verify, ECDSA/EdDSA sign and verify, AES encrypt and decrypt
- * (M2). Every operation uses
+ * (M1); HMAC verify, ECDSA/EdDSA sign and verify, AES encrypt and decrypt,
+ * ECDH, and the ECDH-agreed key mode of the symmetric operations (M2).
+ * Every operation uses
  * the exact per-key scope `keymgmt:use:<kid>` and needs an `https:` device
  * URL.
  *
@@ -12,6 +13,7 @@ import { validateKid, validateMessage } from '../codec/validate.js';
 import { HemValidationError } from '../errors.js';
 import type { CallOptions } from '../transport/transport.js';
 import { type BindingContext, type OperationSpec, invoke, optional, readBase64 } from './core.js';
+import { type KeyPeer, peerFields } from './peer.js';
 import { verified } from './verify.js';
 
 export const CRYPTO_HMAC: OperationSpec = {
@@ -96,8 +98,19 @@ export const CRYPTO_DECRYPT: OperationSpec = {
   required: ['plaintext'],
 };
 
+export const CRYPTO_ECDH: OperationSpec = {
+  name: 'crypto.ecdh',
+  group: 'crypto',
+  method: 'POST',
+  path: '/api/crypto/ecdh',
+  scope: 'keymgmt:use:{kid}',
+  tlsOnly: true,
+  required: ['ecdh'],
+};
+
 /** Operations of this module. */
 export const CRYPTO_OPERATIONS: readonly OperationSpec[] = [
+  CRYPTO_ECDH,
   CRYPTO_HMAC,
   CRYPTO_WRAP,
   CRYPTO_UNWRAP,
@@ -107,6 +120,70 @@ export const CRYPTO_OPERATIONS: readonly OperationSpec[] = [
   CRYPTO_ENCRYPT,
   CRYPTO_DECRYPT,
 ];
+
+/** Hash algorithms: the HMAC digest in the agreed-key mode, and the optional digest of an ECDH secret (ref/api/hem-api-1.2.2.yaml). */
+export const HASH_ALGORITHMS = Object.freeze(['SHA2-256', 'SHA2-384', 'SHA2-512', 'SHA3-256', 'SHA3-384', 'SHA3-512'] as const);
+
+/** A hash algorithm. */
+export type HashAlgorithm = (typeof HASH_ALGORITHMS)[number];
+
+/** Largest HKDF context suffix of the agreed-key mode, in bytes. */
+export const MAX_HKDF_CONTEXT_BYTES = 64;
+
+/**
+ * The agreed-key mode of a symmetric operation (ARCHITECTURE.md §6): the
+ * device runs ECDH between the stored key `kid` and `peer`, and uses the
+ * result as the working key — directly for HMAC, through HKDF-SHA256 for
+ * the cipher and wrap operations, where an optional `ctx` of up to 64
+ * bytes is appended to the HKDF info.
+ */
+export interface AgreedKeyParams {
+  /** The peer public key; its presence selects the agreed-key mode. */
+  peer?: KeyPeer | undefined;
+  /** HKDF context suffix, at most 64 bytes; cipher and wrap operations in the agreed-key mode only. */
+  ctx?: Uint8Array | undefined;
+}
+
+function validateHash(alg: unknown): HashAlgorithm {
+  if (!(HASH_ALGORITHMS as readonly string[]).includes(alg as string)) {
+    throw new HemValidationError(`Invalid alg: must be one of ${HASH_ALGORITHMS.join(', ')}`, { parameter: 'alg' });
+  }
+  return alg as HashAlgorithm;
+}
+
+/**
+ * Add the agreed-key fields to a body: `ext_kid` or `pubkey` from `peer`,
+ * and `ctx` when the operation derives through HKDF. Without a peer, a
+ * context is refused.
+ */
+// implements: REQ-OPS-015
+function addAgreedKey(body: Record<string, unknown>, params: AgreedKeyParams, hkdf: boolean): boolean {
+  if (params.peer === undefined) {
+    if (params.ctx !== undefined) throw new HemValidationError('Invalid ctx: a context applies to the agreed-key mode only; give a peer', { parameter: 'ctx' });
+    return false;
+  }
+  Object.assign(body, peerFields(params.peer));
+  if (params.ctx !== undefined) {
+    if (!hkdf) throw new HemValidationError('Invalid ctx: HMAC has no HKDF context', { parameter: 'ctx' });
+    if (!(params.ctx instanceof Uint8Array) || params.ctx.length > MAX_HKDF_CONTEXT_BYTES) {
+      throw new HemValidationError(`Invalid ctx: must be at most ${MAX_HKDF_CONTEXT_BYTES} bytes`, { parameter: 'ctx' });
+    }
+    body['ctx'] = bytesToBase64(params.ctx);
+  }
+  return true;
+}
+
+/** HMAC body: `alg` is required with a peer (the raw ECDH secret is the key) and refused without one (the stored key's type decides). */
+function addHmacMode(body: Record<string, unknown>, params: AgreedKeyParams & { alg?: HashAlgorithm | undefined }): void {
+  const agreed = addAgreedKey(body, params, false);
+  if (agreed) {
+    if (params.alg === undefined) throw new HemValidationError('Invalid alg: the agreed-key mode of HMAC needs a hash algorithm', { parameter: 'alg' });
+    body['alg'] = validateHash(params.alg);
+  } else if (params.alg !== undefined) {
+    // ARCHITECTURE.md §6 quirk 10: with a stored key the device ignores alg; refusing it keeps callers from relying on it.
+    throw new HemValidationError('Invalid alg: with a stored key its type decides the hash; alg applies to the agreed-key mode only', { parameter: 'alg' });
+  }
+}
 
 /** AES block size; also the IV, nonce and GCM tag size the device uses. */
 export const AES_BLOCK_BYTES = 16;
@@ -171,15 +248,35 @@ const WRAP_ALGORITHMS: readonly string[] = ['AES128', 'AES192', 'AES256'];
 
 /** Parameters of {@link CryptoApi.hmac}. */
 export interface HmacParams {
-  /** Stored HMAC key (`SHA*` type); its type decides the hash. */
+  /** The peer public key; its presence selects the agreed-key mode (see {@link AgreedKeyParams}). */
+  peer?: KeyPeer | undefined;
+  /** Not used by HMAC: a context is refused. Present so one helper validates every agreed-key operation. */
+  ctx?: undefined;
+  /** Stored HMAC key (`SHA*` type); its type decides the hash. In the agreed-key mode, the stored ECDH private key. */
   kid: string;
   /** Message, 1 to 2048 bytes. */
   msg: Uint8Array;
+  /** Hash algorithm; required in the agreed-key mode, refused with a stored key (its type decides). */
+  alg?: HashAlgorithm | undefined;
+}
+
+/** Parameters of {@link CryptoApi.ecdh}. */
+export interface EcdhParams {
+  /** Stored ECDH-capable private key. */
+  kid: string;
+  /** The peer public key: a stored key id or raw bytes. */
+  peer: KeyPeer;
+  /** Digest to apply to the secret; without one the raw secret is returned. */
+  alg?: HashAlgorithm | undefined;
 }
 
 /** Parameters of {@link CryptoApi.wrap} and {@link CryptoApi.unwrap}. */
 export interface WrapParams {
-  /** Stored AES key used as the key-encryption key. */
+  /** The peer public key; its presence selects the agreed-key mode (see {@link AgreedKeyParams}). */
+  peer?: KeyPeer | undefined;
+  /** HKDF context suffix, at most 64 bytes; agreed-key mode only. */
+  ctx?: Uint8Array | undefined;
+  /** Stored AES key used as the key-encryption key. In the agreed-key mode, the stored ECDH private key. */
   kid: string;
   /** Data to wrap, or the wrapped blob to unwrap. */
   msg: Uint8Array;
@@ -191,12 +288,18 @@ export interface WrapParams {
 
 /** Parameters of {@link CryptoApi.hmacVerify}. */
 export interface HmacVerifyParams {
-  /** Stored HMAC key (`SHA*` type); its type decides the hash. */
+  /** The peer public key; its presence selects the agreed-key mode (see {@link AgreedKeyParams}). */
+  peer?: KeyPeer | undefined;
+  /** Not used by HMAC: a context is refused. Present so one helper validates every agreed-key operation. */
+  ctx?: undefined;
+  /** Stored HMAC key (`SHA*` type); its type decides the hash. In the agreed-key mode, the stored ECDH private key. */
   kid: string;
   /** Message, 1 to 2048 bytes. */
   msg: Uint8Array;
   /** The MAC to check, 1 to 64 bytes. */
   mac: Uint8Array;
+  /** Hash algorithm; required in the agreed-key mode, refused with a stored key (its type decides). */
+  alg?: HashAlgorithm | undefined;
 }
 
 /** Parameters of {@link CryptoApi.sign}. */
@@ -219,7 +322,11 @@ export interface VerifyParams extends SignParams {
 
 /** Parameters of {@link CryptoApi.encrypt}. */
 export interface EncryptParams {
-  /** Stored AES key whose size matches `alg`. */
+  /** The peer public key; its presence selects the agreed-key mode (see {@link AgreedKeyParams}). */
+  peer?: KeyPeer | undefined;
+  /** HKDF context suffix, at most 64 bytes; agreed-key mode only. */
+  ctx?: Uint8Array | undefined;
+  /** Stored AES key whose size matches `alg`. In the agreed-key mode, the stored ECDH private key. */
   kid: string;
   /** Plaintext, 1 to 2048 bytes; for ECB a multiple of 16 bytes. */
   msg: Uint8Array;
@@ -240,7 +347,11 @@ export interface EncryptResult {
 
 /** Parameters of {@link CryptoApi.decrypt}. */
 export interface DecryptParams {
-  /** Stored AES key whose size matches `alg`. */
+  /** The peer public key; its presence selects the agreed-key mode (see {@link AgreedKeyParams}). */
+  peer?: KeyPeer | undefined;
+  /** HKDF context suffix, at most 64 bytes; agreed-key mode only. */
+  ctx?: Uint8Array | undefined;
+  /** Stored AES key whose size matches `alg`. In the agreed-key mode, the stored ECDH private key. */
   kid: string;
   /** Ciphertext; for ECB a multiple of 16 bytes. */
   msg: Uint8Array;
@@ -307,6 +418,7 @@ function wrapBody(kid: string, msg: Uint8Array, params: WrapParams): Record<stri
     if (!(params.iv instanceof Uint8Array) || params.iv.length !== 8) throw new HemValidationError('Invalid iv: must be 8 bytes', { parameter: 'iv' });
     body['iv'] = bytesToBase64(params.iv);
   }
+  addAgreedKey(body, params, true);
   return body;
 }
 
@@ -322,6 +434,10 @@ export interface CryptoApi {
    * the device ignores it for a stored key. A missing key or a key of the
    * wrong type raises `HemOperationFailedError` (406).
    *
+   * Agreed-key mode (M2): with `peer`, `kid` is a stored ECDH private key,
+   * the raw ECDH secret with the peer is the HMAC key, and `alg` chooses
+   * the hash (required). The token scope is still that of `kid`.
+   *
    * Device call: `POST /api/crypto/hmac/hash`. HTTPS only.
    *
    * @remarks Token scope: `keymgmt:use:<kid>`. Introduced in M1.
@@ -333,6 +449,7 @@ export interface CryptoApi {
    * `true` when the device accepts it and `false` when it reports a
    * mismatch (406) — which also covers a missing key or a key of the wrong
    * type, as the device does not tell these apart. Other failures raise.
+   * The agreed-key mode (`peer`, `alg`) is as for {@link CryptoApi.hmac}.
    *
    * Device call: `POST /api/crypto/hmac/verify`. HTTPS only.
    *
@@ -376,6 +493,11 @@ export interface CryptoApi {
    * size or type, or an encryption failure raises `HemOperationFailedError`
    * (406).
    *
+   * Agreed-key mode (M2): with `peer`, `kid` is a stored ECDH private key
+   * and the AES key is derived on the device by HKDF-SHA256 from the ECDH
+   * secret with the info `encedo-aes` plus the optional `ctx` (up to 64
+   * bytes). Decrypt with the same pair and context.
+   *
    * Device call: `POST /api/crypto/cipher/encrypt`. HTTPS only.
    *
    * @remarks Token scope: `keymgmt:use:<kid>`. Introduced in M2.
@@ -386,7 +508,8 @@ export interface CryptoApi {
    * Decrypt with a stored AES key in ECB, CBC or GCM mode, taking back the
    * IV and tag that {@link CryptoApi.encrypt} returned. CBC padding is
    * removed by the device. A decryption or GCM authentication failure, or
-   * a wrong key, raises `HemOperationFailedError` (406).
+   * a wrong key, raises `HemOperationFailedError` (406). The agreed-key
+   * mode (`peer`, `ctx`) is as for {@link CryptoApi.encrypt}.
    *
    * Device call: `POST /api/crypto/cipher/decrypt`. HTTPS only.
    *
@@ -399,6 +522,11 @@ export interface CryptoApi {
    * must be 16 to 2048 bytes and a multiple of 8; the result is 8 bytes
    * longer.
    *
+   * Agreed-key mode (M2): with `peer`, `kid` is a stored ECDH private key
+   * and the key-encryption key is derived on the device by HKDF-SHA256 from
+   * the ECDH secret with the info `encedo-kek` plus the optional `ctx` (up
+   * to 64 bytes).
+   *
    * Device call: `POST /api/crypto/cipher/wrap`. HTTPS only.
    *
    * @remarks Token scope: `keymgmt:use:<kid>`. Introduced in M1.
@@ -409,13 +537,27 @@ export interface CryptoApi {
    * Unwrap key material wrapped by {@link CryptoApi.wrap} (RFC 3394). The
    * input must be a multiple of 8 bytes; the result is 8 bytes shorter. A
    * failed integrity check or a wrong key raises `HemOperationFailedError`
-   * (406).
+   * (406). The agreed-key mode (`peer`, `ctx`) is as for {@link CryptoApi.wrap}.
    *
    * Device call: `POST /api/crypto/cipher/unwrap`. HTTPS only.
    *
    * @remarks Token scope: `keymgmt:use:<kid>`. Introduced in M1.
    */
   unwrap(params: WrapParams, options?: CallOptions): Promise<Uint8Array>;
+
+  /**
+   * ECDH shared secret between a stored private key and a peer public key
+   * (a stored key id or raw bytes). Without `alg` the device returns the
+   * raw secret, reported as 32 bytes even for larger curves (firmware
+   * 1.2.2 truncates it); with `alg` it returns the digest of the secret
+   * (32, 48 or 64 bytes). A missing peer key or a failed derivation raises
+   * `HemOperationFailedError` (406).
+   *
+   * Device call: `POST /api/crypto/ecdh`. HTTPS only.
+   *
+   * @remarks Token scope: `keymgmt:use:<kid>`. Introduced in M2.
+   */
+  ecdh(params: EcdhParams, options?: CallOptions): Promise<Uint8Array>;
 }
 
 /** @internal Implementation of {@link CryptoApi}. */
@@ -431,7 +573,9 @@ export class CryptoApiImpl implements CryptoApi {
   async hmac(params: HmacParams, options?: CallOptions): Promise<Uint8Array> {
     const kid = validateKid(params?.kid);
     const msg = validateMessage(params.msg);
-    const r = await invoke(this.#context, CRYPTO_HMAC, { params: { kid }, body: { kid, msg: bytesToBase64(msg) } }, options);
+    const body: Record<string, unknown> = { kid, msg: bytesToBase64(msg) };
+    addHmacMode(body, params);
+    const r = await invoke(this.#context, CRYPTO_HMAC, { params: { kid }, body }, options);
     return readBase64(CRYPTO_HMAC, r, 'mac');
   }
 
@@ -440,8 +584,8 @@ export class CryptoApiImpl implements CryptoApi {
     const kid = validateKid(params?.kid);
     const msg = validateMessage(params.msg);
     const mac = requireNonEmptyBytes(params.mac, 'mac', MAX_MAC_BYTES);
-    // No alg: the stored key's type decides the hash (ARCHITECTURE.md §6 quirk 10).
-    const body = { kid, msg: bytesToBase64(msg), mac: bytesToBase64(mac) };
+    const body: Record<string, unknown> = { kid, msg: bytesToBase64(msg), mac: bytesToBase64(mac) };
+    addHmacMode(body, params);
     return verified(() => invoke(this.#context, CRYPTO_HMAC_VERIFY, { params: { kid }, body }, options));
   }
 
@@ -467,6 +611,7 @@ export class CryptoApiImpl implements CryptoApi {
     if (mode === 'ECB') requireBlockAligned(msg);
     const body: Record<string, unknown> = { kid, msg: bytesToBase64(msg), alg: params.alg };
     addAad(body, params.aad, mode);
+    addAgreedKey(body, params, true);
     const spec = CRYPTO_ENCRYPT;
     const r = await invoke(this.#context, spec, { params: { kid }, body }, options);
     const result: { -readonly [K in keyof EncryptResult]: EncryptResult[K] } = { ciphertext: readBase64(spec, r, 'ciphertext') };
@@ -498,8 +643,18 @@ export class CryptoApiImpl implements CryptoApi {
       throw new HemValidationError(`Invalid tag: ${mode} has no authentication tag`, { parameter: 'tag' });
     }
     addAad(body, params.aad, mode);
+    addAgreedKey(body, params, true);
     const r = await invoke(this.#context, CRYPTO_DECRYPT, { params: { kid }, body }, options);
     return readBase64(CRYPTO_DECRYPT, r, 'plaintext');
+  }
+
+  // implements: REQ-OPS-010
+  async ecdh(params: EcdhParams, options?: CallOptions): Promise<Uint8Array> {
+    const kid = validateKid(params?.kid);
+    const body: Record<string, unknown> = { kid, ...peerFields(params.peer) };
+    if (params.alg !== undefined) body['alg'] = validateHash(params.alg);
+    const r = await invoke(this.#context, CRYPTO_ECDH, { params: { kid }, body }, options);
+    return readBase64(CRYPTO_ECDH, r, 'ecdh');
   }
 
   // implements: REQ-OPS-002

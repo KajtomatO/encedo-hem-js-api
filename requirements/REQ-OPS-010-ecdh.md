@@ -3,7 +3,7 @@ id: REQ-OPS-010
 title: ECDH shared secret
 status: approved
 priority: must
-revision: 1
+revision: 2
 source: start_point §4; ref/api/hem-api-1.2.2.yaml; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: ["REQ-AUTH-005", "REQ-API-005", "REQ-NET-003"]
 supersedes: null
@@ -23,11 +23,13 @@ Without one it returns the raw secret, truncated to 32 bytes even for larger
 curves [C-SDK]. Introduced in M2.
 
 **Acceptance criteria:**
-- [ ] The body is `{kid}` plus exactly one of `ext_kid` or `pubkey`, and
+- [x] The body is `{kid}` plus exactly one of `ext_kid` or `pubkey`, and
       `alg` when given; the scope used is `keymgmt:use:<kid>`; the result is
-      the secret as bytes.
-- [ ] Giving both peers or neither raises `HemValidationError`.
-- [ ] The documentation states the truncation of the raw secret.
+      the secret as bytes — `crypto.ecdh`, STEP-M2A-040 (2026-10-27).
+- [x] Giving both peers or neither raises `HemValidationError` (the shared
+      `peer: { extKid } | { pubkey }` parameter of `src/api/peer.ts`).
+- [x] The documentation states the truncation of the raw secret — TSDoc of
+      `crypto.ecdh`.
 - [ ] (M2B) for an X25519 key on the test device and a locally generated
       peer, the device's raw secret equals the one computed locally with Web
       Crypto.
