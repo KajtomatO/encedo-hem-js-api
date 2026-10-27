@@ -1,10 +1,10 @@
 ---
 id: REQ-BUILD-007
 title: Releases are published from CI on a version tag
-status: draft
+status: approved
 priority: must
-revision: 1
-source: user decision 2026-10-27
+revision: 2
+source: user decision 2026-10-27; approved 2026-10-27
 depends_on: ["REQ-BUILD-005", "REQ-BUILD-006"]
 supersedes: null
 superseded_by: null

@@ -17,9 +17,8 @@ cancelled: null
 **Goal:** `.github/workflows/release.yml` publishes the package to npm through trusted publishing and creates a GitHub Release when a `v*` tag matching the package version is pushed; a unit test checks the workflow file.
 
 **Notes:**
-- **Precondition:** REQ-BUILD-007 is `draft` at decomposition
-  (2026-10-27). Start this step only once the user has set it to
-  `approved`; until then it waits in `todo/`.
+- **Precondition:** REQ-BUILD-007 was `draft` at decomposition and was
+  approved by the user later on 2026-10-27; the step can start.
 - Trigger: `push` with `tags: ['v*']` only, plus `workflow_dispatch` with a
   boolean `dry_run` input that stops before publishing. Permissions:
   `contents: write`, `id-token: write`. Steps: checkout, setup-node 24 with
