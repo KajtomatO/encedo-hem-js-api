@@ -435,8 +435,8 @@ Firmware quirks the bindings normalise or document [BRIEF G16]:
 | # | Quirk | Source | Handling |
 |---|---|---|---|
 | 1 | Over plain HTTP, `DELETE /api/keymgmt/delete/{kid}` and `POST /api/crypto/hmac/hash` answer 409 instead of 418. | [YAML] | The HTTPS guard refuses these calls before sending, so callers always see `HemTlsRequiredError`. |
-| 2 | ML-KEM decapsulation returns an unrelated string in `alg`. | [YAML], [C-SDK] | The field is not exposed. |
-| 3 | A failed ML-DSA verification puts a raw internal code in the HTTP status line (100 per the reference; 795 observed). | [YAML], [C-SDK] | Any completed response that is neither success nor an authentication error means "invalid". How `fetch` surfaces such a status is unverified (§11). |
+| 2 | ML-KEM decapsulation returns an unrelated string in `alg` (on the test device: the token scope, `keymgmt:use:<kid>`). | [YAML], [C-SDK]; device (2026-10-27) | The field is not exposed. |
+| 3 | A failed ML-DSA verification puts a raw internal code in the HTTP status line (100 per the reference; 795 observed, also by this library). | [YAML], [C-SDK]; device (2026-10-27) | Any completed response that is neither success nor an authentication error means "invalid". The Node transport delivers the 795 as a status; browsers unverified (§11 risk 2). |
 | 4 | `POST /api/keymgmt/derive` with a `type` the derive cannot produce (a known type such as `MLKEM768`) returns 200 and echoes the source key id without creating a key; an unknown string gets 400. | [YAML]; device (2026-10-27) | The type is checked against the known list before sending, and a returned id equal to the source id is an error. |
 | 5 | `POST /api/keymgmt/update` rewrites the whole record: omitting `descr` clears it. `label` is always required. | [C-SDK], [YAML] | The call takes both fields explicitly. |
 | 6 | The device accepts a 65-byte description on create and silently truncates it on read. | [C-SDK] | Descriptions over 64 bytes are rejected before sending. |
@@ -663,6 +663,11 @@ strict sequence (D8). Scope comes from [BRIEF] §3–§5.
    hang on an informational status, or return it. *Resolved by:* probing on
    the device at M2B; until then an invalid ML-DSA signature may surface as
    a transport error.
+   **RESOLVED for Node.js (2026-10-27, STEP-M2B-050):** the device answers
+   a bad signature with the status line `795` in 0.3 s; the `node:https`
+   transport delivers it as a status and `crypto.mldsaVerify` returns
+   `false`. A browser's `fetch` was not probed; it may surface such a
+   status differently.
 3. **Connection reuse.** The device closes TCP after each response
    [C-SDK]. Whether Node's `fetch` then fails on a reused connection is
    unknown. *Resolved by:* M1B. **RESOLVED (2026-10-07):** Node's `fetch`

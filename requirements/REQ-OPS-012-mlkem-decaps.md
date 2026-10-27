@@ -3,7 +3,7 @@ id: REQ-OPS-012
 title: ML-KEM decapsulation
 status: verified
 priority: must
-revision: 2
+revision: 3
 source: start_point §4; start_point G16; ref/api/hem-api-1.2.2.yaml; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: ["REQ-AUTH-005", "REQ-NET-003"]
 supersedes: null
@@ -32,5 +32,9 @@ Introduced in M2.
 - [x] The result has no algorithm field, whatever the response contains —
       the result is the bare secret; `alg` is not even required in the
       reply.
-- [ ] (M2B) on the test device the secret from decapsulation equals the one
-      from REQ-OPS-011; the content of the `alg` field is recorded.
+- [x] (M2B) on the test device the secret from decapsulation equals the one
+      from REQ-OPS-011; the content of the `alg` field is recorded — live
+      2026-10-27 (STEP-M2B-050): equal, 32 bytes; the reply's `alg` holds
+      the token scope string `keymgmt:use:<kid>` (quirk 2 confirmed). A
+      tampered ciphertext decapsulates without error to a different secret
+      (implicit rejection, as FIPS 203 specifies).

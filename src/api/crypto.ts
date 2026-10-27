@@ -674,10 +674,13 @@ export interface CryptoApi {
 
   /**
    * ECDH shared secret between a stored private key and a peer public key
-   * (a stored key id or raw bytes). Without `alg` the device returns the
-   * raw secret, reported as 32 bytes even for larger curves (firmware
-   * 1.2.2 truncates it); with `alg` it returns the digest of the secret
-   * (32, 48 or 64 bytes). A missing peer key or a failed derivation raises
+   * (a stored key id or raw bytes; a raw `SECP*` peer in compressed X9.63
+   * form, a stored `SECP*` peer imported with mode `ECDH`). A `SECP*`
+   * private key must have been created with mode `ECDH`. Without `alg` the
+   * device returns the raw secret, reported as 32 bytes even for larger
+   * curves (firmware 1.2.2 truncates it: verified for P-384 and Curve448);
+   * with `alg` it returns the digest of the secret (32, 48 or 64 bytes). A
+   * missing peer key, a key without the ECDH use or a failed derivation raises
    * `HemOperationFailedError` (406).
    *
    * Device call: `POST /api/crypto/ecdh`. HTTPS only.
