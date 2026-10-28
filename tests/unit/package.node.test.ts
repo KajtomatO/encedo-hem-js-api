@@ -66,6 +66,13 @@ describe('package.json', () => {
   it('declares Node.js 24 as the minimum version', () => {
     expect(pkg['engines']).toEqual({ node: '>=24' });
   });
+
+  // verifies: REQ-BUILD-007
+  it('names its GitHub repository exactly, as npm trusted publishing requires of repository.url', () => {
+    expect(pkg['repository']).toEqual({ type: 'git', url: 'git+https://github.com/KajtomatO/encedo-hem-js-api.git' });
+    expect(pkg['homepage']).toBe('https://github.com/KajtomatO/encedo-hem-js-api#readme');
+    expect(pkg['bugs']).toBe('https://github.com/KajtomatO/encedo-hem-js-api/issues');
+  });
 });
 
 describe('build output', () => {

@@ -3,6 +3,12 @@
   "version": "0.2.0",
   "description": "TypeScript client for the Encedo HEM REST API",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KajtomatO/encedo-hem-js-api.git"
+  },
+  "homepage": "https://github.com/KajtomatO/encedo-hem-js-api#readme",
+  "bugs": "https://github.com/KajtomatO/encedo-hem-js-api/issues",
   "type": "module",
   "exports": {
     ".": {

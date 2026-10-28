@@ -56,4 +56,13 @@ registry. Introduced after M1B; implemented in M2A, first exercised at the
       configured on npmjs.com: GitHub Actions, owner `KajtomatO`, repository
       `encedo-hem-js-api`, workflow filename `release.yml`.
 - [ ] (M2B) Pushing the 0.2.0 tag publishes 0.2.0 to npm and creates its
-      GitHub Release — the first live run of the workflow.
+      GitHub Release — the first live run of the workflow. First attempt
+      2026-10-28 (tag `v0.2.0` on `main`): checks passed, the provenance
+      statement was signed and logged, then `npm publish` was refused with
+      `403 OIDC permission denied for this action`. Two documented causes
+      (docs.npmjs.com, "Trusted publishing for npm packages", read
+      2026-10-28): `package.json` had no `repository.url`, which must match
+      the GitHub repository exactly — added (STEP-M2B-080); and a trusted
+      publisher created after 2026-09-03 allows only `npm stage publish`
+      unless direct `npm publish` was chosen at creation, and a connection
+      cannot be edited, only replaced — the user's to check.
