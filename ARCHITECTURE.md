@@ -435,25 +435,26 @@ Firmware quirks the bindings normalise or document [BRIEF G16]:
 | # | Quirk | Source | Handling |
 |---|---|---|---|
 | 1 | Over plain HTTP, `DELETE /api/keymgmt/delete/{kid}` and `POST /api/crypto/hmac/hash` answer 409 instead of 418. | [YAML] | The HTTPS guard refuses these calls before sending, so callers always see `HemTlsRequiredError`. |
-| 2 | ML-KEM decapsulation returns an unrelated string in `alg`. | [YAML], [C-SDK] | The field is not exposed. |
-| 3 | A failed ML-DSA verification puts a raw internal code in the HTTP status line (100 per the reference; 795 observed). | [YAML], [C-SDK] | Any completed response that is neither success nor an authentication error means "invalid". How `fetch` surfaces such a status is unverified (§11). |
-| 4 | `POST /api/keymgmt/derive` with an unrecognised `type` returns 200 and echoes the source key id without creating a key. | [YAML] | The type is checked against the known list before sending, and a returned id equal to the source id is an error. |
+| 2 | ML-KEM decapsulation returns an unrelated string in `alg` (on the test device: the token scope, `keymgmt:use:<kid>`). | [YAML], [C-SDK]; device (2026-10-27) | The field is not exposed. |
+| 3 | A failed ML-DSA verification puts a raw internal code in the HTTP status line (100 per the reference; 795 observed, also by this library). | [YAML], [C-SDK]; device (2026-10-27) | Any completed response that is neither success nor an authentication error means "invalid". The Node transport delivers the 795 as a status; browsers unverified (§11 risk 2). |
+| 4 | `POST /api/keymgmt/derive` with a `type` the derive cannot produce (a known type such as `MLKEM768`) returns 200 and echoes the source key id without creating a key; an unknown string gets 400. | [YAML]; device (2026-10-27) | The type is checked against the known list before sending, and a returned id equal to the source id is an error. |
 | 5 | `POST /api/keymgmt/update` rewrites the whole record: omitting `descr` clears it. `label` is always required. | [C-SDK], [YAML] | The call takes both fields explicitly. |
 | 6 | The device accepts a 65-byte description on create and silently truncates it on read. | [C-SDK] | Descriptions over 64 bytes are rejected before sending. |
 | 7 | `GET /api/keymgmt/get/{kid}` never returns the label, and on fw 1.2.2 not the description either. | [C-SDK] | Documented; label and description come from list or search. |
 | 8 | No match is 200 with an empty list (older firmware: 404), and the reply's `total` is then the repository's record count, not 0. [C-SDK] described the matching as on base64 text; on the device the comparison is on the decoded bytes — a 1-byte prefix and an unaligned `contains` needle both match. | [C-SDK]; device (2026-10-09) | 404 is mapped to an empty result; paging stops at an empty page. |
-| 9 | Raw ECDH output is truncated to 32 bytes even for larger curves. | [C-SDK] | Documented. |
+| 9 | Raw ECDH output is truncated to 32 bytes even for larger curves. | [C-SDK]; device (2026-10-27): 32 bytes for P-384 and Curve448 | Documented. |
 | 10 | In HMAC with a stored key, `alg` is ignored; the key's type decides the hash. | [YAML], [C-SDK] | `alg` is not sent in stored-key mode. |
-| 11 | SECP keys are created ECDH-only unless `mode` asks for ExDSA; signing with them fails with 406. | [C-SDK] | Documented on create and sign. |
+| 11 | A SECP key created without `mode` carries no usage flag: signing *and* ECDH with it fail with 406. [C-SDK] described the default as ECDH-only; the device does not grant ECDH either. The same holds for an imported SECP public key: without `mode` it cannot serve as an ECDH peer. A raw SECP peer must be compressed X9.63. | [C-SDK]; device (2026-10-27) | `keys.create`, `keys.import` and `keys.derive` send `mode: ECDH` for a `SECP*` type unless the caller gives a mode (user decision 2026-10-27, STEP-M2B-075); signing keys need `ExDSA`. Documented on create, import, derive, sign and ECDH. |
 | 12 | Importing or deriving the same key material again fails with 406, because key ids are derived from the material. | [YAML], [C-SDK] | Documented. |
 | 13 | Firmware upload can close the connection with no response for an oversize image or a wrong file extension. | [YAML] | Size and filename are validated before sending. |
 | 14 | `GET /api/system/status` omits fields rather than sending defaults (`inited` only when false, `ts`/`time` only when the clock is set, `https` only over plain HTTP). | [YAML] | Parsed into explicit booleans. |
-| 15 | Audit-log files are pipe-delimited text. | [C-SDK] | Returned verbatim; never parsed [BRIEF M2.3]. |
+| 15 | Audit-log files are pipe-delimited text: a `#` banner line with the firmware name, then CRLF-terminated records; served as `text/plain`. The file of the current boot is locked (406) until the next boot. | [C-SDK]; device (2026-10-27) | Returned verbatim; never parsed [BRIEF M2.3]. |
 | 16 | Firmware 1.2.2 acknowledges a certificate delivered by check-in but never installs it. | [C-SDK] | Documented; the working path is TLS import through config write (M3). |
 | 17 | The device clock runs about 8% fast and is unset after a cold boot. | [C-SDK] | Clock recovery (§5.2). |
 | 18 | Header names are matched case-sensitively: a lowercase `content-length` gets 411, `content-type` 413, `authorization` is ignored. Node's `fetch` cannot spell `content-length` any other way. | device (2026-10-07) | On Node.js the device transport is `node:https` with the names spelled as required (REQ-NET-013); browsers and libcurl spell them so already. |
 | 19 | Responses say `connection: keep-alive` but the socket is closed after each response. | device (2026-10-07) | One connection per request on the Node transport; undici copes by itself. |
 | 20 | The Encedo app accepts only the scopes it knows: a push for `keymgmt:search` is shown as unknown and cannot be rejected, so the wait times out. | device (2026-10-12) | Nothing; callers in mobile mode should ask for scopes the app knows (`keymgmt:list`, `keymgmt:use:<kid>`). |
+| 21 | `POST /api/keymgmt/derive` refuses a `SECP*` target type with 406 whatever the `mode` (none, `ECDH`, `ECDH,ExDSA`) and the source (X25519 or P-256), although [YAML] lists the type; `CURVE25519`, `ED25519`, AES and `SHA*` targets derive. | device (2026-10-27, STEP-M2B-075) | Documented on `keys.derive`; the type stays in `DERIVABLE_KEY_TYPES` as the reference lists it. |
 
 ## 7. Transport
 
@@ -612,11 +613,26 @@ strict sequence (D8). Scope comes from [BRIEF] §3–§5.
   REQs: REQ-API-011, REQ-KEY-006, REQ-KEY-008…009, REQ-OPS-004…015,
   REQ-SYS-008…011.
   **Gate:** A gate.
+  **Passed 2026-10-27** (STEP-M2A-090): every M2A REQ implemented and
+  unit-verified in Node 24 and Chromium; the public surface of 0.1.0
+  unchanged, 159 entries added. The release workflow (REQ-BUILD-007,
+  STEP-M2A-080) waits for the requirement's approval and is not part of
+  the gate.
 - **M2B — daily usage and audit logs: hardware verification.** Live run
   of every M2 operation on the device, including the firmware-quirk probes
   (ML-DSA verify status through `fetch`, ML-KEM `alg`, derive echo).
   REQs: the `(M2B)` criteria of the M2A REQs.
   **Gate:** B gate; version 0.2.0.
+  **Passed 2026-10-27** (STEP-M2B-070): integration suite green on the
+  device (14 files, 59 tests, after a cold boot with clock recovery);
+  every `(M2B)` criterion ticked, none carried; §11 risk 2 resolved for
+  Node; quirks 4, 9 and 11 sharpened from the device (11 corrected: a
+  SECP key needs an explicit mode). The device stopped answering once,
+  during a P-256 signing in the first full run, and needed a power cycle;
+  the rerun passed. After the gate, STEP-M2B-075 (user decision: the
+  library defaults `SECP*` keys to mode `ECDH`) added quirk 21 and left
+  one `(M2B)` box of REQ-KEY-009 open for the user (the device derives no
+  `SECP*` key); 0.2.0 cut (STEP-M2B-080).
 - **M3A — full specification: implementation and unit tests.**
   Provisioning; config write with user-key rotation, TLS import, CSR and
   wipe; mobile-app pairing; attestation; firmware and dashboard upgrade;
@@ -658,6 +674,11 @@ strict sequence (D8). Scope comes from [BRIEF] §3–§5.
    hang on an informational status, or return it. *Resolved by:* probing on
    the device at M2B; until then an invalid ML-DSA signature may surface as
    a transport error.
+   **RESOLVED for Node.js (2026-10-27, STEP-M2B-050):** the device answers
+   a bad signature with the status line `795` in 0.3 s; the `node:https`
+   transport delivers it as a status and `crypto.mldsaVerify` returns
+   `false`. A browser's `fetch` was not probed; it may surface such a
+   status differently.
 3. **Connection reuse.** The device closes TCP after each response
    [C-SDK]. Whether Node's `fetch` then fails on a reused connection is
    unknown. *Resolved by:* M1B. **RESOLVED (2026-10-07):** Node's `fetch`

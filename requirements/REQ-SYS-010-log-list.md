@@ -1,9 +1,9 @@
 ---
 id: REQ-SYS-010
 title: Paged audit-log listing
-status: approved
+status: verified
 priority: must
-revision: 1
+revision: 3
 source: start_point §4; start_point M2.4; ref/api/hem-api-1.2.2.yaml
 depends_on: ["REQ-AUTH-005", "REQ-API-011"]
 supersedes: null
@@ -22,12 +22,18 @@ operation with an offset parameter is easier to use and to iterate.
 Introduced in M2.
 
 **Acceptance criteria:**
-- [ ] The scope used is `logger:get`; an offset of zero and a non-zero
-      offset each produce a valid request.
-- [ ] The result contains `total` and the list of ids; ids are 8 lower-case
-      hex characters.
-- [ ] The documentation states that `total` counts all entries in the log
+- [x] The scope used is `logger:get`; an offset of zero and a non-zero
+      offset each produce a valid request — `logger.list({ offset })`:
+      `/api/logger/list` without an offset, `/list/{offset}` with one,
+      STEP-M2A-070 (2026-10-27).
+- [x] The result contains `total` and the list of ids; ids are 8 lower-case
+      hex characters — `{ total, ids }`; an id of another shape raises
+      `HemProtocolError`.
+- [x] The documentation states that `total` counts all entries in the log
       directory, not the page [YAML], and that the operation needs
-      mass-storage hardware.
-- [ ] A negative or non-integer offset raises `HemValidationError`.
-- [ ] (M2B) the log files of the test device are listed.
+      mass-storage hardware — TSDoc of `logger.list`; the operation-docs
+      test requires the mass-storage note for every `mscOnly` operation.
+- [x] A negative or non-integer offset raises `HemValidationError`.
+- [x] (M2B) the log files of the test device are listed — live 2026-10-27
+      (STEP-M2B-060): `total` 64, 64 ids on the first page (8 lower-case
+      hex each), so no second page was needed.

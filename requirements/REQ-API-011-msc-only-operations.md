@@ -1,9 +1,9 @@
 ---
 id: REQ-API-011
 title: Clear error for operations the hardware does not provide
-status: approved
+status: verified
 priority: must
-revision: 1
+revision: 3
 source: start_point G20; ref/api/hem-api-1.2.2.yaml; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: ["REQ-API-002"]
 supersedes: null
@@ -25,11 +25,23 @@ translation looks like a library bug. Introduced in M2.
 
 **Acceptance criteria:**
 - [ ] The documentation of each such operation states that it needs
-      mass-storage hardware (checked together with REQ-API-007).
+      mass-storage hardware (checked together with REQ-API-007) — in place
+      for the audit-log listing and download (`mscOnly` operation flag;
+      the operation-docs test requires the note), STEP-M2A-070
+      (2026-10-27); the storage, attestation and upgrade operations come
+      with M3A.
 - [ ] A 404 from audit-log listing, a storage operation, attestation or an
-      upgrade operation raises `HemUnsupportedError`.
-- [ ] For audit-log download, where 404 also means an unknown file id
-      [YAML], the error states both possible causes.
-- [ ] (M2B) the M2 operations of this kind run on the test device, and its
-      hardware build is recorded. Behaviour on hardware without mass storage
-      stays unverified unless such a device is available.
+      upgrade operation raises `HemUnsupportedError` — audit-log listing
+      and download done (`unsupportedOn404` in the binding core applies to
+      every `mscOnly` operation), STEP-M2A-070; the M3A operations get the
+      flag when they are bound.
+- [x] For audit-log download, where 404 also means an unknown file id
+      [YAML], the error states both possible causes — STEP-M2A-070
+      (2026-10-27).
+- [x] (M2B) the M2 operations of this kind run on the test device, and its
+      hardware build is recorded — live 2026-10-27 (STEP-M2B-060): the
+      test device is a mass-storage build (`PPA rev 2.2`, `Encedo nGINE FW
+      v1.2.2-DIAG`, status `storage` `["8388607:ro", "234364924:-"]`, the
+      storage fields in the configuration); listing and download worked.
+      Behaviour on hardware without mass storage stays unverified unless
+      such a device is available.

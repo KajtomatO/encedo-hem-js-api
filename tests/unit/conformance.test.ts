@@ -10,6 +10,17 @@ import { loginVector as v } from '../support/vectors.js';
 
 const KID = '0123456789abcdef0123456789abcdef';
 const UPPER_KID = KID.toUpperCase();
+const NEW_KID = '00112233445566778899aabbccddeeff';
+const IV16 = 'AQEBAQEBAQEBAQEBAQEBAQ==';
+const CONFIG = {
+  iat: 1, uts: 2, devid: '0011223344556677', eid: 'AQ==', eid_sign: 'Ag==', user: 'u', email: 'e', hostname: 'h', dnsd: true, trusted_ts: true,
+  trusted_backend: false, allow_keysearch: true, origin: '*', ctx: 0, ip: '192.168.7.1/24', http_option_hsts: false, http_option_dosprot_mode: 0, spk: 'Aw==', nonce: 'BA==',
+};
+const CONFIG_RESULT = {
+  createdAt: 1, updatedAt: 2, devid: '0011223344556677', eid: Uint8Array.from([1]), eidSign: Uint8Array.from([2]), user: 'u', email: 'e', hostname: 'h', dnsd: true,
+  trustedTime: true, trustedBackend: false, allowKeysearch: true, origin: '*', ctx: 0, ip: '192.168.7.1/24', hsts: false, dosProtectionMode: 0,
+  spk: Uint8Array.from([3]), nonce: Uint8Array.from([4]),
+};
 const EPK = 'AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE=';
 const APP_TOKEN = fakeToken({ sub: 'YXBw', exp: v.iat + 900 });
 const STATUS = { ctx: 0, uptime: 1, temp: 30, fls_state: 0 };
@@ -30,14 +41,31 @@ function device(): FakeFetch {
     .always('GET', '/api/system/version', { body: { hwv: 'h', fwv: 'f', fwk: 'AQI=', fws: 'AwQ=' } })
     .always('GET', '/api/system/checkin', { body: { check: 'chk' } })
     .always('POST', '/api/system/checkin', { body: { status: 'OK' } })
+    .always('GET', '/api/system/config', { body: CONFIG })
     .always('POST', '/api/keymgmt/create', { body: { kid: KID } })
     .always('GET', `/api/keymgmt/get/${KID}`, { body: { updated: 5, pubkey: 'AQID' } })
     .always('GET', /^\/api\/keymgmt\/list/, { body: ENVELOPE })
     .always('POST', '/api/keymgmt/search', { body: ENVELOPE })
     .always('DELETE', `/api/keymgmt/delete/${KID}`, { status: 200 })
+    .always('POST', '/api/keymgmt/update', { status: 200 })
+    .always('POST', '/api/keymgmt/import', { body: { kid: NEW_KID } })
+    .always('POST', '/api/keymgmt/derive', { body: { kid: NEW_KID } })
     .always('POST', '/api/crypto/hmac/hash', { body: { mac: 'BQY=' } })
     .always('POST', '/api/crypto/cipher/wrap', { body: { wrapped: 'BwgJ' } })
-    .always('POST', '/api/crypto/cipher/unwrap', { body: { unwrapped: 'CgsM' } });
+    .always('POST', '/api/crypto/cipher/unwrap', { body: { unwrapped: 'CgsM' } })
+    .always('POST', '/api/crypto/hmac/verify', { status: 200 })
+    .always('POST', '/api/crypto/exdsa/sign', { body: { sign: 'DQ4=' } })
+    .always('POST', '/api/crypto/exdsa/verify', { status: 200 })
+    .always('POST', '/api/crypto/cipher/encrypt', { body: { ciphertext: 'Dw==', iv: IV16, tag: IV16 } })
+    .always('POST', '/api/crypto/cipher/decrypt', { body: { plaintext: 'EA==' } })
+    .always('POST', '/api/crypto/ecdh', { body: { ecdh: 'ERI=' } })
+    .always('POST', '/api/crypto/pqc/mlkem/encaps', { body: { alg: 'MLKEM768', ss: 'Ew==', ct: 'FA==' } })
+    .always('POST', '/api/crypto/pqc/mlkem/decaps', { body: { alg: 'garbage', ss: 'Ew==' } })
+    .always('POST', '/api/crypto/pqc/mldsa/sign', { body: { alg: 'MLDSA65', sign: 'FQ==' } })
+    .always('POST', '/api/crypto/pqc/mldsa/verify', { status: 200 })
+    .always('GET', '/api/logger/key', { body: { key: 'AQ==', nonce: 'Ag==', nonce_signed: 'Aw==' } })
+    .always('GET', /^\/api\/logger\/list/, { body: { total: 2, id: ['0000a1b2'] } })
+    .always('GET', '/api/logger/0000a1b2', { body: new TextEncoder().encode('a|b\n'), headers: { 'content-type': 'text/plain' } });
 }
 
 interface Sample {
@@ -84,6 +112,7 @@ const samples: Record<string, Sample> = {
     body: { checked: 'reply' },
     result: { status: 'OK' },
   },
+  'system.config /api/system/config': { run: (c) => c.system.config(), path: '/api/system/config', body: undefined, result: CONFIG_RESULT },
   'keys.create /api/keymgmt/create': {
     run: (c) => c.keys.create({ label: 'k', type: 'AES256' }),
     path: '/api/keymgmt/create',
@@ -111,6 +140,24 @@ const samples: Record<string, Sample> = {
     result: PAGE_RESULT,
   },
   'keys.delete /api/keymgmt/delete/{kid}': { run: (c) => c.keys.delete(UPPER_KID), path: `/api/keymgmt/delete/${KID}`, body: undefined, result: undefined },
+  'keys.update /api/keymgmt/update': {
+    run: (c) => c.keys.update({ kid: UPPER_KID, label: 'k', descr: Uint8Array.from([1]) }),
+    path: '/api/keymgmt/update',
+    body: { kid: KID, label: 'k', descr: 'AQ==' },
+    result: undefined,
+  },
+  'keys.import /api/keymgmt/import': {
+    run: (c) => c.keys.import({ label: 'k', pubkey: Uint8Array.from([2, 3]), type: 'ED25519' }),
+    path: '/api/keymgmt/import',
+    body: { label: 'k', pubkey: 'AgM=', type: 'ED25519' },
+    result: NEW_KID,
+  },
+  'keys.derive /api/keymgmt/derive': {
+    run: (c) => c.keys.derive({ kid: UPPER_KID, label: 'k', type: 'AES256', peer: { pubkey: Uint8Array.from([2, 3]) } }),
+    path: '/api/keymgmt/derive',
+    body: { kid: KID, label: 'k', type: 'AES256', pubkey: 'AgM=' },
+    result: NEW_KID,
+  },
   'crypto.hmac /api/crypto/hmac/hash': {
     run: (c) => c.crypto.hmac({ kid: UPPER_KID, msg: Uint8Array.from([1]) }),
     path: '/api/crypto/hmac/hash',
@@ -129,6 +176,83 @@ const samples: Record<string, Sample> = {
     body: { kid: KID, msg: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' },
     result: Uint8Array.from([10, 11, 12]),
   },
+  'crypto.hmacVerify /api/crypto/hmac/verify': {
+    run: (c) => c.crypto.hmacVerify({ kid: UPPER_KID, msg: Uint8Array.from([1]), mac: Uint8Array.from([5, 6]) }),
+    path: '/api/crypto/hmac/verify',
+    body: { kid: KID, msg: 'AQ==', mac: 'BQY=' },
+    result: true,
+  },
+  'crypto.sign /api/crypto/exdsa/sign': {
+    run: (c) => c.crypto.sign({ kid: UPPER_KID, msg: Uint8Array.from([1]), alg: 'Ed25519' }),
+    path: '/api/crypto/exdsa/sign',
+    body: { kid: KID, msg: 'AQ==', alg: 'Ed25519' },
+    result: Uint8Array.from([13, 14]),
+  },
+  'crypto.encrypt /api/crypto/cipher/encrypt': {
+    run: (c) => c.crypto.encrypt({ kid: UPPER_KID, msg: Uint8Array.from([1]), alg: 'AES256-GCM' }),
+    path: '/api/crypto/cipher/encrypt',
+    body: { kid: KID, msg: 'AQ==', alg: 'AES256-GCM' },
+    result: { ciphertext: Uint8Array.from([15]), iv: new Uint8Array(16).fill(1), tag: new Uint8Array(16).fill(1) },
+  },
+  'crypto.decrypt /api/crypto/cipher/decrypt': {
+    run: (c) => c.crypto.decrypt({ kid: UPPER_KID, msg: Uint8Array.from([15]), alg: 'AES256-GCM', iv: new Uint8Array(16).fill(1), tag: new Uint8Array(16).fill(1) }),
+    path: '/api/crypto/cipher/decrypt',
+    body: { kid: KID, msg: 'Dw==', alg: 'AES256-GCM', iv: IV16, tag: IV16 },
+    result: Uint8Array.from([16]),
+  },
+  'crypto.ecdh /api/crypto/ecdh': {
+    run: (c) => c.crypto.ecdh({ kid: UPPER_KID, peer: { extKid: NEW_KID.toUpperCase() } }),
+    path: '/api/crypto/ecdh',
+    body: { kid: KID, ext_kid: NEW_KID },
+    result: Uint8Array.from([17, 18]),
+  },
+  'crypto.mlkemEncaps /api/crypto/pqc/mlkem/encaps': {
+    run: (c) => c.crypto.mlkemEncaps({ kid: UPPER_KID }),
+    path: '/api/crypto/pqc/mlkem/encaps',
+    body: { kid: KID },
+    result: { alg: 'MLKEM768', sharedSecret: Uint8Array.from([19]), ciphertext: Uint8Array.from([20]) },
+  },
+  'crypto.mlkemDecaps /api/crypto/pqc/mlkem/decaps': {
+    run: (c) => c.crypto.mlkemDecaps({ kid: UPPER_KID, ct: new Uint8Array(768) }),
+    path: '/api/crypto/pqc/mlkem/decaps',
+    body: { kid: KID, ct: btoa(String.fromCharCode(...new Uint8Array(768))) },
+    result: Uint8Array.from([19]),
+  },
+  'crypto.mldsaSign /api/crypto/pqc/mldsa/sign': {
+    run: (c) => c.crypto.mldsaSign({ kid: UPPER_KID, msg: Uint8Array.from([1]) }),
+    path: '/api/crypto/pqc/mldsa/sign',
+    body: { kid: KID, msg: 'AQ==' },
+    result: { alg: 'MLDSA65', signature: Uint8Array.from([21]) },
+  },
+  'crypto.mldsaVerify /api/crypto/pqc/mldsa/verify': {
+    run: (c) => c.crypto.mldsaVerify({ kid: UPPER_KID, msg: Uint8Array.from([1]), sign: Uint8Array.from([21]) }),
+    path: '/api/crypto/pqc/mldsa/verify',
+    body: { kid: KID, msg: 'AQ==', sign: 'FQ==' },
+    result: true,
+  },
+  'logger.key /api/logger/key': {
+    run: (c) => c.logger.key(),
+    path: '/api/logger/key',
+    body: undefined,
+    result: { key: Uint8Array.from([1]), nonce: Uint8Array.from([2]), nonceSigned: Uint8Array.from([3]) },
+  },
+  'logger.list /api/logger/list': { run: (c) => c.logger.list(), path: '/api/logger/list', body: undefined, result: { total: 2, ids: ['0000a1b2'] } },
+  'logger.list /api/logger/list/{offset}': { run: (c) => c.logger.list({ offset: 1 }), path: '/api/logger/list/1', body: undefined, result: { total: 2, ids: ['0000a1b2'] } },
+  'logger.download /api/logger/{file}': {
+    run: async (c) => {
+      const file = await c.logger.download('0000A1B2');
+      return { id: file.id, bytes: file.bytes, contentType: file.contentType, text: file.text() };
+    },
+    path: '/api/logger/0000a1b2',
+    body: undefined,
+    result: { id: '0000a1b2', bytes: new TextEncoder().encode('a|b\n'), contentType: 'text/plain', text: 'a|b\n' },
+  },
+  'crypto.verify /api/crypto/exdsa/verify': {
+    run: (c) => c.crypto.verify({ kid: UPPER_KID, msg: Uint8Array.from([1]), sign: Uint8Array.from([13, 14]), alg: 'Ed25519' }),
+    path: '/api/crypto/exdsa/verify',
+    body: { kid: KID, msg: 'AQ==', alg: 'Ed25519', sign: 'DQ4=' },
+    result: true,
+  },
 };
 
 // Token scope per operation, as listed in ARCHITECTURE.md §6 ("Protocol bindings" table).
@@ -141,14 +265,31 @@ const ARCHITECTURE_SCOPES: Record<string, string | null> = {
   'system.version': null,
   'system.getCheckin': null,
   'system.postCheckin': null,
+  'system.config': 'system:config',
   'keys.create': 'keymgmt:gen',
   'keys.get': `keymgmt:use:${KID}`,
   'keys.search': 'keymgmt:search',
   'keys.list': 'keymgmt:list',
   'keys.delete': 'keymgmt:del',
+  'keys.update': 'keymgmt:upd',
+  'keys.import': 'keymgmt:imp',
+  'keys.derive': 'keymgmt:gen',
   'crypto.hmac': `keymgmt:use:${KID}`,
   'crypto.wrap': `keymgmt:use:${KID}`,
   'crypto.unwrap': `keymgmt:use:${KID}`,
+  'crypto.hmacVerify': `keymgmt:use:${KID}`,
+  'crypto.sign': `keymgmt:use:${KID}`,
+  'crypto.verify': `keymgmt:use:${KID}`,
+  'crypto.encrypt': `keymgmt:use:${KID}`,
+  'crypto.decrypt': `keymgmt:use:${KID}`,
+  'crypto.ecdh': `keymgmt:use:${KID}`,
+  'crypto.mlkemEncaps': `keymgmt:use:${KID}`,
+  'crypto.mlkemDecaps': `keymgmt:use:${KID}`,
+  'crypto.mldsaSign': `keymgmt:use:${KID}`,
+  'crypto.mldsaVerify': `keymgmt:use:${KID}`,
+  'logger.key': 'logger:get',
+  'logger.list': 'logger:get',
+  'logger.download': 'logger:get',
 };
 
 const operations = ALL_OPERATIONS.map((spec) => ({ spec, key: `${spec.name} ${spec.path}` }));
@@ -259,8 +400,8 @@ const bytes = (n: number): Uint8Array => new Uint8Array(n);
 const chars = (n: number): string => 'x'.repeat(n);
 
 // Every documented hard limit (ARCHITECTURE.md §2 and the reference), each with
-// its boundary value and the first value past it. The 7300-byte body limit
-// cannot be reached through any M1 operation's fields and is covered in
+// its boundary value and the first value past it. The 7300-byte body limit is
+// reached through ML-DSA verify (M2) and is also covered in
 // tests/unit/binding-core.test.ts with a synthetic operation.
 const LIMITS: Limit[] = [
   { name: 'kid: 32 hex characters, not 33', parameter: 'kid', atLimit: (c) => c.keys.get(KID), pastLimit: (c) => c.keys.get(`${KID}0`) },
@@ -271,6 +412,13 @@ const LIMITS: Limit[] = [
   { name: 'label: 32 characters, not 33', parameter: 'label', atLimit: (c) => c.keys.create({ label: chars(32), type: 'AES256' }), pastLimit: (c) => c.keys.create({ label: chars(33), type: 'AES256' }) },
   { name: 'label: printable ASCII only', parameter: 'label', atLimit: (c) => c.keys.create({ label: ' ~', type: 'AES256' }), pastLimit: (c) => c.keys.create({ label: 'k\u0007', type: 'AES256' }) },
   { name: 'descr on create: 64 bytes, not 65', parameter: 'descr', atLimit: (c) => c.keys.create({ label: 'k', type: 'AES256', descr: bytes(64) }), pastLimit: (c) => c.keys.create({ label: 'k', type: 'AES256', descr: bytes(65) }) },
+  { name: 'descr on update: 64 bytes, not 65', parameter: 'descr', atLimit: (c) => c.keys.update({ kid: KID, label: 'k', descr: bytes(64) }), pastLimit: (c) => c.keys.update({ kid: KID, label: 'k', descr: bytes(65) }) },
+  { name: 'label on update: 32 characters, not 33', parameter: 'label', atLimit: (c) => c.keys.update({ kid: KID, label: chars(32), descr: bytes(0) }), pastLimit: (c) => c.keys.update({ kid: KID, label: chars(33), descr: bytes(0) }) },
+  { name: 'import pubkey: 1 byte, not 0', parameter: 'pubkey', atLimit: (c) => c.keys.import({ label: 'k', pubkey: bytes(1), type: 'ED25519' }), pastLimit: (c) => c.keys.import({ label: 'k', pubkey: bytes(0), type: 'ED25519' }) },
+  { name: 'import descr: 64 bytes, not 65', parameter: 'descr', atLimit: (c) => c.keys.import({ label: 'k', pubkey: bytes(1), type: 'ED25519', descr: bytes(64) }), pastLimit: (c) => c.keys.import({ label: 'k', pubkey: bytes(1), type: 'ED25519', descr: bytes(65) }) },
+  { name: 'derive peer: one form, not both', parameter: 'peer', atLimit: (c) => c.keys.derive({ kid: KID, label: 'k', type: 'AES256', peer: { extKid: KID } }), pastLimit: (c) => c.keys.derive({ kid: KID, label: 'k', type: 'AES256', peer: { extKid: KID, pubkey: bytes(1) } as never }) },
+  { name: 'derive peer pubkey: 1 byte, not 0', parameter: 'peer.pubkey', atLimit: (c) => c.keys.derive({ kid: KID, label: 'k', type: 'AES256', peer: { pubkey: bytes(1) } }), pastLimit: (c) => c.keys.derive({ kid: KID, label: 'k', type: 'AES256', peer: { pubkey: bytes(0) } }) },
+  { name: 'derive peer extKid: 32 hex characters, not 33', parameter: 'peer.extKid', atLimit: (c) => c.keys.derive({ kid: KID, label: 'k', type: 'AES256', peer: { extKid: UPPER_KID } }), pastLimit: (c) => c.keys.derive({ kid: KID, label: 'k', type: 'AES256', peer: { extKid: `${KID}0` } }) },
   { name: 'descr on search: 64 bytes, not 65', parameter: 'descr', atLimit: (c) => c.keys.search({ descr: bytes(64) }), pastLimit: (c) => c.keys.search({ descr: bytes(65) }) },
   { name: 'search limit: 1, not 0', parameter: 'limit', atLimit: (c) => c.keys.search({ descr: bytes(1), limit: 1 }), pastLimit: (c) => c.keys.search({ descr: bytes(1), limit: 0 }) },
   { name: 'search limit: 15, not 16', parameter: 'limit', atLimit: (c) => c.keys.search({ descr: bytes(1), limit: 15 }), pastLimit: (c) => c.keys.search({ descr: bytes(1), limit: 16 }) },
@@ -287,6 +435,29 @@ const LIMITS: Limit[] = [
   { name: 'wrap iv: 8 bytes, not 9', parameter: 'iv', atLimit: (c) => c.crypto.wrap({ kid: KID, msg: bytes(16), iv: bytes(8) }), pastLimit: (c) => c.crypto.wrap({ kid: KID, msg: bytes(16), iv: bytes(9) }) },
   { name: 'unwrap msg: a non-empty multiple of 8', parameter: 'msg', atLimit: (c) => c.crypto.unwrap({ kid: KID, msg: bytes(16) }), pastLimit: (c) => c.crypto.unwrap({ kid: KID, msg: bytes(12) }) },
   { name: 'unwrap msg: not empty', parameter: 'msg', atLimit: (c) => c.crypto.unwrap({ kid: KID, msg: bytes(8) }), pastLimit: (c) => c.crypto.unwrap({ kid: KID, msg: bytes(0) }) },
+  { name: 'hmacVerify mac: 64 bytes, not 65', parameter: 'mac', atLimit: (c) => c.crypto.hmacVerify({ kid: KID, msg: bytes(1), mac: bytes(64) }), pastLimit: (c) => c.crypto.hmacVerify({ kid: KID, msg: bytes(1), mac: bytes(65) }) },
+  { name: 'hmacVerify mac: 1 byte, not 0', parameter: 'mac', atLimit: (c) => c.crypto.hmacVerify({ kid: KID, msg: bytes(1), mac: bytes(1) }), pastLimit: (c) => c.crypto.hmacVerify({ kid: KID, msg: bytes(1), mac: bytes(0) }) },
+  { name: 'hmacVerify msg: 2048 bytes, not 2049', parameter: 'msg', atLimit: (c) => c.crypto.hmacVerify({ kid: KID, msg: bytes(2048), mac: bytes(1) }), pastLimit: (c) => c.crypto.hmacVerify({ kid: KID, msg: bytes(2049), mac: bytes(1) }) },
+  { name: 'sign ctx: 255 bytes, not 256', parameter: 'ctx', atLimit: (c) => c.crypto.sign({ kid: KID, msg: bytes(1), alg: 'Ed448', ctx: bytes(255) }), pastLimit: (c) => c.crypto.sign({ kid: KID, msg: bytes(1), alg: 'Ed448', ctx: bytes(256) }) },
+  { name: 'sign msg: 2048 bytes, not 2049', parameter: 'msg', atLimit: (c) => c.crypto.sign({ kid: KID, msg: bytes(2048), alg: 'Ed25519' }), pastLimit: (c) => c.crypto.sign({ kid: KID, msg: bytes(2049), alg: 'Ed25519' }) },
+  { name: 'verify sign: 1 byte, not 0', parameter: 'sign', atLimit: (c) => c.crypto.verify({ kid: KID, msg: bytes(1), sign: bytes(1), alg: 'Ed25519' }), pastLimit: (c) => c.crypto.verify({ kid: KID, msg: bytes(1), sign: bytes(0), alg: 'Ed25519' }) },
+  { name: 'verify ctx: 255 bytes, not 256', parameter: 'ctx', atLimit: (c) => c.crypto.verify({ kid: KID, msg: bytes(1), sign: bytes(1), alg: 'Ed25519ctx', ctx: bytes(255) }), pastLimit: (c) => c.crypto.verify({ kid: KID, msg: bytes(1), sign: bytes(1), alg: 'Ed25519ctx', ctx: bytes(256) }) },
+  { name: 'encrypt msg: 2048 bytes, not 2049', parameter: 'msg', atLimit: (c) => c.crypto.encrypt({ kid: KID, msg: bytes(2048), alg: 'AES256-CBC' }), pastLimit: (c) => c.crypto.encrypt({ kid: KID, msg: bytes(2049), alg: 'AES256-CBC' }) },
+  { name: 'encrypt ECB msg: a multiple of 16', parameter: 'msg', atLimit: (c) => c.crypto.encrypt({ kid: KID, msg: bytes(32), alg: 'AES256-ECB' }), pastLimit: (c) => c.crypto.encrypt({ kid: KID, msg: bytes(24), alg: 'AES256-ECB' }) },
+  { name: 'decrypt iv: 16 bytes, not 15', parameter: 'iv', atLimit: (c) => c.crypto.decrypt({ kid: KID, msg: bytes(16), alg: 'AES256-CBC', iv: bytes(16) }), pastLimit: (c) => c.crypto.decrypt({ kid: KID, msg: bytes(16), alg: 'AES256-CBC', iv: bytes(15) }) },
+  { name: 'decrypt iv: 16 bytes, not 17', parameter: 'iv', atLimit: (c) => c.crypto.decrypt({ kid: KID, msg: bytes(16), alg: 'AES256-CBC', iv: bytes(16) }), pastLimit: (c) => c.crypto.decrypt({ kid: KID, msg: bytes(16), alg: 'AES256-CBC', iv: bytes(17) }) },
+  { name: 'decrypt tag: 16 bytes, not 15', parameter: 'tag', atLimit: (c) => c.crypto.decrypt({ kid: KID, msg: bytes(16), alg: 'AES256-GCM', iv: bytes(16), tag: bytes(16) }), pastLimit: (c) => c.crypto.decrypt({ kid: KID, msg: bytes(16), alg: 'AES256-GCM', iv: bytes(16), tag: bytes(15) }) },
+  { name: 'decrypt msg: 1 byte, not 0', parameter: 'msg', atLimit: (c) => c.crypto.decrypt({ kid: KID, msg: bytes(1), alg: 'AES256-GCM', iv: bytes(16), tag: bytes(16) }), pastLimit: (c) => c.crypto.decrypt({ kid: KID, msg: bytes(0), alg: 'AES256-GCM', iv: bytes(16), tag: bytes(16) }) },
+  { name: 'agreed-key ctx: 64 bytes, not 65', parameter: 'ctx', atLimit: (c) => c.crypto.wrap({ kid: KID, msg: bytes(16), peer: { extKid: NEW_KID }, ctx: bytes(64) }), pastLimit: (c) => c.crypto.wrap({ kid: KID, msg: bytes(16), peer: { extKid: NEW_KID }, ctx: bytes(65) }) },
+  { name: 'ecdh peer: one form, not both', parameter: 'peer', atLimit: (c) => c.crypto.ecdh({ kid: KID, peer: { pubkey: bytes(1) } }), pastLimit: (c) => c.crypto.ecdh({ kid: KID, peer: { extKid: NEW_KID, pubkey: bytes(1) } as never }) },
+  { name: 'decaps ct: 768 bytes, not 767', parameter: 'ct', atLimit: (c) => c.crypto.mlkemDecaps({ kid: KID, ct: bytes(768) }), pastLimit: (c) => c.crypto.mlkemDecaps({ kid: KID, ct: bytes(767) }) },
+  { name: 'decaps ct: 1568 bytes, not 1569', parameter: 'ct', atLimit: (c) => c.crypto.mlkemDecaps({ kid: KID, ct: bytes(1568) }), pastLimit: (c) => c.crypto.mlkemDecaps({ kid: KID, ct: bytes(1569) }) },
+  { name: 'mldsaSign ctx: 255 bytes, not 256', parameter: 'ctx', atLimit: (c) => c.crypto.mldsaSign({ kid: KID, msg: bytes(1), ctx: bytes(255) }), pastLimit: (c) => c.crypto.mldsaSign({ kid: KID, msg: bytes(1), ctx: bytes(256) }) },
+  { name: 'mldsaVerify sign: 4627 bytes, not 4628', parameter: 'sign', atLimit: (c) => c.crypto.mldsaVerify({ kid: KID, msg: bytes(1), sign: bytes(4627) }), pastLimit: (c) => c.crypto.mldsaVerify({ kid: KID, msg: bytes(1), sign: bytes(4628) }) },
+  { name: 'mldsaVerify body: 7300 bytes, not more', parameter: 'body', atLimit: (c) => c.crypto.mldsaVerify({ kid: KID, msg: bytes(798), sign: bytes(4627) }), pastLimit: (c) => c.crypto.mldsaVerify({ kid: KID, msg: bytes(2048), sign: bytes(4627) }) },
+  { name: 'log list offset: 0, not -1', parameter: 'offset', atLimit: (c) => c.logger.list({ offset: 0 }), pastLimit: (c) => c.logger.list({ offset: -1 }) },
+  { name: 'log file id: 8 hex characters, not 9', parameter: 'file', atLimit: (c) => c.logger.download('0000a1b2'), pastLimit: (c) => c.logger.download('0000a1b20') },
+  { name: 'log file id: 8 hex characters, not 7', parameter: 'file', atLimit: (c) => c.logger.download('0000A1B2'), pastLimit: (c) => c.logger.download('0000a1b') },
   { name: 'approval scope: 1023 characters, not 1024', parameter: 'scope', atLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: chars(1023) }), pastLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: chars(1024) }) },
   { name: 'approval scope: 1 character, not 0', parameter: 'scope', atLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: 'k' }), pastLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: '' }) },
   { name: 'approval ctx: 64 characters, not 65', parameter: 'ctx', atLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: 'k', ctx: chars(64) }), pastLimit: (c) => c.auth.requestApproval({ epk: EPK, scope: 'k', ctx: chars(65) }) },
@@ -314,6 +485,6 @@ describe('documented limits', () => {
 
   it('covers every validated parameter at least once', () => {
     const parameters = new Set(LIMITS.map((limit) => limit.parameter));
-    expect([...parameters].sort()).toEqual(['authreply', 'count', 'ctx', 'descr', 'epk', 'iv', 'kid', 'label', 'limit', 'msg', 'note', 'offset', 'scope']);
+    expect([...parameters].sort()).toEqual(['authreply', 'body', 'count', 'ct', 'ctx', 'descr', 'epk', 'file', 'iv', 'kid', 'label', 'limit', 'mac', 'msg', 'note', 'offset', 'peer', 'peer.extKid', 'peer.pubkey', 'pubkey', 'scope', 'sign', 'tag']);
   });
 });

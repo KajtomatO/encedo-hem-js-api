@@ -22,10 +22,11 @@ export function documentedMethods(declarations: string): DocumentedMethod[] {
   return found;
 }
 
-/** Problems with one method's documentation: missing scope or missing milestone. */
-export function docProblems(doc: string): string[] {
+/** Problems with one method's documentation: missing scope, missing milestone, or (when `mscOnly`) no mass-storage note. */
+export function docProblems(doc: string, { mscOnly = false }: { mscOnly?: boolean } = {}): string[] {
   const problems: string[] = [];
   if (!/Token scope: [^.\n]+/.test(doc)) problems.push('no token scope');
   if (!/Introduced in M\d+\./.test(doc)) problems.push('no milestone');
+  if (mscOnly && !/mass-storage hardware/.test(doc)) problems.push('no mass-storage hardware note');
   return problems;
 }

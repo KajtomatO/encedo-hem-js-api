@@ -36,4 +36,12 @@ describe('documentation checker', () => {
     ]);
     expect(methods.every((m) => m.className === 'DemoApi')).toBe(true);
   });
+
+  // verifies: REQ-API-011
+  it('requires the mass-storage note only for operations flagged so', () => {
+    const doc = '/** Lists files. Token scope: `logger:get`. Introduced in M2. */';
+    expect(docProblems(doc, { mscOnly: true })).toEqual(['no mass-storage hardware note']);
+    expect(docProblems(doc)).toEqual([]);
+    expect(docProblems(`${doc.slice(0, -2)} Needs mass-storage hardware. */`, { mscOnly: true })).toEqual([]);
+  });
 });

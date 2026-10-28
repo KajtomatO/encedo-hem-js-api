@@ -1,9 +1,9 @@
 ---
 id: REQ-OPS-010
 title: ECDH shared secret
-status: approved
+status: verified
 priority: must
-revision: 1
+revision: 3
 source: start_point §4; ref/api/hem-api-1.2.2.yaml; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: ["REQ-AUTH-005", "REQ-API-005", "REQ-NET-003"]
 supersedes: null
@@ -23,12 +23,22 @@ Without one it returns the raw secret, truncated to 32 bytes even for larger
 curves [C-SDK]. Introduced in M2.
 
 **Acceptance criteria:**
-- [ ] The body is `{kid}` plus exactly one of `ext_kid` or `pubkey`, and
+- [x] The body is `{kid}` plus exactly one of `ext_kid` or `pubkey`, and
       `alg` when given; the scope used is `keymgmt:use:<kid>`; the result is
-      the secret as bytes.
-- [ ] Giving both peers or neither raises `HemValidationError`.
-- [ ] The documentation states the truncation of the raw secret.
-- [ ] (M2B) for an X25519 key on the test device and a locally generated
+      the secret as bytes — `crypto.ecdh`, STEP-M2A-040 (2026-10-27).
+- [x] Giving both peers or neither raises `HemValidationError` (the shared
+      `peer: { extKid } | { pubkey }` parameter of `src/api/peer.ts`).
+- [x] The documentation states the truncation of the raw secret — TSDoc of
+      `crypto.ecdh`.
+- [x] (M2B) for an X25519 key on the test device and a locally generated
       peer, the device's raw secret equals the one computed locally with Web
-      Crypto.
-- [ ] (M2B) the raw output length for a P-384 key is recorded.
+      Crypto — live 2026-10-27 (STEP-M2B-040): equal, 32 bytes; with
+      `alg: SHA2-384` the device returns the 48-byte digest of that secret;
+      the same secret through the peer imported as a stored key.
+- [x] (M2B) the raw output length for a P-384 key is recorded — live
+      2026-10-27: 32 bytes for P-384 and for Curve448 (quirk 9 confirmed).
+      Findings on the way: a `SECP*` key created *without* `mode` carries
+      no `ECDH` flag on firmware 1.2.2-DIAG and every ECDH with it is 406
+      (quirk 11 corrected); a `SECP*` peer given raw must be compressed
+      X9.63 (uncompressed → 406); a `SECP*` peer imported without `mode`
+      cannot serve as `ext_kid` either (406).

@@ -1,9 +1,9 @@
 ---
 id: REQ-OPS-006
 title: ECDSA and EdDSA signature
-status: approved
+status: verified
 priority: must
-revision: 1
+revision: 3
 source: start_point §4; ref/api/hem-api-1.2.2.yaml; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: ["REQ-AUTH-005", "REQ-API-005", "REQ-NET-003"]
 supersedes: null
@@ -27,12 +27,22 @@ message, not a digest. ECDSA signatures come back DER-encoded, EdDSA
 signatures raw [C-SDK]. Introduced in M2.
 
 **Acceptance criteria:**
-- [ ] The body is `{kid, msg, alg}` plus `ctx` when given; the scope used is
-      `keymgmt:use:<kid>`; the result is the signature as bytes.
-- [ ] An algorithm outside the list, or a context longer than 255 bytes,
-      raises `HemValidationError`.
-- [ ] The documentation states the signature encoding per key family and
-      that a `SECP*` key needs the `ExDSA` mode to sign.
-- [ ] (M2B) signatures made on the test device with a P-256 key and an
+- [x] The body is `{kid, msg, alg}` plus `ctx` when given; the scope used is
+      `keymgmt:use:<kid>`; the result is the signature as bytes —
+      `crypto.sign`, STEP-M2A-020 (2026-10-27).
+- [x] An algorithm outside the list, or a context longer than 255 bytes,
+      raises `HemValidationError` — as does a context given with an
+      algorithm that takes none (`Ed25519`, `*WithECDSA`), a library
+      decision so a context is never silently dropped.
+- [x] The documentation states the signature encoding per key family and
+      that a `SECP*` key needs the `ExDSA` mode to sign — TSDoc of
+      `crypto.sign`.
+- [x] (M2B) signatures made on the test device with a P-256 key and an
       Ed25519 key verify locally with Web Crypto; the ECDSA encoding is
-      recorded.
+      recorded — live 2026-10-27 (STEP-M2B-020): the P-256 signature is
+      DER (70 bytes, `0x30` SEQUENCE of two INTEGERs), converted to r‖s
+      for Web Crypto, which verified it against the decompressed 33-byte
+      public key from `keys.get`; the Ed25519 signature is raw 64 bytes
+      and verified against the 32-byte public key. `Ed25519ctx` with a
+      context signed (64 bytes). A `SECP256R1` key created without the
+      `ExDSA` mode cannot sign: 406 (quirk 11 confirmed).

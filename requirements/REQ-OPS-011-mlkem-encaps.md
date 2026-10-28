@@ -1,9 +1,9 @@
 ---
 id: REQ-OPS-011
 title: ML-KEM encapsulation
-status: approved
+status: verified
 priority: must
-revision: 1
+revision: 3
 source: start_point §4; ref/api/hem-api-1.2.2.yaml
 depends_on: ["REQ-AUTH-005", "REQ-NET-003"]
 supersedes: null
@@ -21,10 +21,13 @@ that returns a shared secret and its ciphertext for a stored ML-KEM key.
 -768 and -1024; the shared secret is 32 bytes [YAML]. Introduced in M2.
 
 **Acceptance criteria:**
-- [ ] The body is `{kid}`; the scope used is `keymgmt:use:<kid>`; the result
+- [x] The body is `{kid}`; the scope used is `keymgmt:use:<kid>`; the result
       contains the parameter-set name, the shared secret and the ciphertext
-      as bytes.
-- [ ] A 406 (key missing or not an ML-KEM private key) raises
+      as bytes — `crypto.mlkemEncaps` → `{ alg, sharedSecret, ciphertext }`,
+      STEP-M2A-050 (2026-10-27).
+- [x] A 406 (key missing or not an ML-KEM private key) raises
       `HemOperationFailedError`.
-- [ ] (M2B) encapsulation runs on the test device for an `MLKEM768` key; the
-      lengths are recorded.
+- [x] (M2B) encapsulation runs on the test device for an `MLKEM768` key; the
+      lengths are recorded — live 2026-10-27 (STEP-M2B-050): `alg`
+      `MLKEM768`, secret 32 bytes, ciphertext 1088 bytes; key generation
+      took 2.5 s.

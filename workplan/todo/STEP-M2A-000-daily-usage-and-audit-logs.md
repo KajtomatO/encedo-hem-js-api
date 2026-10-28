@@ -11,7 +11,7 @@ evidence:
   tests: []
   notes: null
 reopened: []
-cancelled: null
+cancelled: "Replaced by STEP-M2A-010…090 at the M2A decomposition (approved 2026-10-27)."
 ---
 
 **Goal:** Stand-in for the detailed M2A steps: everything in the M2A entry of
@@ -24,4 +24,4 @@ ARCHITECTURE.md §10, ending in the A gate.
 - M2A is decomposed only after the M1B gate has passed (§5.5).
 
 **Definition of done**
-- [ ] Cancelled and replaced by the detailed M2A steps.
+- [x] Cancelled and replaced by the detailed M2A steps (2026-10-27).

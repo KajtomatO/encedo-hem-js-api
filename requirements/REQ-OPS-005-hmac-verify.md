@@ -1,9 +1,9 @@
 ---
 id: REQ-OPS-005
 title: Verify an HMAC
-status: approved
+status: verified
 priority: must
-revision: 1
+revision: 3
 source: start_point §4; ref/api/hem-api-1.2.2.yaml
 depends_on: ["REQ-OPS-004", "REQ-AUTH-005", "REQ-API-005"]
 supersedes: null
@@ -21,8 +21,11 @@ checks a MAC over a message with a stored key.
 expected value to the caller. Introduced in M2.
 
 **Acceptance criteria:**
-- [ ] The body is `{kid, msg, mac}`; the scope used is `keymgmt:use:<kid>`;
-      the result follows REQ-OPS-004.
-- [ ] A MAC longer than 64 bytes raises `HemValidationError`.
-- [ ] (M2B) on the test device a MAC from REQ-OPS-001 verifies as `true`,
-      and an altered one as `false`.
+- [x] The body is `{kid, msg, mac}`; the scope used is `keymgmt:use:<kid>`;
+      the result follows REQ-OPS-004 — `crypto.hmacVerify`, STEP-M2A-020
+      (2026-10-27); no `alg` in stored-key mode (quirk 10).
+- [x] A MAC longer than 64 bytes raises `HemValidationError` (so does an
+      empty one).
+- [x] (M2B) on the test device a MAC from REQ-OPS-001 verifies as `true`,
+      and an altered one as `false` — live 2026-10-27 (STEP-M2B-020); so
+      does the right MAC over another message.

@@ -15,8 +15,9 @@ AI-assisted requirements and workplan process.
   device and **stop** until the user says go.
 - Steps move only by `git mv` between `workplan/todo|doing|done`; WIP limit 2;
   every commit subject during a step starts with `[STEP-<ID>]`.
-- Git: **never push**. Commit only while implementing milestone steps or when the
-  user asks directly. Keep commit messages short, and never reference Claude/AI
+- Git: **never push**. Work on branch `development`; only stable releases are
+  merged into `main`, by the user (user decision 2026-10-27). Commit only while
+  implementing milestone steps or when the user asks directly. Keep commit messages short, and never reference Claude/AI
   in them (no `Co-Authored-By` or "Generated with" lines).
 - Tag code `// implements: REQ-…` and tests `// verifies: REQ-…`;
   `requirements/TRACE.md` is generated, never hand-edited.

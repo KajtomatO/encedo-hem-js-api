@@ -1,9 +1,9 @@
 ---
 id: REQ-KEY-006
 title: Change a key's label or description
-status: approved
+status: verified
 priority: must
-revision: 1
+revision: 3
 source: start_point §4; ref/api/hem-api-1.2.2.yaml; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: ["REQ-AUTH-005", "REQ-API-005"]
 supersedes: null
@@ -24,11 +24,17 @@ to say what the description becomes — new bytes, or deliberately empty.
 Introduced in M2.
 
 **Acceptance criteria:**
-- [ ] The body is `{kid, label}` plus `descr` when a description is given;
-      the scope used is `keymgmt:upd`.
-- [ ] The call cannot be made without stating the description (bytes, or an
-      explicit empty value).
-- [ ] A 406 (for example an unknown key id) raises
+- [x] The body is `{kid, label}` plus `descr` when a description is given;
+      the scope used is `keymgmt:upd` — `keys.update`, STEP-M2A-010
+      (2026-10-27).
+- [x] The call cannot be made without stating the description (bytes, or an
+      explicit empty value) — `descr: Uint8Array` is required; an empty
+      array clears it (the field is then omitted, which is how the device
+      clears it).
+- [x] A 406 (for example an unknown key id) raises
       `HemOperationFailedError`.
-- [ ] (M2B) a test key's label and description are changed and read back
-      through list; clearing the description is confirmed.
+- [x] (M2B) a test key's label and description are changed and read back
+      through list; clearing the description is confirmed — live
+      2026-10-27 (STEP-M2B-010): the renamed key listed with the new label
+      and a 19-byte description; after an update with an empty description
+      the list entry has no `descr` at all; an unknown key id → 406.

@@ -49,14 +49,64 @@ export type { Role, SessionInfo } from './auth/session.js';
 export type { Clock } from './auth/login.js';
 export type { ApprovalDetails, ApprovalPoll, PendingApproval, WaitOptions } from './auth/approval.js';
 export type { HemClientOptions, MobileApprovalOptions } from './client.js';
-export type { CheckinResult, HealthReport, SystemApi, SystemStatus, SystemVersion } from './api/system.js';
+export type { CheckinResult, DeviceConfig, HealthReport, SystemApi, SystemStatus, SystemVersion } from './api/system.js';
 export { EncedoCheckinRelay, ENCEDO_CHECKIN_URL } from './relay/checkin.js';
 export type { CheckinRelay, EncedoCheckinRelayOptions } from './relay/checkin.js';
 export type { RelayCallOptions } from './relay/http.js';
 export type { CallOptions, FetchFunction } from './transport/transport.js';
 export { createNodeFetch } from './transport/node-https.js';
 export type { NodeFetchOptions } from './transport/node-https.js';
-export type { CreateKeyParams, DescriptionMatch, KeyDetails, KeyEntry, KeyPage, KeysApi, ListKeysParams, SearchKeysParams } from './api/keymgmt.js';
-export { KEY_ALGORITHMS, KEY_FLAGS, KEY_MODES, KEY_TYPES } from './api/key-type.js';
-export type { KeyFlag, KeyMode, KeyType, KeyTypeInfo } from './api/key-type.js';
-export type { CryptoApi, HmacParams, WrapAlgorithm, WrapParams } from './api/crypto.js';
+export type {
+  CreateKeyParams,
+  DeriveKeyParams,
+  DescriptionMatch,
+  ImportKeyParams,
+  KeyDetails,
+  KeyEntry,
+  KeyPage,
+  KeysApi,
+  ListKeysParams,
+  SearchKeysParams,
+  UpdateKeyParams,
+} from './api/keymgmt.js';
+export type { KeyPeer } from './api/peer.js';
+export type { ListLogsParams, LogFile, LogFileList, LoggerApi, LoggerKey } from './api/logger.js';
+export { MAX_LOG_IDS_PER_PAGE } from './api/logger.js';
+export { DERIVABLE_KEY_TYPES, IMPORTABLE_KEY_TYPES, KEY_ALGORITHMS, KEY_FLAGS, KEY_MODES, KEY_TYPES } from './api/key-type.js';
+export type { DerivableKeyType, ImportableKeyType, KeyFlag, KeyMode, KeyType, KeyTypeInfo } from './api/key-type.js';
+export type {
+  AgreedKeyParams,
+  CipherAlgorithm,
+  CipherMode,
+  CryptoApi,
+  DecryptParams,
+  EcdhParams,
+  EncryptParams,
+  EncryptResult,
+  HashAlgorithm,
+  HmacParams,
+  HmacVerifyParams,
+  MldsaSignature,
+  MldsaSignParams,
+  MldsaVerifyParams,
+  MlkemDecapsParams,
+  MlkemEncapsParams,
+  MlkemEncapsulation,
+  SignatureAlgorithm,
+  SignParams,
+  VerifyParams,
+  WrapAlgorithm,
+  WrapParams,
+} from './api/crypto.js';
+export {
+  AES_BLOCK_BYTES,
+  CIPHER_ALGORITHMS,
+  HASH_ALGORITHMS,
+  MAX_CONTEXT_BYTES,
+  MAX_HKDF_CONTEXT_BYTES,
+  MAX_MAC_BYTES,
+  MLDSA_SIGNATURE_BYTES,
+  MLKEM_CIPHERTEXT_BYTES,
+  MLKEM_SHARED_SECRET_BYTES,
+  SIGNATURE_ALGORITHMS,
+} from './api/crypto.js';

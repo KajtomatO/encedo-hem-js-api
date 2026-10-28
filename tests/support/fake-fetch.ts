@@ -67,7 +67,25 @@ function toResponse(spec: ReplySpec): Response {
   }
   // Statuses without a body may not carry one in a Response.
   if (status === 204 || status === 205 || status === 304) body = null;
+  // The Response constructor accepts 200–599 only; firmware 1.2.2 can answer
+  // outside that range (ML-DSA verify, ARCHITECTURE.md §6 quirk 3), so such a
+  // status is served as a Response-like object, as the Node transport does.
+  if (status < 200 || status > 599) return responseLike(status, headers, body);
   return new Response(body, { status, headers });
+}
+
+function responseLike(status: number, headers: Headers, body: BodyInit | null): Response {
+  const bytes = body === null ? new Uint8Array() : body instanceof Uint8Array ? body : new TextEncoder().encode(String(body));
+  const like = {
+    status,
+    ok: false,
+    type: 'basic',
+    redirected: false,
+    headers,
+    arrayBuffer: () => Promise.resolve(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength)),
+    text: () => Promise.resolve(decoder.decode(bytes)),
+  };
+  return like as unknown as Response;
 }
 
 function sleep(ms: number, signal: AbortSignal | undefined): Promise<void> {

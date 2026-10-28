@@ -1,9 +1,9 @@
 ---
 id: REQ-OPS-004
 title: Verify operations return valid or invalid
-status: approved
+status: verified
 priority: must
-revision: 1
+revision: 2
 source: start_point M2.2; https://github.com/KajtomatO/encedo-hem-c-api
 depends_on: ["REQ-API-002"]
 supersedes: null
@@ -23,8 +23,12 @@ key or a wrong key type; the cases cannot be told apart [C-SDK], so `false`
 can also mean the key was unusable for the check. Introduced in M2.
 
 **Acceptance criteria:**
-- [ ] For each verify operation: 200 gives `true`; the device's mismatch
-      response gives `false`.
-- [ ] 400, 401, 403, 409 and transport failures raise their error classes.
-- [ ] The documentation of each verify operation states that `false` also
-      covers a missing or unsuitable key.
+- [x] For each verify operation: 200 gives `true`; the device's mismatch
+      response gives `false` — `verified()` in `src/api/verify.ts`;
+      HMAC verify and ExDSA verify (STEP-M2A-020, 2026-10-27); ML-DSA
+      verify with its own invalid rule in STEP-M2A-050.
+- [x] 400, 401, 403, 409 and transport failures raise their error classes
+      — tested for HMAC verify and ExDSA verify (STEP-M2A-020).
+- [x] The documentation of each verify operation states that `false` also
+      covers a missing or unsuitable key — TSDoc of `hmacVerify` and
+      `verify` (STEP-M2A-020).

@@ -1,5 +1,6 @@
 /**
- * System bindings: status and version (M1).
+ * System bindings: status, version, health and check-in (M1); config read
+ * (M2).
  *
  * @packageDocumentation
  */
@@ -62,7 +63,93 @@ export const SYSTEM_CHECKIN_POST: OperationSpec = {
 };
 
 /** Operations of this module. */
-export const SYSTEM_OPERATIONS: readonly OperationSpec[] = [SYSTEM_STATUS, SYSTEM_VERSION, SYSTEM_CHECKIN_GET, SYSTEM_CHECKIN_POST];
+export const SYSTEM_CONFIG: OperationSpec = {
+  name: 'system.config',
+  group: 'system',
+  method: 'GET',
+  path: '/api/system/config',
+  scope: 'system:config',
+  tlsOnly: false,
+  required: [
+    'iat',
+    'uts',
+    'devid',
+    'eid',
+    'eid_sign',
+    'user',
+    'email',
+    'hostname',
+    'dnsd',
+    'trusted_ts',
+    'trusted_backend',
+    'allow_keysearch',
+    'origin',
+    'ctx',
+    'ip',
+    'http_option_hsts',
+    'http_option_dosprot_mode',
+    'spk',
+    'nonce',
+  ],
+};
+
+export const SYSTEM_OPERATIONS: readonly OperationSpec[] = [SYSTEM_STATUS, SYSTEM_VERSION, SYSTEM_CHECKIN_GET, SYSTEM_CHECKIN_POST, SYSTEM_CONFIG];
+
+/**
+ * Device configuration and identity, as read by {@link SystemApi.config}.
+ * Field names follow the device's (`eid_sign` → `eidSign`); key material is
+ * bytes. Fields the device sends only on some builds are optional.
+ */
+export interface DeviceConfig {
+  /** When the configuration was created, Unix seconds (`iat`). */
+  readonly createdAt: number;
+  /** When the configuration was last updated, Unix seconds (`uts`). */
+  readonly updatedAt: number;
+  /** Device serial, 8 bytes as hexadecimal text (`devid`). */
+  readonly devid: string;
+  /** Device instance UUID, when the device reports one (`instanceid`). */
+  readonly instanceid?: string;
+  /** X25519 identity public key (`eid`). */
+  readonly eid: Uint8Array;
+  /** Ed25519 signing public key (`eid_sign`). */
+  readonly eidSign: Uint8Array;
+  /** Owner's user label. */
+  readonly user: string;
+  /** Owner's e-mail address. */
+  readonly email: string;
+  /** Configured hostname. */
+  readonly hostname: string;
+  /** DNS daemon option (`dnsd`). */
+  readonly dnsd: boolean;
+  /** Trusted-time option (`trusted_ts`); the same setting `system.status` reports as `trustedTime`. */
+  readonly trustedTime: boolean;
+  /** Trusted-backend option (`trusted_backend`): check-in replies may carry management actions. */
+  readonly trustedBackend: boolean;
+  /** Whether key search is allowed (`allow_keysearch`). */
+  readonly allowKeysearch: boolean;
+  /** Browser origin allow-list (`origin`), for example `*` or `https://app.example.com`. */
+  readonly origin: string;
+  /** Configured context number. */
+  readonly ctx: number;
+  /** Device address in CIDR form (`ip`), for example `192.168.7.1/24`. */
+  readonly ip: string;
+  /** HTTP Strict Transport Security option (`http_option_hsts`). */
+  readonly hsts: boolean;
+  /** Denial-of-service protection mode, 0 to 4 (`http_option_dosprot_mode`). */
+  readonly dosProtectionMode: number;
+  /** Mass-storage hardware: secure-element serial, when reported (`genuine_id`). */
+  readonly genuineId?: string;
+  /** Mass-storage hardware: storage mode, when reported (`storage_mode`). */
+  readonly storageMode?: number;
+  /** Mass-storage hardware: disk 0 size in sectors, when reported (`storage_disk0size`). */
+  readonly storageDisk0Size?: number;
+  /** Mass-storage hardware: total usable sectors, when reported (`storage_capacity`). */
+  readonly storageCapacity?: number;
+  /** Session X25519 public key for the user-key rotation of config write (`spk`). */
+  readonly spk: Uint8Array;
+  /** Fresh nonce to echo in a user-key rotation (`nonce`). */
+  readonly nonce: Uint8Array;
+}
 
 /**
  * Device status. The device leaves fields out instead of sending defaults;
@@ -231,6 +318,19 @@ export interface SystemApi {
   status(options?: CallOptions): Promise<SystemStatus>;
 
   /**
+   * The device configuration and identity keys: owner, hostname and
+   * address, origin allow-list, option flags, the identity and signing
+   * public keys, and the session key and nonce that a configuration write
+   * with user-key rotation needs. Read-only here; configuration write is a
+   * later milestone.
+   *
+   * Device call: `GET /api/system/config`.
+   *
+   * @remarks Token scope: `system:config`. Introduced in M2.
+   */
+  config(options?: CallOptions): Promise<DeviceConfig>;
+
+  /**
    * Hardware, firmware and bootloader identity. Compare `fwv` with
    * `HEM_API_VERSION` to check compatibility.
    *
@@ -325,6 +425,38 @@ export class SystemApiImpl implements SystemApi {
       storage: optional(readStringArray, spec, r, 'storage'),
       format: optional(readString, spec, r, 'format'),
     } as SystemStatus);
+  }
+
+  // implements: REQ-SYS-008
+  async config(options?: CallOptions): Promise<DeviceConfig> {
+    const spec = SYSTEM_CONFIG;
+    const r = await invoke(this.#context, spec, {}, options);
+    return defined<DeviceConfig>({
+      createdAt: readInteger(spec, r, 'iat'),
+      updatedAt: readInteger(spec, r, 'uts'),
+      devid: readString(spec, r, 'devid'),
+      instanceid: optional(readString, spec, r, 'instanceid'),
+      eid: readBase64(spec, r, 'eid'),
+      eidSign: readBase64(spec, r, 'eid_sign'),
+      user: readString(spec, r, 'user'),
+      email: readString(spec, r, 'email'),
+      hostname: readString(spec, r, 'hostname'),
+      dnsd: readBoolean(spec, r, 'dnsd'),
+      trustedTime: readBoolean(spec, r, 'trusted_ts'),
+      trustedBackend: readBoolean(spec, r, 'trusted_backend'),
+      allowKeysearch: readBoolean(spec, r, 'allow_keysearch'),
+      origin: readString(spec, r, 'origin'),
+      ctx: readInteger(spec, r, 'ctx'),
+      ip: readString(spec, r, 'ip'),
+      hsts: readBoolean(spec, r, 'http_option_hsts'),
+      dosProtectionMode: readInteger(spec, r, 'http_option_dosprot_mode'),
+      genuineId: optional(readString, spec, r, 'genuine_id'),
+      storageMode: optional(readInteger, spec, r, 'storage_mode'),
+      storageDisk0Size: optional(readInteger, spec, r, 'storage_disk0size'),
+      storageCapacity: optional(readInteger, spec, r, 'storage_capacity'),
+      spk: readBase64(spec, r, 'spk'),
+      nonce: readBase64(spec, r, 'nonce'),
+    } as DeviceConfig);
   }
 
   // implements: REQ-SYS-002
