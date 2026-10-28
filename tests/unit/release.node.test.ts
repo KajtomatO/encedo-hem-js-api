@@ -1,4 +1,5 @@
-// The release workflow publishes from CI on a version tag, after the A-gate checks, through npm trusted publishing.
+// The release workflow stages on npm from CI on a version tag, after the A-gate checks, through npm trusted
+// publishing; the user approves the staged version and publishes the draft GitHub Release.
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
@@ -21,33 +22,34 @@ describe('release workflow', () => {
   });
 
   // verifies: REQ-BUILD-007
-  it('runs the same install and A-gate steps as ci.yml before any publish step', () => {
+  it('runs the same install and A-gate steps as ci.yml before any staging step', () => {
     const ciSteps = [...ci.matchAll(/^\s*- run: (.+)$/gm)].map((match) => match[1]);
     expect(runs.slice(0, 3)).toEqual(ciSteps);
     expect(runs.slice(0, 3)).toEqual(['npm ci', 'npx playwright install --with-deps chromium', 'npm run check']);
-    expect(lineOf('npm run check')).toBeLessThan(lineOf(/run: npm publish$/));
-    expect(lineOf('npm run check')).toBeLessThan(lineOf('npm publish --dry-run'));
+    expect(lineOf('npm run check')).toBeLessThan(lineOf(/run: npm stage publish$/));
+    expect(lineOf('npm run check')).toBeLessThan(lineOf('npm stage publish --dry-run'));
   });
 
   // verifies: REQ-BUILD-007
-  it('fails unless the tag is v + the package.json version, before publishing', () => {
+  it('fails unless the tag is v + the package.json version, before staging', () => {
     expect(commands).toContain(`test "$GITHUB_REF_NAME" = "v$(node -p "require('./package.json').version")"`);
-    expect(lineOf('$GITHUB_REF_NAME" = "v$(node')).toBeLessThan(lineOf(/run: npm publish$/));
+    expect(lineOf('$GITHUB_REF_NAME" = "v$(node')).toBeLessThan(lineOf(/run: npm stage publish$/));
   });
 
   // verifies: REQ-BUILD-007
-  it('publishes through OIDC: id-token write, no registry token, and requires npm 11.5.1 or later', () => {
+  it('stages through OIDC: id-token write, no registry token, and requires npm 11.15.0 or later', () => {
     expect(commands).toMatch(/^permissions:\n(?: {2}\w[\w-]*: \w+\n)*? {2}id-token: write\n/m);
     expect(commands).not.toMatch(/NODE_AUTH_TOKEN|NPM_TOKEN|secrets\./);
-    expect(commands).toMatch(/11\.5\.1/);
+    expect(commands).toMatch(/11\.15\.0/);
+    expect(commands).not.toMatch(/run: npm publish/);
     expect(commands).toMatch(/registry-url: https:\/\/registry\.npmjs\.org/);
   });
 
   // verifies: REQ-BUILD-007
-  it('publishes only for a pushed tag; a manual run stops at a dry run', () => {
+  it('stages only for a pushed tag; a manual run stops at a dry run', () => {
     const steps = commands.split(/\n(?= {6}- )/);
-    const publish = steps.find((step) => /run: npm publish\n|run: npm publish$/.test(step)) as string;
-    const dryRun = steps.find((step) => step.includes('npm publish --dry-run')) as string;
+    const publish = steps.find((step) => /run: npm stage publish\n|run: npm stage publish$/.test(step)) as string;
+    const dryRun = steps.find((step) => step.includes('npm stage publish --dry-run')) as string;
     const release = steps.find((step) => step.includes('gh release create')) as string;
     expect(publish).toContain("if: github.event_name == 'push'");
     expect(release).toContain("if: github.event_name == 'push'");
@@ -55,10 +57,10 @@ describe('release workflow', () => {
   });
 
   // verifies: REQ-BUILD-007
-  it('creates a GitHub Release named after the tag with the matching CHANGELOG section, using the workflow token', () => {
+  it('creates a draft GitHub Release named after the tag with the matching CHANGELOG section, using the workflow token', () => {
     expect(commands).toMatch(/^permissions:\n(?: {2}\w[\w-]*: \w+\n)*? {2}contents: write\n/m);
     expect(commands).toContain('GH_TOKEN: ${{ github.token }}');
-    expect(commands).toMatch(/gh release create "\$GITHUB_REF_NAME" --title "\$GITHUB_REF_NAME" --notes-file release-notes\.md/);
+    expect(commands).toMatch(/gh release create "\$GITHUB_REF_NAME" --draft --title "\$GITHUB_REF_NAME" --notes-file release-notes\.md/);
     expect(commands).toContain('test -s release-notes.md');
   });
 

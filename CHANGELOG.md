@@ -44,8 +44,9 @@ M2B. The public surface of 0.1.0 is unchanged; 159 entries are added.
   `SIGNATURE_ALGORITHMS`, `CIPHER_ALGORITHMS`, `HASH_ALGORITHMS`,
   `MLKEM_CIPHERTEXT_BYTES`, `MLDSA_SIGNATURE_BYTES`, the size limits, and
   the parameter and result types of every new call.
-- **Release workflow:** tags `v*` are published to npm from GitHub Actions
-  through trusted publishing, with a GitHub Release cut from this file.
+- **Release workflow:** a pushed tag `v*` is staged on npm from GitHub
+  Actions through trusted publishing and goes live when a maintainer
+  approves it; a draft GitHub Release is cut from this file.
 
 ### Findings from the device that callers must know
 

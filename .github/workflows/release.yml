@@ -1,8 +1,10 @@
-# Publish to npm and create a GitHub Release when a version tag (v<version>) is pushed.
+# Stage on npm and create a draft GitHub Release when a version tag (v<version>) is pushed.
 # implements: REQ-BUILD-007
-# The tag must equal "v" + the package.json version. Publishing uses npm trusted
-# publishing (OIDC) — no npm token is stored anywhere. A manual run performs the
-# same checks and a publish dry run only; it never publishes.
+# The tag must equal "v" + the package.json version. Staging uses npm trusted
+# publishing (OIDC) — no npm token is stored anywhere. The version goes live when a
+# maintainer approves the staged package on npmjs.com with 2FA and publishes the
+# draft release. A manual run performs the same checks and a staging dry run only;
+# it never stages.
 # As ci.yml: unit tests only, no integration or attended runs, no device credentials.
 name: Release
 
@@ -29,18 +31,18 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm run check
-      - name: npm supports trusted publishing (11.5.1 or later)
-        run: node -e "const [a,b,c]=require('child_process').execSync('npm --version').toString().trim().split('.').map(Number); if (a<11||(a===11&&(b<5||(b===5&&c<1)))) { console.error('npm too old for trusted publishing'); process.exit(1) }"
+      - name: npm supports staged publishing (11.15.0 or later)
+        run: node -e "const [a,b,c]=require('child_process').execSync('npm --version').toString().trim().split('.').map(Number); if (a<11||(a===11&&(b<15||(b===15&&c<0)))) { console.error('npm too old for npm stage publish'); process.exit(1) }"
       - name: Tag matches the package version
         if: github.event_name == 'push'
         run: test "$GITHUB_REF_NAME" = "v$(node -p "require('./package.json').version")"
-      - name: Publish dry run (manual run)
+      - name: Staging dry run (manual run)
         if: github.event_name != 'push'
-        run: npm publish --dry-run
-      - name: Publish to npm
+        run: npm stage publish --dry-run
+      - name: Stage on npm
         if: github.event_name == 'push'
-        run: npm publish
-      - name: GitHub Release with the CHANGELOG section
+        run: npm stage publish
+      - name: Draft GitHub Release with the CHANGELOG section
         if: github.event_name == 'push'
         env:
           GH_TOKEN: ${{ github.token }}
@@ -48,4 +50,4 @@ jobs:
           version="${GITHUB_REF_NAME#v}"
           awk -v v="$version" '$0 ~ "^## " v "( |$)" { p = 1; next } /^## / { p = 0 } p' CHANGELOG.md > release-notes.md
           test -s release-notes.md
-          gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file release-notes.md
+          gh release create "$GITHUB_REF_NAME" --draft --title "$GITHUB_REF_NAME" --notes-file release-notes.md
